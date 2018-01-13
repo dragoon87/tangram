@@ -156,9 +156,9 @@ export default class TileManager {
         //     }
         // }
 
-        // if (tiles.length === 0) {
-        //     return Promise.resolve({});
-        // }
+        if (tiles.length === 0) {
+            return Promise.resolve({});
+        }
 
         tiles.sort((a, b) => a.key < b.key ? -1 : (a.key > b.key ? 1 : 0));
 
