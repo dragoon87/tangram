@@ -24,7 +24,9 @@ export default class TileManager {
             style_counts: [],
             pending_label_style_counts: [],
             zoom: null,
-            zoom_steps: 2
+            zoom_steps: 2,
+            timeout: 100,
+            last_time: null
         };
 
         // Provide a hook for this object to be called from worker threads
@@ -124,8 +126,14 @@ export default class TileManager {
     }
 
     updateLabels () {
-        // if (this.isLoadingVisibleTiles() || this.scene.building) {
-        //     // log('debug', `Skip label layout due to loading (loading visible ${this.isLoadingVisibleTiles()}, building ${this.scene.building != null})`);
+        if (this.collision.last_time == null) {
+            this.collision.last_time = +new Date();
+        }
+
+        // block some label layout while tiles are loading, except if enough time has passed since last layout
+        // const loading = ((this.isLoadingVisibleTiles() && (+new Date() - this.collision.last_time < this.collision.timeout)) || this.scene.building);
+        // const loading = (this.isLoadingVisibleTiles() || this.scene.building);
+        // if (loading) {
         //     return Promise.resolve({});
         // }
 
@@ -134,32 +142,31 @@ export default class TileManager {
             return Promise.resolve({});
         }
 
-        // get current visible tiles and sort by key for consistency collision order
-        const tiles = this.renderable_tiles
+        // get current visible tiles
+        let tiles = this.renderable_tiles
+            // .filter(t => !loading || (t.isProxy() && t.proxy_for.length === 1))
+            // .filter(t => !loading || t.isProxy())
             .filter(t => t.valid)
             .filter(t => t.built);
-            // .sort((a, b) => b.center_dist > a.center_dist ? -1 : (b.center_dist === a.center_dist ? 0 : 1))
-            // .sort((a, b) => b.center_dist > a.center_dist ? -1 : (b.center_dist === a.center_dist ? (a.key < b.key ? -1 : (a.key > b.key ? 1 : 0)) : 1))
-            // .sort((a, b) => a.key < b.key ? -1 : (a.key > b.key ? 1 : 0));
 
-        // let tiles = [];
-        // for (let source in this.scene.sources) {
-        //     const source_tiles = Object.keys(this.tiles)
-        //         .map(t => this.tiles[t])
-        //         .filter(t => t.source.name === source)
-        //         .filter(t => t.valid)
-        //         .filter(t => t.visible);
-        //         // .filter(t => t.built);
+        // include tiles from sources that are completely loaded
+        for (let source in this.scene.sources) {
+            const source_tiles = Object.keys(this.tiles)
+                .map(t => this.tiles[t])
+                .filter(t => t.source.name === source)
+                .filter(t => t.valid)
+                .filter(t => t.visible);
 
-        //     if (source_tiles.every(t => t.built)) {
-        //         tiles.push(...source_tiles);
-        //     }
-        // }
+            if (source_tiles.every(t => t.built)) {
+                source_tiles.forEach(t => tiles.indexOf(t) === -1 && tiles.push(t));
+            }
+        }
 
         if (tiles.length === 0) {
             return Promise.resolve({});
         }
 
+        // sort by key for consistency collision order
         tiles.sort((a, b) => a.key < b.key ? -1 : (a.key > b.key ? 1 : 0));
 
         // check if tile set has changed (in ways that affect collision)
@@ -182,7 +189,8 @@ export default class TileManager {
             this.collision.style_counts = tiles.map(t => Object.keys(t.meshes).length);
             this.collision.pending_label_style_counts = tiles.map(t => t.pendingLabelStyleCount());
             this.collision.zoom = roundPrecision(this.view.zoom, this.collision.zoom_steps);
-            // log('debug', `Update label collisions (zoom ${this.collision.zoom}, ${JSON.stringify(this.collision.tiles.map(t => t.key))}, mesh counts ${JSON.stringify(this.collision.style_counts)}, pending label mesh counts ${JSON.stringify(this.collision.pending_label_style_counts)})`);
+            this.collision.last_time = null;
+            log('debug', `Update label collisions (zoom ${this.collision.zoom}, ${JSON.stringify(this.collision.tiles.map(t => t.key))}, mesh counts ${JSON.stringify(this.collision.style_counts)}, pending label mesh counts ${JSON.stringify(this.collision.pending_label_style_counts)})`);
 
             this.collision.task = {
                 type: 'tileManagerUpdateLabels',

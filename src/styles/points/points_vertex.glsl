@@ -158,6 +158,7 @@ void main() {
     // Value passed to fragment shader in the v_alpha_factor varying
     #ifdef TANGRAM_FADE_ON_ZOOM_OUT
         v_alpha_factor *= clamp(1. + TANGRAM_FADE_ON_ZOOM_OUT_RATE * (u_map_position.z - u_tile_origin.z), 0., 1.);
+        // v_alpha_factor *= clamp(1.5 * (u_map_position.z - u_tile_origin.z + 2.), 0., 1.);
     #endif
 
     // World coordinates for 3d procedural textures
