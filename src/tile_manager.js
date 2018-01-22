@@ -132,10 +132,10 @@ export default class TileManager {
 
         // block some label layout while tiles are loading, except if enough time has passed since last layout
         // const loading = ((this.isLoadingVisibleTiles() && (+new Date() - this.collision.last_time < this.collision.timeout)) || this.scene.building);
-        // const loading = (this.isLoadingVisibleTiles() || this.scene.building);
-        // if (loading) {
-        //     return Promise.resolve({});
-        // }
+        const loading = (this.isLoadingVisibleTiles() || this.scene.building);
+        if (loading) {
+            return Promise.resolve({});
+        }
 
         if (this.scene.building && !this.scene.building.initial) {
             // log('debug', `Skip label layout due to on-going scene rebuild`);
