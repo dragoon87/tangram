@@ -154,11 +154,13 @@ Object.assign(Points, {
         // optional sprite
         let sprite_info;
         if (this.hasSprites(style)) {
+            // populate sprite_info object with used sprites
             sprite_info = this.parseSprite(style, draw, context);
             if (sprite_info) {
                 style.texcoords = sprite_info.texcoords;
             }
             else {
+                // sprites are defined, but none are used
                 return;
             }
         }
@@ -166,11 +168,16 @@ Object.assign(Points, {
         // point size defined explicitly, or defaults to sprite size, or generic fallback
         style.size = draw.size;
         if (!style.size) {
+            // a 'size' property has not been set in the draw layer -
+            // use the sprite size if it exists and a generic fallback if it doesn't
             style.size = (sprite_info && sprite_info.css_size) || [DEFAULT_POINT_SIZE, DEFAULT_POINT_SIZE];
         }
         else {
+            // evaluate the size set in the draw layer
             style.size = StyleParser.evalCachedPointSizeProperty(draw.size, sprite_info, context);
             if (style.size == null) {
+                // the StyleParser couldn't evaluate a sprite size - this means no sprite was defined,
+                // use the texture size
                 let tex = Texture.textures[style.texture];
                 let factor = draw.size.value.indexOf('%') > -1 ? parseFloat(draw.size.value) : 1.0;
                 style.size = [(tex.width * factor), (tex.height * factor)];
@@ -254,6 +261,7 @@ Object.assign(Points, {
         return style.texture && Texture.textures[style.texture] && Texture.textures[style.texture].sprites;
     },
 
+    // Generate a sprite_info object
     getSpriteInfo (style, sprite) {
         let info = Texture.textures[style.texture].sprites[sprite] && Texture.getSpriteInfo(style.texture, sprite);
         if (sprite && !info) {
@@ -270,7 +278,9 @@ Object.assign(Points, {
         return info;
     },
 
+    // Check a sprite name against available sprites and return a sprite_info object
     parseSprite (style, draw, context) {
+        // check for functions
         let sprite = StyleParser.evalProperty(draw.sprite, context);
         let sprite_info = this.getSpriteInfo(style, sprite) || this.getSpriteInfo(style, draw.sprite_default);
         return sprite_info;
@@ -400,6 +410,7 @@ Object.assign(Points, {
         // Size (1d value or 2d array)
         try {
             draw.size = StyleParser.createPointSizePropertyCache(draw.size);
+            // example: {value: 64, type: 0}
         }
         catch(e) {
             log({ level: 'warn', once: true }, `Layer '${draw.layers[draw.layers.length-1]}': ` +

@@ -163,6 +163,7 @@ const isRatio = v => v === 'auto'; // size derived from aspect ratio of one dime
 const isComputed = v => isPercent(v) || isRatio(v);
 const dualRatioError = `'size' can specify either width or height as derived from aspect ratio, but not both`;
 StyleParser.createPointSizePropertyCache = function (obj) {
+    // obj is the value to be parsed eg "64px" "100%" "auto"
     // mimics the structure of the size value (at each zoom stop if applicable),
     // stores flags indicating if each element is a %-based size or not, or derived from aspect
     let has_pct = null;
@@ -204,6 +205,7 @@ StyleParser.createPointSizePropertyCache = function (obj) {
     return obj;
 };
 
+// Check for point size cache, generate one if it doesn't exist
 StyleParser.evalCachedPointSizeProperty = function (val, sprite_info, context) {
     // no percentage-based calculation, one cache for all sprites
     if (!val.has_pct && !val.has_ratio) {
