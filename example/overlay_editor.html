@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <link rel="stylesheet" href="../dist/leaflet.pm.css" />
+    <title>编辑线、面、圆</title>
+    
+    <style>
+        .marker {
+            color: #ff6600;
+            padding: 4px 10px;
+            border: 1px solid #fff;
+            white-space: nowrap;
+            font-size: 12px;
+            font-family: "";
+            background-color: #0066ff;
+        }
+        .button-group {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            padding: 10px;
+            z-index: 1000;
+        }
+        .button-group .button {
+            height: 28px;
+            line-height: 28px;
+            background-color: #0D9BF2;
+            color: #FFF;
+            border: 0;
+            outline: none;
+            padding-left: 5px;
+            padding-right: 5px;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            cursor: pointer;
+        }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div class="button-group">
+    <input type="button" class="button" value="开始编辑线" onClick="startEditPolyline()"/>
+    <input type="button" class="button" value="结束编辑线" onClick="closeEditPolyline()">
+    <input type="button" class="button" value="开始编辑面" onClick="startEditPolygon()"/>
+    <input type="button" class="button" value="结束编辑面" onClick="closeEditPolygon()"/>
+    <input type="button" class="button" value="开始编辑圆" onClick="startEditCircle()"/>
+    <input type="button" class="button" value="结束编辑圆" onClick="closeEditCircle()"/>
+    </div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script src="../dist/leaflet.pm.min.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.5, 114.4],
+            zoom: 13,
+            maxZoom: 20,
+            zoomSnap: 0,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+                
+        var options = {
+            stroke: true,       //描边，默认true；面和圆为false
+            color: 'red',       //也支持'#ff0000'形式
+            weight: 3,          //stroke宽度，默认3
+            opacity: 1,         //透明度，默认1    
+            lineCap: 'round',   //线两段样式，默认round
+            lineJoin: 'round',  //线连接样式，默认round
+            dashArray: [1,1],   //dash样式，只有线可以设置，默认null
+            dashOffset: 1,      //dash距离
+            fill: false,        //是否填充，面和圆为true
+            fillColor: 'green',      //填充颜色，面和圆设置
+            fillOpacity: 0.2,   //填充透明度，默认0.2
+        };
+        
+        //默认是svg方式绘制
+        polyline = L.polyline([
+            [30.51, 114.37],
+            [30.50, 114.38],
+            [30.51, 114.39],
+            [30.50, 114.39]
+        ], L.extend(options, {
+            fill: false
+        })).addTo(map);
+        
+        polygon = L.polygon([
+            [30.52, 114.40],
+            [30.50, 114.41],
+            [30.49, 114.40],
+            [30.49, 114.39]
+        ], L.extend(options, {
+            fill: true,
+            fillColor: 'green',
+        })).addTo(map);
+        
+        circle = L.circle([30.5, 114.43], L.extend(options, {
+            fill: true,
+            fillColor: 'blue',
+            radius: 1000
+        })).addTo(map);
+        //覆盖物编辑的选项配置        
+        var edit_options = {
+            //要素可以拖到
+            draggable: true,
+            //节点可以捕获
+            snappable: true,
+            //节点捕获范围
+            snapDistance: 30,
+            //是否允许自相交
+            allowSelfIntersection: true,
+        };
+                
+        startEditPolyline=function(){
+            //开启编辑
+            polyline.pm.enable(edit_options);
+        }
+        closeEditPolyline=function(){
+            //结束编辑
+            polyline.pm.disable();
+        }
+        
+        startEditPolygon=function(){
+            polygon.pm.enable(edit_options);
+        }
+        closeEditPolygon=function(){
+            polygon.pm.disable();
+        }
+        
+        startEditCircle=function(){
+            circle.pm.enable(edit_options);
+        }
+        closeEditCircle=function(){
+            circle.pm.disable();
+        }
+    </script>
+  </body>
+
+</html>

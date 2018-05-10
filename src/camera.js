@@ -1,6 +1,6 @@
 import Utils from './utils/utils';
 import ShaderProgram from './gl/shader_program';
-import {mat4, mat3, vec3} from './utils/gl-matrix';
+import {mat4, mat3, mat2, vec3} from './utils/gl-matrix';
 
 // Abstract base class
 export default class Camera {
@@ -9,6 +9,38 @@ export default class Camera {
         this.view = view;
         this.position = options.position;
         this.zoom = options.zoom;
+        this._angle = 0;
+        this._pitch = 0;
+    }
+    
+    updateMatrices() {
+    }
+    
+    getBearing() {
+        return -this._angle / Math.PI * 180;
+    }
+    
+    setBearing(bearing) {
+        const b = -Utils.wrap(bearing, -180, 180) * Math.PI / 180;
+        if (this.angle === b) return;
+        this._unmodified = false;
+        this._angle = b;
+        this.updateMatrices();
+
+        // 2x2 matrix for rotating points
+        this.rotationMatrix = mat2.create();
+        mat2.rotate(this.rotationMatrix, this.rotationMatrix, this._angle);
+    }
+    
+    getPitch() {
+        return this._pitch / Math.PI * 180;
+    }
+    setPitch(pitch) {
+        const p = Utils.clamp(pitch, 0, 60) / 180 * Math.PI;
+        if (this._pitch === p) return;
+        this._unmodified = false;
+        this._pitch = p;
+        this.updateMatrices();
     }
 
     // Create a camera by type name, factory-style
@@ -191,7 +223,11 @@ class PerspectiveCamera extends Camera {
 
         // Include camera height in projection matrix
         mat4.translate(this.projection_matrix, this.projection_matrix, vec3.fromValues(0, 0, -height));
-    }
+        //console.log("this._pitch:"+this._pitch);
+        mat4.rotateX(this.projection_matrix, this.projection_matrix, -this._pitch);
+        //console.log("this._angle:"+this._angle);
+        mat4.rotateZ(this.projection_matrix, this.projection_matrix, this._angle);
+   }
 
     update() {
         super.update();

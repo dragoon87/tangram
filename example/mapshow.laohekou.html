@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [32.38472, 111.67390],
+            zoom: 15,
+            maxZoom: 20,
+            zoomSnap: 0,
+            trackResize: true,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/laohekou-basemap-common.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        
+        map.dragging.disable();
+        map.keyboard.disable();
+        map.doubleClickZoom.disable();
+        //boxZoom scrollWheelZoom tap touchZoom 
+        
+        map.setView([32.38472, 111.67390], 16);
+        map.setZoom(18);
+        map.zoomIn(0.5);
+        map.zoomOut(0.5);
+        map.panBy([200, 300]);
+        map.panTo([32.38472, 111.67390]);
+        map.flyTo([32.38472, 111.67390], 16);
+        
+        //setMaxBounds
+        
+        var mypop = L.popup();
+        map.on('click', function(e) {
+          var content = '<br>';
+          content += e.latlng.toString();
+          mypop.setLatLng(e.latlng)
+               .setContent(content)
+               .openOn(map);
+        });
+    </script>
+  </body>
+
+</html>

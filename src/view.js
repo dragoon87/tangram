@@ -37,7 +37,7 @@ export default class View {
         };
         this.aspect = null;
 
-        this.buffer = 0;
+        this.buffer = 1;
         this.continuous_zoom = (typeof options.continuousZoom === 'boolean') ? options.continuousZoom : true;
         this.wrap = (options.wrapView === false) ? false : true;
         this.preserve_tiles_within_zoom = 1;
@@ -264,7 +264,7 @@ export default class View {
 
         this.scene.tile_manager.removeTiles(tile => {
             // Ignore visible tiles
-            if (tile.visible || tile.isProxy()) {
+            if (tile.visible || tile.proxy_for) {
                 return false;
             }
 

@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>限制地图显示范围</title>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id="tip" style="z-index:1000;background-color: #fff;position: absolute;font-size: 12px;right: 10px;top: 20px;">设置后拖动地图试试哦！</div>
+    <div style="position: absolute;bottom: 20px;right: 20px;font-size: 12px;padding: 10px;z-index: 1000;">
+        <input onclick="setLimitBounds()" type="button" style="background-color: #0D9BF2;color: #FFF;" value="限定区域到当前视野"/>
+        <input onclick="getLimitBounds()" type="button" style="background-color: #0D9BF2;color: #FFF;" value="获取限制的区域"/>
+        <input onclick="clearLimitBounds()" type="button" style="background-color: #0D9BF2;color: #FFF;" value="清除区域限制"/>
+    </div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 10,
+            maxZoom: 20,
+            zoomSnap: 0,
+            trackResize: true,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        var limitBounds = null;
+        function setLimitBounds() {
+            limitBounds = map.getBounds();
+            map.setMaxBounds(limitBounds);
+        }
+        function getLimitBounds() {
+            if (limitBounds) {
+                var tip = [];
+                tip.push('限制区域：\n西南坐标[' + limitBounds.getSouthWest().lng + ',' + limitBounds.getSouthWest().lat + ']\n')
+                tip.push('东北坐标[' + limitBounds.getNorthEast().lng + ',' + limitBounds.getNorthEast().lat + ']')
+                alert(tip.join(''));
+            } else {
+                alert('未设置限制区域');
+            }
+        }
+        function clearLimitBounds() {
+            limitBounds = null;
+            map.setMaxBounds(limitBounds);
+        }
+    </script>
+  </body>
+
+</html>

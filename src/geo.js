@@ -42,6 +42,27 @@ Geo.metersForTile = function (tile) {
     };
 };
 
+Geo.lnglatForTile = function (min, max) {
+
+    let minx = min.x;
+    let miny = min.y;
+    minx /= Geo.half_circumference_meters;
+    miny /= Geo.half_circumference_meters;
+    miny = (2 * Math.atan(Math.exp(miny * Math.PI)) - (Math.PI / 2)) / Math.PI;
+    minx *= 180;
+    miny *= 180;
+    
+    let maxx = max.x;
+    let maxy = max.y;
+    maxx /= Geo.half_circumference_meters;
+    maxy /= Geo.half_circumference_meters;
+    maxy = (2 * Math.atan(Math.exp(maxy * Math.PI)) - (Math.PI / 2)) / Math.PI;
+    maxx *= 180;
+    maxy *= 180;
+
+    return { sw: { x: minx, y: maxy }, ne: { x: maxx, y: miny } };
+};
+
 /**
    Given a point in mercator meters and a zoom level, return the tile X/Y/Z that the point lies in
 */
@@ -98,7 +119,7 @@ Geo.latLngToMeters = function([x, y]) {
 };
 
 // Transform from local tile coordinats to lat lng
-Geo.tileSpaceToLatlng = function (geometry, z, min) {
+Geo.tileSpaceToLatlng = function (geometry, z, min, max) {
     const units_per_meter = Geo.unitsPerMeter(z);
     Geo.transformGeometry(geometry, coord => {
         coord[0] = (coord[0] / units_per_meter) + min.x;
@@ -167,6 +188,60 @@ Geo.boxIntersect = function (b1, b2) {
         b2.sw.y > b1.ne.y ||
         b2.ne.y < b1.sw.y
     );
+};
+
+Geo.getBoundingBox = function (geometry) {
+    if (geometry == null) {
+        return; // skip if missing geometry (valid GeoJSON)
+    }
+    let bounds = [];
+    if (geometry.type === 'Point') {
+        const bbox = [Infinity, Infinity, -Infinity, -Infinity];
+        bbox[0] = bbox[2] = geometry.coordinates[0];
+        bbox[1] = bbox[3] = geometry.coordinates[1];
+        Array.prototype.push.apply(bounds, bbox);
+    }
+    else if (geometry.type === 'LineString' || geometry.type === 'MultiPoint') {
+        const bbox = [Infinity, Infinity, -Infinity, -Infinity];
+        let num_coords = geometry.coordinates.length;
+        for (let c=0; c < num_coords; c++) {
+            let p = geometry.coordinates[c];
+            bbox[0] = Math.min(bbox[0], p[0]);
+            bbox[1] = Math.min(bbox[1], p[1]);
+            bbox[2] = Math.max(bbox[2], p[0]);
+            bbox[3] = Math.max(bbox[3], p[1]);
+        }
+        Array.prototype.push.apply(bounds, bbox);
+    }
+    else if (geometry.type === 'Polygon' || geometry.type === 'MultiLineString') {
+        const bbox = [Infinity, Infinity, -Infinity, -Infinity];
+        let num_coords = geometry.coordinates[0].length;
+        for (let c=0; c < num_coords; c++) {
+            let p = geometry.coordinates[0][c];
+            bbox[0] = Math.min(bbox[0], p[0]);
+            bbox[1] = Math.min(bbox[1], p[1]);
+            bbox[2] = Math.max(bbox[2], p[0]);
+            bbox[3] = Math.max(bbox[3], p[1]);
+        }
+        Array.prototype.push.apply(bounds, bbox);
+    }
+    else if (geometry.type === 'MultiPolygon') {
+        let num_geos = geometry.coordinates.length;
+        for (let i=0; i < num_geos; i++) {
+            const bbox = [Infinity, Infinity, -Infinity, -Infinity];
+            let num_coords = geometry.coordinates[i][0].length;
+            for (let c=0; c < num_coords; c++) {
+                let p = geometry.coordinates[i][0][c];
+                bbox[0] = Math.min(bbox[0], p[0]);
+                bbox[1] = Math.min(bbox[1], p[1]);
+                bbox[2] = Math.max(bbox[2], p[0]);
+                bbox[3] = Math.max(bbox[3], p[1]);
+            }
+            Array.prototype.push.apply(bounds, bbox);
+        }
+    }
+    
+    return bounds;
 };
 
 // Finds the axis-aligned bounding box for a polygon

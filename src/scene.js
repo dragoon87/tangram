@@ -278,43 +278,21 @@ export default class Scene {
         return worker_url;
     }
 
-    // Update list of any custom scripts (either at scene-level or data-source-level)
-    updateExternalScripts () {
-        let prev_scripts = [...(this.external_scripts||[])]; // save list of previously loaded scripts
-        let scripts = [];
-
-        // scene-level scripts
-        if (this.config.scene.scripts) {
-            for (let f in this.config.scene.scripts) {
-                if (scripts.indexOf(this.config.scene.scripts[f]) === -1) {
-                    scripts.push(this.config.scene.scripts[f]);
-                }
-            }
-        }
-
-        // data-source-level scripts
-        for (let s in this.config.sources) {
-            let source = this.config.sources[s];
-            if (source.scripts) {
-                for (let f in source.scripts) {
-                    if (scripts.indexOf(source.scripts[f]) === -1) {
-                        scripts.push(source.scripts[f]);
-                    }
-                }
-            }
-        }
-
-        this.external_scripts = scripts;
+    // Update list of any custom data source scripts (if any)
+    updateDataSourceScripts () {
+        let prev_scripts = [...(this.data_source_scripts||[])]; // save list of previously loaded scripts
+        let scripts = Object.keys(this.config.sources).map(s => this.config.sources[s].scripts).filter(x => x);
+        this.data_source_scripts = [].concat(...scripts).sort();
 
         // Scripts changed?
-        return !(this.external_scripts.length === prev_scripts.length &&
-            this.external_scripts.every((v, i) => v === prev_scripts[i]));
+        return !(this.data_source_scripts.length === prev_scripts.length &&
+            this.data_source_scripts.every((v, i) => v === prev_scripts[i]));
     }
 
     // Web workers handle heavy duty tile construction: networking, geometry processing, etc.
     createWorkers() {
         // Reset old workers (if any) if we need to re-instantiate with new external scripts
-        if (this.updateExternalScripts()) {
+        if (this.updateDataSourceScripts()) {
             this.destroyWorkers();
         }
 
@@ -340,7 +318,7 @@ export default class Scene {
 
             log('debug', `Scene.makeWorkers: initializing worker ${id}`);
             let _id = id;
-            queue.push(WorkerBroker.postMessage(worker, 'self.init', this.id, id, this.num_workers, this.log_level, Utils.device_pixel_ratio, has_element_index_uint, this.external_scripts).then(
+            queue.push(WorkerBroker.postMessage(worker, 'self.init', this.id, id, this.num_workers, this.log_level, Utils.device_pixel_ratio, has_element_index_uint, this.data_source_scripts).then(
                 (id) => {
                     log('debug', `Scene.makeWorkers: initialized worker ${id}`);
                     return id;
@@ -606,55 +584,40 @@ export default class Scene {
 
         // Render tile GL geometries
         let renderable_tiles = this.tile_manager.getRenderableTiles();
+        for (let t=0; t < renderable_tiles.length; t++) {
+            let tile = renderable_tiles[t];
 
-        // Mesh variants must be rendered in requested order across tiles, to prevent labels that cross
-        // tile boundaries from rendering over adjacent tile features meant to be underneath
-        let max_mesh_variant_order =
-            Math.max(...renderable_tiles.map(t => {
-                return t.meshes[style_name] ?
-                    Math.max(...t.meshes[style_name].map(m => m.variant.order)) : -1;
-                })
-            );
+            if (tile.meshes[style_name] == null) {
+                continue;
+            }
 
-        // One pass per mesh variant order (loop goes to max value +1 because 0 is a valid order value)
-        for (let mo=0; mo < max_mesh_variant_order + 1; mo++) {
-            for (let t=0; t < renderable_tiles.length; t++) {
-                let tile = renderable_tiles[t];
-
-                if (tile.meshes[style_name] == null) {
-                    continue;
-                }
-
-                // Skip proxy tiles if new tiles have finished loading this style
-                if (!tile.shouldProxyForStyle(style_name)) {
-                    // log('trace', `Scene.renderStyle(): Skip proxy tile for style '${style_name}' `, tile, tile.proxy_for);
-                    continue;
-                }
-
-                // Render current mesh variant for current style for current tile
-                let mesh = tile.meshes[style_name].filter(m => m.variant.order === mo)[0]; // find mesh by variant order
-                if (mesh) {
-                    // Style-specific state
-                    // Only setup style if rendering for first time this frame
-                    // (lazy init, not all styles will be used in all screen views; some styles might be defined but never used)
-                    if (first_for_style === true) {
-                        first_for_style = false;
-                        program = this.setupStyle(style, program_key);
-                        if (!program) {
-                            return 0;
-                        }
-                    }
-
-                    // Tile-specific state
-                    this.view.setupTile(tile, program);
-
-                    // Render this mesh variant
-                    if (style.render(mesh)) {
-                        this.requestRedraw();
-                    }
-                    render_count += mesh.geometry_count;
+            // Style-specific state
+            // Only setup style if rendering for first time this frame
+            // (lazy init, not all styles will be used in all screen views; some styles might be defined but never used)
+            if (first_for_style === true) {
+                first_for_style = false;
+                program = this.setupStyle(style, program_key);
+                if (!program) {
+                    return 0;
                 }
             }
+
+            // Skip proxy tiles if new tiles have finished loading this style
+            if (!tile.shouldProxyForStyle(style_name)) {
+                // log('trace', `Scene.renderStyle(): Skip proxy tile for style '${style_name}' `, tile, tile.proxy_for);
+                continue;
+            }
+
+            // Tile-specific state
+            this.view.setupTile(tile, program);
+
+            // Render tile
+            tile.meshes[style_name].forEach(mesh => {
+                if (style.render(mesh)) {
+                    this.requestRedraw();
+                }
+                render_count += mesh.geometry_count;
+            });
         }
 
         return render_count;
@@ -756,6 +719,36 @@ export default class Scene {
             render_states.blending.set({ blend: false });
         }
     }
+	getFeaturesAt(point, { scale, radius } = {}) {
+        let find_features = [];
+        //计算搜索buffer
+        let EXTENT = 8192;
+        let tileSize = 256;
+        const pixelsToTileUnits = (EXTENT / tileSize) / scale;
+        const additionalRadius = (radius * pixelsToTileUnits) / 111000;
+        //计算点所在tile
+        scale = Math.floor(scale);
+        var tilex = parseInt(Math.floor((point.lng + 180.0) / 360.0 * Math.pow(2.0, scale) + 0.1));
+        var tiley = parseInt(Math.floor((1.0 - Math.log(Math.tan(point.lat * Math.PI / 180.0) + 1.0 / Math.cos(point.lat * Math.PI / 180.0)) / Math.PI) / 2.0 * Math.pow(2.0, scale)));
+        var max_zoom = this.config.sources.mapzen.max_zoom || 20;
+        
+        for (let key in this.tile_manager.tiles) {
+            let tile = this.tile_manager.tiles[key];
+            if (scale <= max_zoom && (Math.abs(tile.coords.x - tilex) > 1 || Math.abs(tile.coords.y - tiley) > 1 ||
+                Math.abs(tile.coords.z - scale) >= 1)) {//如果tile相差太远，不搜索
+            //if (point.lng < tile.lnglat.sw.x || point.lng > tile.lnglat.ne.x || point.lat < tile.lnglat.ne.y || point.lat > tile.lnglat.sw.y) {
+                continue;
+            }
+            //rtree搜索
+            const result = tile.tree.search({minX:point.lng - additionalRadius, minY:point.lat - additionalRadius, maxX:point.lng + additionalRadius, maxY:point.lat + additionalRadius});
+            for (let idx in result) {
+                let feature = tile.features[result[idx].id];
+                //console.log("find feature[" + idx + "]:" + JSON.stringify(feature))
+                find_features.push(feature);
+            }
+        }
+        return find_features;
+    }
 
     // Request feature selection at given pixel. Runs async and returns results via a promise.
     getFeatureAt(pixel, { radius } = {}) {
@@ -831,7 +824,7 @@ export default class Scene {
     // Rebuild all tiles, without re-parsing the config or re-compiling styles
     // sync: boolean of whether to sync the config object to the worker
     // sources: optional array of data sources to selectively rebuild (by default all our rebuilt)
-    rebuild({ initial = false, new_generation = true, sources = null, serialize_funcs, profile = false, fade_in = false } = {}) {
+    rebuild({ new_generation = true, sources = null, serialize_funcs, profile = false, fade_in = false } = {}) {
         return new Promise((resolve, reject) => {
             // Skip rebuild if already in progress
             if (this.building) {
@@ -843,14 +836,14 @@ export default class Scene {
                 }
 
                 // Save queued request
-                let options = { initial, new_generation, sources, serialize_funcs, profile, fade_in };
+                let options = { new_generation, sources, serialize_funcs, profile, fade_in };
                 this.building.queued = { resolve, reject, options };
                 log('trace', `Scene.rebuild(): queuing request`);
                 return;
             }
 
             // Track tile build state
-            this.building = { resolve, reject, initial };
+            this.building = { resolve, reject };
 
             // Profiling
             if (profile) {
@@ -909,9 +902,6 @@ export default class Scene {
             if (queued) {
                 log('debug', `Scene: starting queued rebuild() request`);
                 this.rebuild(queued.options).then(queued.resolve, queued.reject);
-            }
-            else {
-                this.tile_manager.updateLabels(); // refresh label if nothing to rebuild
             }
         }
     }
@@ -1061,6 +1051,235 @@ export default class Scene {
         return (this.config.scene.animated !== undefined ?
                 this.config.scene.animated :
                 this.tile_manager.getActiveStyles().some(s => this.styles[s].animated));
+	}
+    
+    // Get active style - for public API
+    //daibin:获取当前feature使用的style，多个style后面覆盖前面的取值
+    getActiveStyles(feature, selection) {
+        //把obj2深拷贝到obj1，用于样式覆盖
+        let deepMerge = function(obj1, obj2) {
+            for(let key in obj2) {
+                // 如果target(也就是obj1[key])存在，且是对象的话再去调用deepMerge，否则就是obj1[key]里面没这个对象，需要与obj2[key]合并
+                obj1[key] = obj1[key] && obj1[key].toString() === "[object Object]" ? deepMerge(obj1[key], obj2[key]) : obj1[key] = obj2[key];
+            }
+            return obj1;
+        };
+        
+        let scene = this;
+        //FizzyData是一个对象，用于dat.gui展示
+        //pre是前缀，用于展示例如数组（拆分到每个字符串）
+        let FizzyData = function(style, pre) {
+            let data = {};
+            for (let s in style) {
+                let pres = pre + s;
+                if (style[s].toString() === "[object Object]") {
+                    //如果是对象，新建一个对象
+                    let obj = new FizzyData(style[s], pre === "" ? s + ":" : pres + ":"); 
+                    for(let o in obj) {
+                        data[o] = obj[o];
+                    }
+                } else if (Array.isArray(style[s])) {
+                    //如果是数组
+                    if (s === 'color' || s === 'fill') {
+                        let precolor = pres;
+                        if (Array.isArray(style[s][0])) {
+                            //是按级别的color
+                            for (let i in style[s]) {
+                                precolor = pres + "_" + style[s][i][0];
+                                data[precolor] = StyleParser.parseColor(style[s][i][1].slice(0));
+                                //dat.gui范围是0~255，这里是0~1，需要处理
+                                for (let j = 0; j < 3; j ++) data[precolor][j] *= 255;
+                            }
+                        } else {
+                            data[precolor] = StyleParser.parseColor(style[s].slice(0));
+                            for (let j = 0; j < 3; j ++) data[precolor][j] *= 255;
+                        }
+                    }
+                    else //其他数组，做一下标准化
+                        data[pres] = JSON.stringify(style[s]);
+                }
+                else {
+                    //颜色需要特殊处理，可能是字符串（global或tangram内定义）、16进制、rgb、rgba
+                    if (s === 'color' || s === 'fill') {
+                        data[pres] = StyleParser.parseColor(style[s]);
+                        for (var j = 0; j < 3; j ++) data[pres][j] *= 255;
+                    }
+                    else
+                        data[pres] = style[s];
+                }
+            }
+            
+            return data;
+        };                
+             
+        let list = [];//返回所有style列表
+        let styles = {};//合并后的style
+        let ustyles = {};//用于更新style
+        //生成更新样式对象，只记录对应关系即可
+        let MakeUpdate = function (ustyles, style, pre) {
+            for (let s in style) {
+                let pres = pre + s;
+                if (style[s].toString() === "[object Object]") {//遍历处理
+                    MakeUpdate(ustyles, style[s], pre === "" ? s + ":" : pres + ":"); 
+                } else if (Array.isArray(style[s])) {
+                    if (s === 'color' || s === 'fill') {
+                        let precolor = pres;
+                        if (Array.isArray(style[s][0])) {
+                            for (let i in style[s]) {//是按级别的color
+                                precolor = pres + "_" + style[s][i][0];
+                                ustyles[precolor] = style;
+                            }
+                        } else
+                            ustyles[precolor] = style;
+                    }
+                    else
+                        ustyles[pres] = style;
+                }
+                else 
+                    ustyles[pres] = style;
+            }
+        };
+        
+        let rootname = null;//样式对图层根目录
+        for (let i in feature.layers) {
+            let seps = feature.layers[i].split(':');
+            let sublayer = this.config.layers;//图层根目录
+            for (let j in seps) {
+                sublayer = sublayer[seps[j]];
+                if (i == 0 && j == 0)
+                    rootname = seps[j];
+                if (i > 0 && j == 0 && rootname === seps[j]) //多个样式对应根目录一定是相同的
+                    continue;
+                let draw = sublayer.draw;//draw对象
+                let type = null;//基本类型（点线面标注），或者自定义styleid
+                let style = null;//
+                for (let j in draw) {
+                    if (typeof draw[j] !== 'object')//style必定要是对象
+                        continue;
+                    style = draw[j];  
+                    if (!style.hasOwnProperty('visible'))
+                        style['visible'] = true;
+                    type = j;                    
+                    if (typeof this.config.styles[j] !== "undefined") {
+                        //是自定义styleid
+                        if (this.config.styles[j].hasOwnProperty('base')) //这是基本类型
+                            type = type + ":" + this.config.styles[j]['base'];
+                        else
+                            console.log("this.config.styles[j]:"+j)
+                    }
+                    //同类型的样式，进行覆盖合并
+                    if (styles.hasOwnProperty(type)) {
+                        let obj = {};
+                        deepMerge(obj, styles[type]);
+                        deepMerge(obj, style);
+                        styles[type] = obj;
+                    } else
+                        styles[type] = style;
+                    //在更新时只需要修改最新样式即可，所以这里记录的是最新样式
+                    if (!ustyles.hasOwnProperty(type))
+                        ustyles[type] = {}
+                    //生成更新样式对象
+                    MakeUpdate(ustyles[type], style, "");
+                }
+            }
+        } 
+        
+        //console.log("ustyles[type]:"+JSON.stringify(ustyles))
+        //对合并后样式生成dat.gui    
+        for (let type in styles) {    
+            let style = styles[type];
+            //对每个类型，生成子目录
+            let subselection = selection.addFolder(type);
+            let text = new FizzyData(style, "");
+            for (let att in text) {
+                let obj = null;
+                if (att.indexOf('color') !== -1 || att.indexOf('fill') !== -1)
+                    obj = subselection.addColor(text, att);
+                else 
+                    obj = subselection.add(text, att);
+                //响应修改
+                obj.onChange(function(value) {
+                    let att = this.property;//样式名称
+                    let type = this.domElement.parentNode.parentNode.parentNode.children[0].innerText;//所在类型
+                    if (typeof value === 'string') {//转成对象
+                        try {
+                            value = JSON.parse(value);
+                        } catch(e) {
+                        }
+                    }
+                    
+                    if (typeof value === 'string' && value.substr(0, 1) === "#") {//转换16进制字符串
+                        let new_value = [parseInt(value.substr(1, 2),16), parseInt(value.substr(3, 2),16), parseInt(value.substr(5, 2),16)];
+                        value = new_value;
+                    }
+                    else if (typeof value === 'string' && value.indexOf('rgb(') === 0) {//转换rgb字符串
+                        var new_value = value.substr(4, value.length - 5).split(',');
+                        for (var j = 0; j < 3; j ++) 
+                            new_value[j] = parseInt(new_value[j]);
+                        value = new_value;
+                    }
+                    else if (typeof value === 'string' && value.indexOf('rgba(') === 0) {//转换rgba字符串
+                        var new_value = value.substr(5, value.length - 6).split(',');
+                        for (var j = 0; j < 3; j ++) 
+                            new_value[j] = parseInt(new_value[j]);
+                        new_value[3] = parseFloat(new_value[3]);
+                        value = new_value;
+                    }
+                    
+                    let seps = att.split(':');
+                    let len = seps.length;
+                    let key = seps[len - 1];//最后一个才是真正样式名称
+                    let zoom = null;
+                    if (key.indexOf('_') !== -1) {//一定是带级别
+                        let keys = key.split('_');
+                        key = keys[0];
+                        zoom = parseInt(keys[1]);
+                    }
+                    //console.log("type:"+type)
+                    //console.log("att:"+att)
+                    //console.log("value:"+JSON.stringify(value))
+                    //console.log("ustyles[type][att][att]:"+ustyles[type][att][att])
+                    //console.log("ustyles[type][att][att]:"+JSON.stringify(scene.config.layers.landuse.draw.dots))
+                    if (key === 'color' || key === 'fill') {//更新颜色
+                        if (zoom !== null) {
+                            //console.log("ustyles[type][att][key]:"+JSON.stringify(ustyles[type][att][key]))
+                            for (let i in ustyles[type][att][key]) {
+                                if (ustyles[type][att][key][i][0] === zoom) {
+                                    //由于空间取值统一转为数组，这里也改为数组，不论原始是字符串还是数组
+                                    ustyles[type][att][key][i][1] = [];
+                                    for (let j = 0; j < 3; j ++) 
+                                        ustyles[type][att][key][i][1][j] = value[j] / 255.0;
+                                    if (value.length > 3)//如果是rgab
+                                        ustyles[type][att][key][i][1][3] = value[3];
+                                }
+                            }
+                        }
+                        else {
+                            ustyles[type][att][key] = [];
+                            for (let j = 0; j < 3; j ++)
+                                ustyles[type][att][key][j] = value[j] / 255.0;
+                            if (value.length > 3)
+                                ustyles[type][att][key][3] = value[3];
+                        }
+                    }
+                    else {//更新其他，除了颜色，其他直接用控件取值替换
+                        ustyles[type][att][key] = value;
+                    }
+                    //实时更新scene
+                    scene.rebuild();
+                    //console.log("ustyles[type]:"+JSON.stringify(ustyles['dots:polygons']['visible']))
+                    //console.log("ustyles[type]:"+JSON.stringify(scene.config.layers.landuse.pedestrian.draw.dots))
+                    //console.log("ustyles[type]:"+JSON.stringify(scene.config.layers.landuse.draw.dots))
+                });
+            }
+            //打开dat.gui
+            subselection.open();
+            selection.open();
+            
+            list.push(style);
+        }                    
+           
+        return list;
     }
 
     // Get active camera - for public API
@@ -1156,7 +1375,7 @@ export default class Scene {
 
         // Optionally rebuild geometry
         let done = rebuild ?
-            this.rebuild(Object.assign({ initial: load_event, new_generation: false, serialize_funcs, fade_in }, typeof rebuild === 'object' && rebuild)) :
+            this.rebuild(Object.assign({ new_generation: false, serialize_funcs, fade_in }, typeof rebuild === 'object' && rebuild)) :
             this.syncConfigToWorker({ serialize_funcs }); // rebuild() also syncs config
 
         // Finish by updating bounds and re-rendering
@@ -1239,9 +1458,7 @@ export default class Scene {
     // Fires event when rendered tile set or style changes
     updateViewComplete () {
         if ((this.render_count_changed || this.generation !== this.last_complete_generation) &&
-            !this.tile_manager.isLoadingVisibleTiles() &&
-            this.tile_manager.allVisibleTilesLabeled()) {
-            this.tile_manager.updateLabels();
+            !this.tile_manager.isLoadingVisibleTiles()) {
             this.last_complete_generation = this.generation;
             this.trigger('view_complete');
         }

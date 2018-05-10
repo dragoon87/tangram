@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>地图平移</title>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div style="position: absolute;bottom: 20px;right: 20px;font-size: 12px;padding: 10px;z-index: 1000;">
+        <input id="piexpan" type="button" style="background-color: #0D9BF2;color: #FFF;" value="平移像素值"/>
+        <input id="panto" type="button" style="background-color: #0D9BF2;color: #FFF;" value="地图中心点平移至"/>
+    </div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 16,
+            maxZoom: 20,
+            zoomSnap: 0,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        
+        L.DomEvent.on(document.getElementById('piexpan'), 'click', function() {
+            map.panBy([100, 100]);//平移像素值
+        });
+        L.DomEvent.on(document.getElementById('panto'), 'click', function() {
+            map.panTo([30.527, 114.34]);//地图中心点平移至
+        });
+    </script>
+  </body>
+
+</html>

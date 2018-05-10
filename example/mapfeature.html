@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>地图热点</title>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id="tip" style="z-index:1000;background-color: #fff;position: absolute;font-size: 12px;right: 10px;top: 20px;">鼠标点击热点试试</div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 16,
+            maxZoom: 20,
+            zoomSnap: 0,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+            events: {
+                hover: onFeatureHover,      //feature悬浮回调
+				click: onFeatureClick       //feature点击回调
+            },
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        
+        function onFeatureHover (selection) {
+            //selection.feature.properties是属性
+            //selection.leaflet_event.latlng是经纬度
+            var feature = selection.feature;
+            if (feature != null && feature.properties != null)
+                map._container.style.cursor = 'pointer';
+            else
+                map._container.style.cursor = '';
+        }
+        var marker = null;
+        function onFeatureClick (selection) {
+            if (marker) {
+                map.removeLayer(marker);
+                marker = null;
+            }
+            var feature = selection.feature;
+            if (feature != null && feature.properties != null) {
+                var label = '';
+                label += `<b>key:</b> ${feature.tile.key}<br>`;
+                Object.keys(feature.layers).forEach(p => label += `<b>layer${p}:</b> ${feature.layers[p]}<br>`);
+                Object.keys(feature.properties).forEach(p => label += `<b>${p}:</b> ${feature.properties[p]}<br>`);
+                if (label != '') {
+                    var style = '<span class="labelInner">' + label + '</span>';
+                    //style += '<table><tr class="amap-info-tabs"><td class="tab selected"><i class="tab-icon icon-around"></i>在附近找</td><td class="tab"><i class="tab-icon icon-start"></i>这里出发</td><td class="tab"><i class="tab-icon icon-end"></i>到这里去</td></tr></table><table cellpadding="0"><tr><td class="input-label"></td><td><div class="keyword-input"><input class="keyword" type="text"></div></td><td><div class="search-button">搜索</div><div class="nav-button hide"><span class="nav-icon nav-drive">驾车</span><span class="nav-icon nav-bus">公交</span><span class="nav-icon nav-walk">步行</span></div></td></tr></table>'
+                    marker = L.marker(selection.leaflet_event.latlng,
+                        {draggable: true,        // 使图标可拖拽
+                        title: 'Text',           // 添加一个标题
+                        opacity: 0}            // 设置透明度
+                        )
+                        .addTo(map)
+                        .bindPopup(style)
+                        .openPopup();
+                }
+            }
+            
+            if (marker != null) {
+                L.DomEvent.on(document.getElementsByClassName("leaflet-popup-close-button")[0], 'click', function (e) {
+                    map.removeLayer(marker);
+                    marker = null;
+                });
+            }
+        }
+    </script>
+  </body>
+
+</html>

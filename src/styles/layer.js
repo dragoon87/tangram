@@ -44,9 +44,28 @@ export function mergeTrees(matchingTrees, group) {
     let draw = {
         visible: true, // visible by default
     };
+	//daibin,这里的方案是深度遍历，以最深的覆盖前一级的，同时用字符串排序导致样式顺序无效
+    //改为顺序覆盖，同时对重复layername不进行覆盖（父节点重复覆盖会有问题）
+    let layer_names = [];
+    for (var i = 0; i < matchingTrees.length; i ++) {
+        draws = matchingTrees[i].map(function (tree) {
+            if (tree && tree[group]) {
+                if (layer_names.indexOf(tree[group].layer_name) === -1)
+                    layer_names.push(tree[group].layer_name);
+                else
+                    return null;
+            }
+            return tree && tree[group];
+        });
+        if (draws.length === 0) {
+            continue;
+        }
+        mergeObjects(draw, ...draws);
+        delete draw.layer_name;
+    }
 
     // Iterate trees in parallel
-    for (let x=0; x < treeDepth; x++) {
+    /*for (let x=0; x < treeDepth; x++) {
         // Pull out the requested draw group, for each tree, at this depth (avoiding duplicates at the same level in tree)
         draws = [];
         matchingTrees.forEach(tree => {
@@ -68,7 +87,7 @@ export function mergeTrees(matchingTrees, group) {
         // Remove layer names, they were only used transiently to sort and calculate final layer
         // (final merged names will not be accurate since only one tree can win)
         delete draw.layer_name;
-    }
+    }*/
 
     // Short-circuit if not visible
     if (draw.visible === false) {

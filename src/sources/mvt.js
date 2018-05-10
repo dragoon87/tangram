@@ -2,7 +2,7 @@ import DataSource, {NetworkTileSource} from './data_source';
 import Geo from '../geo';
 
 import Pbf from 'pbf';
-import {VectorTile, VectorTileFeature} from '@mapbox/vector-tile';
+import {VectorTile, VectorTileFeature} from 'vector-tile';
 
 /**
  Mapbox Vector Tile format

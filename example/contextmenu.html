@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <link rel="stylesheet" href="../dist/leaflet.contextmenu.css" />
+    <title>右键菜单</title>
+    
+    <style>
+        .marker {
+            color: #ff6600;
+            padding: 4px 10px;
+            border: 1px solid #fff;
+            white-space: nowrap;
+            font-size: 12px;
+            font-family: "";
+            background-color: #0066ff;
+        }
+        .button-group {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            padding: 10px;
+            z-index: 1000;
+        }
+        .button-group .button {
+            height: 28px;
+            line-height: 28px;
+            background-color: #0D9BF2;
+            color: #FFF;
+            border: 0;
+            outline: none;
+            padding-left: 5px;
+            padding-right: 5px;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            cursor: pointer;
+        }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div class="button-group">
+    <input type="button" class="button" value="重新布局" id="reset"/>
+    </div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script src="../dist/leaflet.contextmenu.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 16,
+            maxZoom: 20,
+            zoomSnap: 0,
+            contextmenu: true,      //显示右键菜单
+            contextmenuWidth: 140,  //菜单宽度
+            contextmenuItems: [{    //初始化时加入菜单
+                text: '添加标记',
+                callback: addMarker
+            }, {
+                text: '以此为中心',
+                callback: centerMap
+            }, '-', {
+                text: '放大',
+                icon: 'images/zoom-in.png',
+                callback: zoomIn
+            }, {
+                text: '缩小',
+                icon: 'images/zoom-out.png',
+                callback: zoomOut
+            }]
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        //添加标记
+        function addMarker (e) {
+            L.marker(e.latlng, {
+                contextmenu: true,
+                contextmenuItems: [{
+                    text: 'Marker item',
+                    index: 0
+                }, {
+                    separator: true,
+                    index: 1
+                }],
+                contextmenuInheritItems: false  //不显示map的菜单，默认是true
+            }).addTo(map);
+        }
+        //以此为中心
+        function centerMap (e) {
+            map.panTo(e.latlng);
+        }
+        //放大
+        function zoomIn (e) {
+            map.zoomIn();
+        }
+        //缩小
+        function zoomOut (e) {
+            map.zoomOut();
+        }
+        //也可以手动调用创建菜单    
+        L.DomEvent.on(document.getElementById('reset'), 'click', function() {
+            //map.contextmenu.hide();
+            
+            map.contextmenu.removeItem(0);
+            map.contextmenu.removeAllItems();
+            map.contextmenu.addItem({
+                    text: '缩小',
+                    callback: zoomOut
+                });
+            map.contextmenu.addItem({
+                    text: '放大',
+                    callback: zoomIn
+                });
+            map.contextmenu.addItem({
+                    text: '以此为中心',
+                    callback: centerMap
+                });
+            map.contextmenu.addItem({
+                    text: '添加标记',
+                    callback: addMarker
+                });
+        });
+    </script>
+  </body>
+
+</html>

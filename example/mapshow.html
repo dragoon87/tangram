@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>地图显示</title>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        //定义一个map
+        var map = L.map('map', {
+            center: [30.527, 114.34],   //中心点[维度, 经度]
+            zoom: 16,                   //当前显示级别
+            maxZoom: 20,                //最大显示级别
+            zoomSnap: 0,                //缩放级别增量，默认是1
+        });
+        //定义一个矢量layer
+        var layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',   //样式文件
+            introspection: true,                                    //是否开启鼠标拾取feature，默认不开启
+            logLevel: 'debug',                                      //日志级别，测试时开debug
+        });
+        //图层加入map
+        layer.addTo(map);
+        //加入比例尺控件
+        L.control.scale().addTo(map);
+    </script>
+  </body>
+
+</html>

@@ -46,7 +46,8 @@ export default class CanvasText {
         return FontManager.loadFonts().then(() => {
             return Task.add({
                 type: 'textSizes',
-                run: this.processTextSizesTask.bind(this),
+                target: this,
+                method: 'processTextSizesTask',
                 texts,
                 tile_id,
                 cursor: {
@@ -129,7 +130,7 @@ export default class CanvasText {
 
     // Computes width and height of text based on current font style
     // Includes word wrapping, returns size info for whole text block and individual lines
-    textSize (style, text, {transform, text_wrap, max_lines, stroke_width = 0, supersample}) {
+    textSize (style, text, {transform, text_wrap, max_lines, stroke_width = 0, supersample, spacing}) {
         // Check cache first
         CanvasText.cache.text[style] = CanvasText.cache.text[style] || {};
         if (CanvasText.cache.text[style][text]) {
@@ -149,11 +150,15 @@ export default class CanvasText {
         let line_height = this.px_size + leading; // px_size already in device pixels
 
         // Parse string into series of lines if it exceeds the text wrapping value or contains line breaks
-        let multiline = MultiLine.parse(str, text_wrap, max_lines, line_height, ctx);
+        let multiline = MultiLine.parse(str, text_wrap, max_lines, line_height, spacing, ctx);
 
         // Final dimensions of text
         let height = multiline.height;
         let width = multiline.width;
+		if (width === 0)
+            width = line_height * 1;
+        if (height === 0)
+            height = line_height * 1;
         let lines = multiline.lines;
 
         let collision_size = [
@@ -180,12 +185,12 @@ export default class CanvasText {
     }
 
     // Draw multiple lines of text
-    drawTextMultiLine (lines, [x, y], size, { stroke, stroke_width = 0, transform, align, supersample }, type) {
+    drawTextMultiLine (lines, [x, y], size, { stroke, stroke_width = 0, transform, align, supersample, spacing }, type) {
         let line_height = size.line_height;
         let height = y;
         for (let line_num=0; line_num < lines.length; line_num++) {
             let line = lines[line_num];
-            this.drawTextLine(line, [x, height], size, { stroke, stroke_width, transform, align, supersample }, type);
+            this.drawTextLine(line, [x, height], size, { stroke, stroke_width, transform, align, supersample, spacing }, type);
             height += line_height;
         }
 
@@ -229,7 +234,7 @@ export default class CanvasText {
     }
 
     // Draw single line of text at specified location, adjusting for buffer and baseline
-    drawTextLine (line, [x, y], size, { stroke, stroke_width = 0, transform, align, supersample }, type) {
+    drawTextLine (line, [x, y], size, { stroke, stroke_width = 0, transform, align, supersample, spacing }, type) {
         let dpr = Utils.device_pixel_ratio * supersample;
         align = align || 'center';
 
@@ -255,20 +260,55 @@ export default class CanvasText {
         // In the absence of better Canvas TextMetrics (not supported by browsers yet),
         // 0.75 buffer produces a better approximate vertical centering of text
         let ty = y + vertical_buffer * 0.75 + line_height;
-
+        
+        if (!line.new_line && str.length == 1 && align === 'center') {
+            if (ty < this.canvas.height / 2 && ty > this.canvas.height / 4)
+                ty = this.canvas.height / 2;
+            if (tx < this.canvas.width / 3 && tx > this.canvas.width / 6)
+                tx = this.canvas.width / 3;
+        }
+            
         // Draw stroke and fill separately for curved text. Offset stroke in texture atlas by shift.
         if (stroke && stroke_width > 0) {
             let shift = (type === 'curved') ? texture_size[0] : 0;
             this.context.strokeText(str, tx + shift, ty);
         }
-        this.context.fillText(str, tx, ty);
+        
+        x = tx;
+        y = ty;
+		let wAll = this.context.measureText(str).width;
+        do
+        {
+            //Remove the first character from the string
+            let char = str.substr(0, 1);
+            str = str.substr(1);
+            //Print the first character at position (X, Y) using fillText()
+            this.context.fillText(char, x, y);
+            //Measure wShorter, the width of the resulting shorter string using measureText().
+            let wShorter = 0;
+            if (str == "")
+                wShorter = 0;
+            else
+                wShorter = this.context.measureText(str).width;
+            //Subtract the width of the shorter string from the width of the entire string, giving the kerned width of the character, wChar = wAll - wShorter
+            let wChar = wAll - wShorter;
+            x += wChar + spacing;
+            wAll = wShorter;
+        } while (str != "");
+        //this.context.fillText(str, tx, ty);
     }
 
+	getFont (dpr, supersample) {
+        let ctx = this.context;
+        return {"font_css":ctx.font, "fill":ctx.fillStyle, "stroke":ctx.strokeStyle, "stroke_width":ctx.lineWidth / dpr, "px_size":this.px_size, "supersample":supersample};
+    }
+    
     rasterize (texts, textures, tile_id, texture_prefix, gl) {
         return Task.add({
             type: 'rasterizeLabels',
-            run: this.processRasterizeTask.bind(this),
-            cancel: this.cancelRasterizeTask.bind(this),
+            target: this,
+            method: 'processRasterizeTask',
+            cancel: 'cancelRasterizeTask',
             pause_factor: 2,         // pause 2 frames when task run past allowed time
             user_moving_view: false, // don't run task when user is moving view
             texts,
@@ -387,7 +427,8 @@ export default class CanvasText {
                                         else {
                                             let texture_position = cache.texture_position;
                                             let { size, lines } = this.textSize(style, word, text_settings);
-
+                                            if (words.length > 1)
+                                                Object.keys(lines).forEach(p => lines[p].new_line = true);
                                             this.drawTextMultiLine(lines, texture_position, size, text_settings, type);
 
                                             texcoord = Texture.getTexcoordsForSprite(
@@ -437,7 +478,8 @@ export default class CanvasText {
                                 stroke_width: text_settings.stroke_width,
                                 transform: text_settings.transform,
                                 supersample: text_settings.supersample,
-                                align: align
+                                align: align,
+								spacing: text_settings.spacing
                             });
 
                             text_info.align[align].texcoords = Texture.getTexcoordsForSprite(
@@ -812,7 +854,7 @@ function splitLabelText(text, rtl){
 // Private class to arrange text labels into multiple lines based on
 // "text wrap" and "max line" values
 class MultiLine {
-    constructor (context, max_lines = Infinity, text_wrap = Infinity) {
+    constructor (context, max_lines = Infinity, text_wrap = Infinity, spacing = 0) {
         this.width = 0;
         this.height = 0;
         this.lines = [];
@@ -820,22 +862,29 @@ class MultiLine {
         this.max_lines = max_lines;
         this.text_wrap = text_wrap;
         this.context = context;
+		this.spacing = spacing;
     }
 
-    createLine (line_height){
+    createLine (line_height, spacing, new_line){
         if (this.lines.length < this.max_lines){
-            return new Line(line_height, this.text_wrap);
+            return new Line(line_height, this.text_wrap, spacing, new_line);
         }
         else {
             return false;
         }
     }
 
-    push (line){
+    push (line, line_height, spacing, new_line){
         if (this.lines.length < this.max_lines){
             // measure line width
             let line_width = this.context.measureText(line.text).width;
             line.width = line_width;
+			
+			if (line_width === 0)
+            {
+                line_width = line_height;
+            }
+            line.width = line_width + spacing*(line.text.length - 1);
 
             if (line_width > this.width){
                 this.width = Math.ceil(line_width);
@@ -853,10 +902,12 @@ class MultiLine {
     }
 
     // pushes to the lines array and returns a new line if possible (false otherwise)
-    advance (line, line_height) {
-        let can_push = this.push(line);
+    advance (line, line_height, spacing) {
+        let can_push = this.push(line, line_height, spacing);
         if (can_push){
-            return this.createLine(line_height);
+            //记录下这个line是不是multiline的换行
+            this.lines[this.lines.length - 1].new_line = true;
+            return this.createLine(line_height, spacing, true);
         }
         else {
             return false;
@@ -875,16 +926,18 @@ class MultiLine {
         }
     }
 
-    finish (line){
+    finish (line, line_height, spacing){
         if (line){
-            this.push(line);
+            if (this.lines.length > 0)
+                line.new_line = true;
+            this.push(line, line_height, spacing);
         }
         else {
             this.addEllipsis();
         }
     }
 
-    static parse (str, text_wrap, max_lines, line_height, ctx) {
+    static parse (str, text_wrap, max_lines, line_height, spacing, ctx) {
         // Word wrapping
         // Line breaks can be caused by:
         //  - implicit line break when a maximum character threshold is exceeded per line (text_wrap)
@@ -897,7 +950,7 @@ class MultiLine {
             words = [str]; // no max line word wrapping (but new lines will still be in effect)
         }
 
-        let multiline = new MultiLine(ctx, max_lines, text_wrap);
+        let multiline = new MultiLine(ctx, max_lines, text_wrap, spacing);
         let line = multiline.createLine(line_height);
 
         // First iterate on space-break groups (will be one if max line length off), then iterate on line-break groups
@@ -922,7 +975,7 @@ class MultiLine {
                 // if adding current word would overflow, add a new line instead
                 // first word (i === 0) always appends
                 if (text_wrap && i > 0 && line.exceedsTextwrap(spaced_word)) {
-                    line = multiline.advance(line, line_height);
+                    line = multiline.advance(line, line_height, spacing);
                     if (!line){
                         break;
                     }
@@ -935,13 +988,13 @@ class MultiLine {
 
                 // if line breaks present, add new line (unless on last line)
                 if (n < breaks.length - 1) {
-                    line = multiline.advance(line, line_height);
+                    line = multiline.advance(line, line_height, spacing);
                     new_line = true;
                 }
             }
 
             if (i === words.length - 1){
-                multiline.finish(line);
+                multiline.finish(line, line_height, spacing);
             }
         }
         return multiline;
@@ -953,9 +1006,11 @@ MultiLine.ellipsis = '...';
 // A Private class used by MultiLine to contain the logic for a single line
 // including character count, width, height and text
 class Line {
-    constructor (height = 0, text_wrap = 0){
+    constructor (height = 0, text_wrap = 0, spacing = 0, new_line = false){
         this.chars = 0;
         this.text = '';
+		this.spacing = spacing;
+        this.new_line = new_line;
 
         this.height = Math.ceil(height);
         this.text_wrap = text_wrap;

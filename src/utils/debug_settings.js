@@ -13,9 +13,6 @@ export default debugSettings = {
     // suppress animaton of label snap to pixel grid
     suppress_label_snap_animation: false,
 
-    // show hidden labels for debugging
-    show_hidden_labels: false,
-
     // collect feature/geometry stats on styling layers
     layer_stats: false
 };

@@ -16,6 +16,16 @@ const vec3 = {
     }
 };
 
+// mat2
+
+import {default as mat2_create} from 'gl-mat2/create';
+import {default as mat2_rotate} from 'gl-mat2/rotate';
+
+const mat2 = {
+    create: mat2_create,
+    rotate: mat2_rotate
+};
+
 
 // mat3
 
@@ -30,6 +40,10 @@ const mat3 = {
 
 // mat4
 
+import {default as mat4_rotate} from 'gl-mat4/rotate';
+import {default as mat4_rotateX} from 'gl-mat4/rotateX';
+import {default as mat4_rotateY} from 'gl-mat4/rotateY';
+import {default as mat4_rotateZ} from 'gl-mat4/rotateZ';
 import {default as mat4_multiply} from 'gl-mat4/multiply';
 import {default as mat4_translate} from 'gl-mat4/translate';
 import {default as mat4_scale} from 'gl-mat4/scale';
@@ -39,6 +53,10 @@ import {default as mat4_identity} from 'gl-mat4/identity';
 import {default as mat4_copy} from 'gl-mat4/copy';
 
 const mat4 = {
+    rotate: mat4_rotate,
+    rotateX: mat4_rotateX,
+    rotateY: mat4_rotateY,
+    rotateZ: mat4_rotateZ,
     multiply: mat4_multiply,
     translate: mat4_translate,
     scale: mat4_scale,
@@ -49,4 +67,4 @@ const mat4 = {
 };
 
 
-export {vec3, mat3, mat4};
+export {vec3, mat2, mat3, mat4};

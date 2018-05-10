@@ -263,6 +263,7 @@ export var Style = {
 
             // Calculate order
             style.order = this.parseOrder(draw.order, context);
+			style.blend_order = this.parseOrder(draw.blend_order, context);
             if (style.order == null && this.blend !== 'overlay') {
                 let msg = `Layer '${draw.layers.join(', ')}', draw group '${draw.group}': `;
                 msg += `'order' parameter is required unless blend mode is 'overlay'`;

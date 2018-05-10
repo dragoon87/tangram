@@ -1,7 +1,6 @@
 // Manage rendering for primitives
 import ShaderProgram from './shader_program';
 import VertexArrayObject from './vao';
-import Texture from './texture';
 
 // A single mesh/VBO, described by a vertex layout, that can be drawn with one or more programs
 export default class VBOMesh  {
@@ -19,7 +18,6 @@ export default class VBOMesh  {
         this.data_usage = options.data_usage || this.gl.STATIC_DRAW;
         this.vertices_per_geometry = 3; // TODO: support lines, strip, fan, etc.
         this.uniforms = options.uniforms;
-        this.textures = options.textures; // any textures owned by this mesh
         this.retain = options.retain || false; // whether to retain mesh data in CPU after uploading to GPU
         this.created_at = +new Date();
         this.fade_in_time = options.fade_in_time || 0; // optional time to fade in mesh
@@ -43,7 +41,8 @@ export default class VBOMesh  {
             this.geometry_count = this.vertex_count / this.vertices_per_geometry;
         }
 
-        this.upload();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertex_data, this.data_usage);
 
         if (!this.retain) {
             delete this.vertex_data;
@@ -107,12 +106,6 @@ export default class VBOMesh  {
         }
     }
 
-    // Upload buffer data to GPU
-    upload() {
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertex_data, this.data_usage);
-    }
-
     destroy() {
         if (!this.valid) {
             return false;
@@ -122,6 +115,7 @@ export default class VBOMesh  {
         for (let v in this.vaos) {
             VertexArrayObject.destroy(this.gl, this.vaos[v]);
         }
+
 
         this.gl.deleteBuffer(this.vertex_buffer);
         this.vertex_buffer = null;
@@ -133,10 +127,6 @@ export default class VBOMesh  {
 
         delete this.vertex_data;
         delete this.element_data;
-
-        if (this.textures) {
-            this.textures.forEach(t => Texture.release(t));
-        }
 
         return true;
     }

@@ -286,6 +286,35 @@ Utils.toCSSColor = function (color) {
     return `rgba(${color.map((c, i) => (i < 3 && Math.round(c * 255)) || c).join(', ')})`;
 };
 
+Utils.pointInTile2 = function (min, max, anchor) {
+    if (anchor == 'right' && min[0] >=0 && max[0] >=0 && min[0] < Geo.tile_scale && max[0] < Geo.tile_scale)
+        return true;
+    else if (anchor == 'left' && min[0] >=0 && max[0] >=0 && min[0] < Geo.tile_scale && max[0] < Geo.tile_scale)
+        return true;
+    else if (anchor == 'bottom' && min[1] > -Geo.tile_scale && max[1] > -Geo.tile_scale && min[1] <= 0 && max[1] <= 0)
+        return true;
+    else if (anchor == 'top' && min[1] > -Geo.tile_scale && max[1] > -Geo.tile_scale && min[1] <= 0 && max[1] <= 0)
+        return true;
+    return false;
+};
+
 Utils.pointInTile = function (point) {
     return point[0] >= 0 && point[1] > -Geo.tile_scale && point[0] < Geo.tile_scale && point[1] <= 0;
+};
+
+Utils.wrap = function (n, min, max) {
+    const d = max - min;
+    const w = ((n - min) % d + d) % d + min;
+    return (w === min) ? max : w;
+};
+
+Utils.clamp = function (n, min, max) {
+    return Math.min(max, Math.max(min, n));
+};
+
+Utils.bindAll = function(fns, context) {
+    fns.forEach((fn) => {
+        if (!context[fn]) { return; }
+        context[fn] = context[fn].bind(context);
+    });
 };

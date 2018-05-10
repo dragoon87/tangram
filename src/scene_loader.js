@@ -106,16 +106,8 @@ export default SceneLoader = {
     normalizeDataSource(source, bundle) {
         source.url = bundle.urlFor(source.url);
 
-        if (source.scripts) {
-            // convert legacy array-style scripts to object format (script URL is used as both key and value)
-            if (Array.isArray(source.scripts)) {
-                source.scripts = source.scripts.reduce((val, cur) => { val[cur] = cur; return val; }, {});
-            }
-
-            // resolve URLs for external scripts
-            for (let s in source.scripts) {
-                source.scripts[s] = bundle.urlFor(source.scripts[s]);
-            }
+        if (Array.isArray(source.scripts)) {
+            source.scripts = source.scripts.map(url => bundle.urlFor(url));
         }
 
         return source;

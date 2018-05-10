@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <link rel="stylesheet" href="../dist/leaflet-geocoder-mapzen.css" />
+    <title>鼠标拾取地图坐标</title>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id="myPageTop" style="z-index:1000;position: absolute;top: 5px;right: 10px;background: #fff none repeat scroll 0 0;border: 1px solid #ccc;margin: 10px auto;padding: 6px;">
+        <table>
+            <tr>
+                <td>
+                    <label>按关键字搜索：</label>
+                </td>
+                <td class="column2">
+                    <label>左击获取经纬度：</label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="text" placeholder="请输入关键字进行搜索" id="tipinput">
+                </td>
+                <td class="column2">
+                    <input type="text" readonly="true" id="lnglat">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script src="../dist/leaflet-geocoder-mapzen.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 16,
+            maxZoom: 20,
+            zoomSnap: 0,
+            trackResize: true,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        //map监控鼠标点击事件
+        map.on('click', function(e){
+            document.getElementById('lnglat').value = e.latlng.toString();
+        });
+        
+        var geocoder = L.control.geocoder('', {
+            input: 'tipinput',
+            url: 'https://192.168.99.67:3101/v1',
+            layers: ['pois'],
+            bounds: L.latLngBounds(L.latLng(29.9766, 113.704), L.latLng(31.3527, 115.082)),
+            placeholder: 'Search within wuhan',
+            markers: false
+        }).addTo(map).focus();
+    </script>
+  </body>
+
+</html>

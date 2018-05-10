@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>设置地图状态</title>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div style="background-color: #0d9bf2;position: absolute;bottom: 20px;right: 20px;font-size: 12px;padding: 10px;z-index: 1000;">
+        <input type="checkbox" onclick="toggleDrag(this)" style="background-color: #0D9BF2;color: #FFF;"/>允许拖拽
+        <input type="checkbox" onclick="toggleKeyboard(this)" style="background-color: #0D9BF2;color: #FFF;"/>允许键盘平移
+        <input type="checkbox" onclick="toggleDoubleClickZoom(this)" style="background-color: #0D9BF2;color: #FFF;"/>允许双击放大
+    </div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 16,
+            maxZoom: 20,
+            zoomSnap: 0,
+            dragging: false,            //地图拖动，默认true
+            keyboard: false,            //键盘控制地图移动，默认true
+            doubleClickZoom: false      //鼠标双击放大，默认true
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        
+        function toggleDrag(checkbox) {
+            //map开关是否可以拖到
+            if (checkbox.checked) {
+                map.dragging.enable();
+            } else {
+                map.dragging.disable();
+            }
+        }
+        function toggleKeyboard(checkbox) {
+            //map开关是否键盘可以移动map
+            if (checkbox.checked) {
+                map.keyboard.enable();
+            } else {
+                map.keyboard.disable();
+            }
+        }
+        function toggleDoubleClickZoom(checkbox) {
+            //map开关是否鼠标双击可以放大map
+            if (checkbox.checked) {
+                map.doubleClickZoom.enable();
+            } else {
+                map.doubleClickZoom.disable();
+            }
+        }
+    </script>
+  </body>
+
+</html>

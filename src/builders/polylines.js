@@ -46,7 +46,7 @@ export function buildPolylines (lines, width, vertex_data, vertex_template,
         miter_limit,
         offset
     }) {
-    var cap_type = cap ? CAP_TYPE[cap] : CAP_TYPE.butt;
+    var cap_type = cap ? CAP_TYPE[cap] : CAP_TYPE.round;
     var join_type = join ? JOIN_TYPE[join] : JOIN_TYPE.miter;
 
     // Configure miter limit
@@ -73,7 +73,7 @@ export function buildPolylines (lines, width, vertex_data, vertex_template,
         cap_type,
         vertex_data,
         vertex_template,
-        half_width: width / 2,
+        half_width: width / 3,
         extrude_index,
         offset_index,
         v_scale,
@@ -180,6 +180,12 @@ function buildPolyline(line, context){
                 v += 0.5 * v_scale * context.texcoord_width;
             }
         }
+		else
+        {
+            addCap(coordCurr, v, normNext, CAP_TYPE.round, true, context);
+            if (has_texcoord)
+                v += 0.5 * v_scale * context.texcoord_width;
+        }
 
         // Add first pair of points for the line strip
         addVertex(coordCurr, normNext, normNext, 1, v, context, 1);
@@ -252,6 +258,10 @@ function buildPolyline(line, context){
         // If line ends at edge, don't add a cap
         if (!isCoordOutsideTile(coordCurr)) {
             addCap(coordCurr, v, normPrev, cap_type, false, context);
+        }
+		else
+        {
+            addCap(coordCurr, v, normPrev, CAP_TYPE.round, false, context);
         }
     }
 

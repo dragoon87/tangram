@@ -1,6 +1,6 @@
 {
   "name": "tangram",
-  "version": "0.15.1",
+  "version": "0.14.2",
   "description": "WebGL Maps for Vector Tiles",
   "repository": {
     "type": "git",
@@ -45,7 +45,8 @@
     "dist/tangram.min.js"
   ],
   "author": {
-    "name": "Tangram contributors"
+    "name": "Mapzen",
+    "email": "tangram@mapzen.com"
   },
   "contributors": [
     {
@@ -112,7 +113,7 @@
     "karma-chrome-launcher": "2.0.0",
     "karma-mocha": "0.1.9",
     "karma-mocha-reporter": "1.0.0",
-    "karma-sauce-launcher": "tangrams/karma-sauce-launcher#firefox-profiles3",
+    "karma-sauce-launcher": "tangrams/karma-sauce-launcher#firefox-profiles2",
     "karma-sinon": "1.0.4",
     "mapstraction": "1.0.1",
     "mocha": "1.21.4",

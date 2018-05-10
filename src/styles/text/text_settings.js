@@ -9,6 +9,9 @@ export default TextSettings = {
     // A key for grouping all labels of the same text style (e.g. same Canvas state, to minimize state changes)
     key (settings) {
         return [
+            settings.spacing,
+            settings.dash,
+            settings.angle,
             settings.style,
             settings.weight,
             settings.family,
@@ -25,6 +28,8 @@ export default TextSettings = {
     },
 
     defaults: {
+        spacing: 0,
+        angle: 0,
         style: 'normal',
         weight: null,
         size: '12px',
@@ -102,7 +107,24 @@ export default TextSettings = {
 
         // max_lines setting to truncate very long labels with an ellipsis
         style.max_lines = draw.max_lines || this.defaults.max_lines;
-
+        
+        if (typeof draw.angle === 'string') {
+            style.angle = feature.properties[draw.angle] * Math.PI / 180.0;
+        } else if (draw.angle instanceof Function) {
+            style.angle = draw.angle(context) * Math.PI / 180.0;
+        } else {
+            style.angle = draw.angle * Math.PI / 180.0 || this.defaults.angle;
+        }
+        
+        style.dash = draw.dash;
+        
+        if (draw.spacing instanceof Function) {
+            style.spacing = draw.spacing(context) || this.defaults.spacing;
+        }
+        else {
+            style.spacing = draw.spacing || this.defaults.spacing;
+        }
+        
         return style;
     },
 

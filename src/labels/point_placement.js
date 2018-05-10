@@ -77,21 +77,50 @@ function getPositionsAndAngles(line, min_length, options){
     if (length <= min_length) {
         return false;
     }
+    
+    if (options.dash === null)
+    {
+        let num_labels = Math.max(Math.floor(length / spacing), 1);
+        let remainder = length - (num_labels - 1) * spacing;
+        let positions = [];
+        let angles = [];
 
-    let num_labels = Math.max(Math.floor(length / spacing), 1);
-    let remainder = length - (num_labels - 1) * spacing;
-    let positions = [];
-    let angles = [];
-
-    let distance = 0.5 * remainder;
-    for (let i = 0; i < num_labels; i++){
-        let {position, angle} = interpolateLine(line, distance, min_length, options);
-        if (position != null && angle != null) {
-            positions.push(position);
-            angles.push(angle);
+        let distance = 0.5 * remainder;
+        for (let i = 0; i < num_labels; i++){
+            let {position, angle} = interpolateLine(line, distance, min_length, options);
+            if (position != null && angle != null) {
+                positions.push(position);
+                angles.push(angle);
+            }
+            distance += spacing;
         }
-        distance += spacing;
     }
+    else
+    {
+        let dash_len = options.dash.length;
+        let distance = 0;
+        let num_labels = 0;
+        while (distance < length)
+        {
+            let pos = num_labels % dash_len;
+            let segment = options.dash[pos];
+            distance += segment;
+            if (segment == 0 || pos % 2 == 1)
+            {
+                num_labels ++;
+                continue;
+            }
+            
+            let {position, angle} = interpolateLine(line, distance, min_length, options);
+
+            if (position != null && angle != null) {
+                positions.push(position);
+                angles.push(angle);
+            }
+            
+            num_labels ++;
+        }
+    }    
 
     return {positions, angles};
 }

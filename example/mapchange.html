@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>改变地图中心点缩放级别</title>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div style="position: absolute;bottom: 20px;right: 20px;font-size: 12px;padding: 10px;z-index: 1000;">
+        <input id="setview" type="button" style="background-color: #0D9BF2;color: #FFF;" value="改变地图中心点缩放级别"/>
+        <input id="flyto" type="button" style="background-color: #0D9BF2;color: #FFF;" value="改变地图中心点缩放级别带动画"/>
+    </div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 16,
+            maxZoom: 20,
+            zoomSnap: 0,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        //监控dom元素的点击事件
+        L.DomEvent.on(document.getElementById('setview'), 'click', function() {
+            //设置缩放级别和中心点
+            map.setView([30.427, 114.24], 14);
+            //在新中心点添加 marker 
+            var marker = new L.Marker([30.427, 114.24]).addTo(map);
+        });
+        L.DomEvent.on(document.getElementById('flyto'), 'click', function() {
+            //设置缩放级别和中心点，以动画效果
+            map.flyTo([30.627, 114.44], 13);
+            //在新中心点添加 marker 
+            var marker = new L.Marker([30.427, 114.24]).addTo(map);
+        });
+    </script>
+  </body>
+
+</html>

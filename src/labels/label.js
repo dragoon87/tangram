@@ -7,33 +7,20 @@ import OBB from '../utils/obb';
 export default class Label {
 
     constructor (size, layout = {}) {
-        this.id = Label.nextLabelId();
-        this.type = ''; // set by subclass
+        this.icon = false;
+        this.priority = 5000;
         this.size = size;
         this.layout = layout;
+        this.angle = layout.angle;
+        this.spacing = layout.spacing;
         this.position = null;
         this.anchor = Array.isArray(this.layout.anchor) ? this.layout.anchor[0] : this.layout.anchor; // initial anchor
         this.placed = null;
         this.offset = layout.offset;
-        this.unit_scale = this.layout.units_per_pixel;
         this.aabb = null;
         this.obb = null;
         this.align = 'center';
         this.throw_away = false;    // if label does not fit (exceeds tile boundary, etc) this boolean will be true
-    }
-
-    // Minimal representation of label
-    toJSON () {
-        return {
-            id: this.id,
-            type: this.type,
-            obb: this.obb.toJSON(),
-            position: this.position,
-            size: this.size,
-            offset: this.offset,
-            breach: this.breach,
-            layout: textLayoutToJSON(this.layout)
-        };
     }
 
     update () {
@@ -45,12 +32,16 @@ export default class Label {
         let intersect = false;
         let aabbs = bboxes.aabb;
         let obbs = bboxes.obb;
-
+        let icons = bboxes.icons;
+        let priorities = bboxes.priorities;
+            
         // Broad phase
         if (aabbs.length > 0) {
             boxIntersectsList(this.aabb, aabbs, (j) => {
                 // log('trace', 'collision: broad phase collide', this.layout.id, this, this.aabb, aabbs[j]);
-
+                //检查一下优先级是否正确
+                if (this.priority && priorities[j] && this.priority < priorities[j])
+                    return;
                 // Skip if colliding with excluded label
                 if (exclude && aabbs[j] === exclude.aabb) {
                     // log('trace', 'collision: skipping due to explicit exclusion', this, exclude);
@@ -75,11 +66,21 @@ export default class Label {
         return intersect;
     }
 
+    // Add this label's bounding box to the provided set
+    add (bboxes) {
+        this.placed = true;
+        bboxes.aabb.push(this.aabb);
+        bboxes.obb.push(this.obb);
+        bboxes.icons.push(this.icon);
+        bboxes.priorities.push(this.priority);
+    }
+
     // checks whether the label is within the tile boundaries
     inTileBounds () {
         let min = [ this.aabb[0], this.aabb[1] ];
         let max = [ this.aabb[2], this.aabb[3] ];
-
+        if (Utils.pointInTile(min, max, this.anchor))
+            return true;
         if (!Utils.pointInTile(min) || !Utils.pointInTile(max)) {
             return false;
         }
@@ -97,41 +98,4 @@ export default class Label {
     }
 }
 
-// Generic label placement function, adds a label's bounding boxes to the currently placed set
-//  Supports single or multiple collision boxes
-Label.add = function (label, bboxes) {
-    label.placed = true;
-
-    if (label.aabb) {
-        bboxes.aabb.push(label.aabb);
-        bboxes.obb.push(label.obb);
-    }
-
-    if (label.aabbs) {
-        for (let i = 0; i < label.aabbs.length; i++) {
-            bboxes.aabb.push(label.aabbs[i]);
-            bboxes.obb.push(label.obbs[i]);
-        }
-    }
-};
-
-Label.id = 0;
-Label.id_prefix = ''; // id prefix scoped to worker thread
-
-Label.nextLabelId = function () {
-    return Label.id_prefix + '/' + (Label.id++);
-};
-
 Label.epsilon = 0.9999; // tolerance around collision boxes, prevent perfectly adjacent objects from colliding
-
-// Minimal representation of text layout, sent to main thread for label collisions
-export function textLayoutToJSON (layout) {
-    return {
-        priority: layout.priority,
-        collide: layout.collide,
-        repeat_distance: layout.repeat_distance,
-        repeat_group: layout.repeat_group,
-        buffer: layout.buffer,
-        italic: layout.italic // affects bounding box size
-    };
-}

@@ -232,10 +232,107 @@ Object.assign(TextStyle, {
 
         return labels;
     },
+	getAngle(p, q) {
+        let angle = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+        return angle === 'auto' ? Math.atan2(q[0] - p[0], q[1] - p[1]) : angle;
+    },
+        
+    getLineLength(line) {
+        let distance = 0;
+        for (let i = 0; i < line.length - 1; i ++) {
+            distance += this.norm(line[i], line[i + 1]);
+        }
+        return distance;
+    },
 
+    norm(p, q) {
+        return Math.sqrt(Math.pow(p[0] - q[0], 2) + Math.pow(p[1] - q[1], 2));
+    },
     // Build one or more labels for a line geometry
     buildLineLabels (line, size, layout, total_size) {
         let labels = [];
+		if (layout.dash && layout.dash !== null && typeof layout.dash !== "undefined")
+        {
+            let tmp_length = 0;
+            let total_pos = 0;
+            let dash_count = layout.dash.length;
+            let length = this.getLineLength(line);
+            let points = [];
+            while (tmp_length < length)
+            {
+                let cur_pos = total_pos % dash_count;
+                if (tmp_length > 0 && cur_pos % 2 === 0)
+                {
+                    let distance = 0;
+                    let point = null;
+                    let angle = 'auto';
+                    //console.log("tmp_length:" + tmp_length);
+                    for (let i = 0; i < line.length - 1; i ++)
+                    {
+                        let tmp_distance = this.norm(line[i], line[i + 1]);
+                        if (distance + tmp_distance < tmp_length)
+                        {
+                            distance += tmp_distance;
+                            continue;
+                        }
+                        if (points.indexOf(i) > -1)
+                            console.log("test dup :" + i);
+                        else
+                            points.push(i);
+                        //angle = Math.atan((line[i + 1][1] - line[i][1]) / (line[i + 1][0] - line[i][0]));
+                        angle = this.getAngle(line[i], line[i + 1], angle);
+                        //console.log("tmp_distance :" + tmp_distance);
+                        //console.log("tmp_length - distance :" + (Math.cos(angle) * (tmp_length - distance)));
+                        point = [ line[i][0] + Math.round(Math.sin(angle) * (tmp_length - distance)), line[i][1] + Math.round(Math.cos(angle) * (tmp_length - distance)) ];
+                        //console.log(line[i] + "---" + point + "---" + line[i + 1]);
+                        let dy = Math.round(Math.cos(angle) * layout.dash[cur_pos + 1] * 5 * layout.units_per_pixel);
+                        let dx = Math.round(Math.sin(angle) * layout.dash[cur_pos + 1] * 5 * layout.units_per_pixel);
+                        let p1 = [ point[0] - dx, point[1] - dy ];
+                        let p2 = [ point[0] + dx, point[1] + dy ];
+                        //console.log(p1 + "---" + point + "---" + p2);
+                        let label = _label_line2.default.create(size, total_size, [ p1, point, p2 ], layout);
+                        if (label) {
+                            //label.position = point;
+                            //label.angle = angle;
+                            labels.push(label);
+                        }
+                    
+                        break;
+                    }
+                    //var label = _label_line2.default.create(size, total_size, line_segment, layout);
+                    //layout.angle = angle;
+                    //console.log("angle:" + angle);
+                    //console.log("point:" + line[1]);
+                }
+                
+                tmp_length += layout.dash[cur_pos] * 5 * layout.units_per_pixel;
+                total_pos ++;
+            }
+            
+            /*console.log("points:" + points);
+            for (var j = 0; j < points.length; j ++)
+            //if (points.length > 0)
+            {
+                //var j = parseInt(points.length / 2);
+                point = null;
+                point = line[points[j]];
+                if (point === null)
+                    console.log("line:" + line);
+                else
+                {
+                    var label = _label_line2.default.create(size, total_size, [ line[points[j]], line[points[j] + 1] ], layout);
+                    if (label) {
+                        labels.push(label);
+                    }
+                    /*console.log("point:" + point + "---size:" + size + "---layout" + layout);
+                    var pLabel = new _label_point2.default(point, size, layout);
+                    if (pLabel)
+                        labels.push(pLabel);
+                }
+            }*/
+
+            return labels;
+        }
         let subdiv = Math.min(layout.subdiv, line.length - 1);
         if (subdiv > 1) {
             // Create multiple labels for line, with each allotted a range of segments

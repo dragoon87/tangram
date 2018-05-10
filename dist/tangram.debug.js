@@ -1,640 +1,4 @@
-(function(){var target = (typeof self === "undefined" || !(typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope)) && ((typeof module !== "undefined" && module.exports) || (typeof window !== "undefined"));if (target) {var __worker_src__ = arguments.callee.toString();var __worker_src_origin__ = typeof document !== "undefined" && document.currentScript ? document.currentScript.src : '';var __worker_src_map__ = 'tangram.debug.js.map';};(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Tangram = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-'use strict';
-
-module.exports = Point;
-
-/**
- * A standalone point geometry with useful accessor, comparison, and
- * modification methods.
- *
- * @class Point
- * @param {Number} x the x-coordinate. this could be longitude or screen
- * pixels, or any other sort of unit.
- * @param {Number} y the y-coordinate. this could be latitude or screen
- * pixels, or any other sort of unit.
- * @example
- * var point = new Point(-77, 38);
- */
-function Point(x, y) {
-    this.x = x;
-    this.y = y;
-}
-
-Point.prototype = {
-
-    /**
-     * Clone this point, returning a new point that can be modified
-     * without affecting the old one.
-     * @return {Point} the clone
-     */
-    clone: function() { return new Point(this.x, this.y); },
-
-    /**
-     * Add this point's x & y coordinates to another point,
-     * yielding a new point.
-     * @param {Point} p the other point
-     * @return {Point} output point
-     */
-    add:     function(p) { return this.clone()._add(p); },
-
-    /**
-     * Subtract this point's x & y coordinates to from point,
-     * yielding a new point.
-     * @param {Point} p the other point
-     * @return {Point} output point
-     */
-    sub:     function(p) { return this.clone()._sub(p); },
-
-    /**
-     * Multiply this point's x & y coordinates by point,
-     * yielding a new point.
-     * @param {Point} p the other point
-     * @return {Point} output point
-     */
-    multByPoint:    function(p) { return this.clone()._multByPoint(p); },
-
-    /**
-     * Divide this point's x & y coordinates by point,
-     * yielding a new point.
-     * @param {Point} p the other point
-     * @return {Point} output point
-     */
-    divByPoint:     function(p) { return this.clone()._divByPoint(p); },
-
-    /**
-     * Multiply this point's x & y coordinates by a factor,
-     * yielding a new point.
-     * @param {Point} k factor
-     * @return {Point} output point
-     */
-    mult:    function(k) { return this.clone()._mult(k); },
-
-    /**
-     * Divide this point's x & y coordinates by a factor,
-     * yielding a new point.
-     * @param {Point} k factor
-     * @return {Point} output point
-     */
-    div:     function(k) { return this.clone()._div(k); },
-
-    /**
-     * Rotate this point around the 0, 0 origin by an angle a,
-     * given in radians
-     * @param {Number} a angle to rotate around, in radians
-     * @return {Point} output point
-     */
-    rotate:  function(a) { return this.clone()._rotate(a); },
-
-    /**
-     * Rotate this point around p point by an angle a,
-     * given in radians
-     * @param {Number} a angle to rotate around, in radians
-     * @param {Point} p Point to rotate around
-     * @return {Point} output point
-     */
-    rotateAround:  function(a,p) { return this.clone()._rotateAround(a,p); },
-
-    /**
-     * Multiply this point by a 4x1 transformation matrix
-     * @param {Array<Number>} m transformation matrix
-     * @return {Point} output point
-     */
-    matMult: function(m) { return this.clone()._matMult(m); },
-
-    /**
-     * Calculate this point but as a unit vector from 0, 0, meaning
-     * that the distance from the resulting point to the 0, 0
-     * coordinate will be equal to 1 and the angle from the resulting
-     * point to the 0, 0 coordinate will be the same as before.
-     * @return {Point} unit vector point
-     */
-    unit:    function() { return this.clone()._unit(); },
-
-    /**
-     * Compute a perpendicular point, where the new y coordinate
-     * is the old x coordinate and the new x coordinate is the old y
-     * coordinate multiplied by -1
-     * @return {Point} perpendicular point
-     */
-    perp:    function() { return this.clone()._perp(); },
-
-    /**
-     * Return a version of this point with the x & y coordinates
-     * rounded to integers.
-     * @return {Point} rounded point
-     */
-    round:   function() { return this.clone()._round(); },
-
-    /**
-     * Return the magitude of this point: this is the Euclidean
-     * distance from the 0, 0 coordinate to this point's x and y
-     * coordinates.
-     * @return {Number} magnitude
-     */
-    mag: function() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-    },
-
-    /**
-     * Judge whether this point is equal to another point, returning
-     * true or false.
-     * @param {Point} other the other point
-     * @return {boolean} whether the points are equal
-     */
-    equals: function(other) {
-        return this.x === other.x &&
-               this.y === other.y;
-    },
-
-    /**
-     * Calculate the distance from this point to another point
-     * @param {Point} p the other point
-     * @return {Number} distance
-     */
-    dist: function(p) {
-        return Math.sqrt(this.distSqr(p));
-    },
-
-    /**
-     * Calculate the distance from this point to another point,
-     * without the square root step. Useful if you're comparing
-     * relative distances.
-     * @param {Point} p the other point
-     * @return {Number} distance
-     */
-    distSqr: function(p) {
-        var dx = p.x - this.x,
-            dy = p.y - this.y;
-        return dx * dx + dy * dy;
-    },
-
-    /**
-     * Get the angle from the 0, 0 coordinate to this point, in radians
-     * coordinates.
-     * @return {Number} angle
-     */
-    angle: function() {
-        return Math.atan2(this.y, this.x);
-    },
-
-    /**
-     * Get the angle from this point to another point, in radians
-     * @param {Point} b the other point
-     * @return {Number} angle
-     */
-    angleTo: function(b) {
-        return Math.atan2(this.y - b.y, this.x - b.x);
-    },
-
-    /**
-     * Get the angle between this point and another point, in radians
-     * @param {Point} b the other point
-     * @return {Number} angle
-     */
-    angleWith: function(b) {
-        return this.angleWithSep(b.x, b.y);
-    },
-
-    /*
-     * Find the angle of the two vectors, solving the formula for
-     * the cross product a x b = |a||b|sin(θ) for θ.
-     * @param {Number} x the x-coordinate
-     * @param {Number} y the y-coordinate
-     * @return {Number} the angle in radians
-     */
-    angleWithSep: function(x, y) {
-        return Math.atan2(
-            this.x * y - this.y * x,
-            this.x * x + this.y * y);
-    },
-
-    _matMult: function(m) {
-        var x = m[0] * this.x + m[1] * this.y,
-            y = m[2] * this.x + m[3] * this.y;
-        this.x = x;
-        this.y = y;
-        return this;
-    },
-
-    _add: function(p) {
-        this.x += p.x;
-        this.y += p.y;
-        return this;
-    },
-
-    _sub: function(p) {
-        this.x -= p.x;
-        this.y -= p.y;
-        return this;
-    },
-
-    _mult: function(k) {
-        this.x *= k;
-        this.y *= k;
-        return this;
-    },
-
-    _div: function(k) {
-        this.x /= k;
-        this.y /= k;
-        return this;
-    },
-
-    _multByPoint: function(p) {
-        this.x *= p.x;
-        this.y *= p.y;
-        return this;
-    },
-
-    _divByPoint: function(p) {
-        this.x /= p.x;
-        this.y /= p.y;
-        return this;
-    },
-
-    _unit: function() {
-        this._div(this.mag());
-        return this;
-    },
-
-    _perp: function() {
-        var y = this.y;
-        this.y = this.x;
-        this.x = -y;
-        return this;
-    },
-
-    _rotate: function(angle) {
-        var cos = Math.cos(angle),
-            sin = Math.sin(angle),
-            x = cos * this.x - sin * this.y,
-            y = sin * this.x + cos * this.y;
-        this.x = x;
-        this.y = y;
-        return this;
-    },
-
-    _rotateAround: function(angle, p) {
-        var cos = Math.cos(angle),
-            sin = Math.sin(angle),
-            x = p.x + cos * (this.x - p.x) - sin * (this.y - p.y),
-            y = p.y + sin * (this.x - p.x) + cos * (this.y - p.y);
-        this.x = x;
-        this.y = y;
-        return this;
-    },
-
-    _round: function() {
-        this.x = Math.round(this.x);
-        this.y = Math.round(this.y);
-        return this;
-    }
-};
-
-/**
- * Construct a point from an array if necessary, otherwise if the input
- * is already a Point, or an unknown type, return it unchanged
- * @param {Array<Number>|Point|*} a any kind of input value
- * @return {Point} constructed point, or passed-through value.
- * @example
- * // this
- * var point = Point.convert([0, 1]);
- * // is equivalent to
- * var point = new Point(0, 1);
- */
-Point.convert = function (a) {
-    if (a instanceof Point) {
-        return a;
-    }
-    if (Array.isArray(a)) {
-        return new Point(a[0], a[1]);
-    }
-    return a;
-};
-
-},{}],2:[function(_dereq_,module,exports){
-module.exports.VectorTile = _dereq_('./lib/vectortile.js');
-module.exports.VectorTileFeature = _dereq_('./lib/vectortilefeature.js');
-module.exports.VectorTileLayer = _dereq_('./lib/vectortilelayer.js');
-
-},{"./lib/vectortile.js":3,"./lib/vectortilefeature.js":4,"./lib/vectortilelayer.js":5}],3:[function(_dereq_,module,exports){
-'use strict';
-
-var VectorTileLayer = _dereq_('./vectortilelayer');
-
-module.exports = VectorTile;
-
-function VectorTile(pbf, end) {
-    this.layers = pbf.readFields(readTile, {}, end);
-}
-
-function readTile(tag, layers, pbf) {
-    if (tag === 3) {
-        var layer = new VectorTileLayer(pbf, pbf.readVarint() + pbf.pos);
-        if (layer.length) layers[layer.name] = layer;
-    }
-}
-
-
-},{"./vectortilelayer":5}],4:[function(_dereq_,module,exports){
-'use strict';
-
-var Point = _dereq_('@mapbox/point-geometry');
-
-module.exports = VectorTileFeature;
-
-function VectorTileFeature(pbf, end, extent, keys, values) {
-    // Public
-    this.properties = {};
-    this.extent = extent;
-    this.type = 0;
-
-    // Private
-    this._pbf = pbf;
-    this._geometry = -1;
-    this._keys = keys;
-    this._values = values;
-
-    pbf.readFields(readFeature, this, end);
-}
-
-function readFeature(tag, feature, pbf) {
-    if (tag == 1) feature.id = pbf.readVarint();
-    else if (tag == 2) readTag(pbf, feature);
-    else if (tag == 3) feature.type = pbf.readVarint();
-    else if (tag == 4) feature._geometry = pbf.pos;
-}
-
-function readTag(pbf, feature) {
-    var end = pbf.readVarint() + pbf.pos;
-
-    while (pbf.pos < end) {
-        var key = feature._keys[pbf.readVarint()],
-            value = feature._values[pbf.readVarint()];
-        feature.properties[key] = value;
-    }
-}
-
-VectorTileFeature.types = ['Unknown', 'Point', 'LineString', 'Polygon'];
-
-VectorTileFeature.prototype.loadGeometry = function() {
-    var pbf = this._pbf;
-    pbf.pos = this._geometry;
-
-    var end = pbf.readVarint() + pbf.pos,
-        cmd = 1,
-        length = 0,
-        x = 0,
-        y = 0,
-        lines = [],
-        line;
-
-    while (pbf.pos < end) {
-        if (!length) {
-            var cmdLen = pbf.readVarint();
-            cmd = cmdLen & 0x7;
-            length = cmdLen >> 3;
-        }
-
-        length--;
-
-        if (cmd === 1 || cmd === 2) {
-            x += pbf.readSVarint();
-            y += pbf.readSVarint();
-
-            if (cmd === 1) { // moveTo
-                if (line) lines.push(line);
-                line = [];
-            }
-
-            line.push(new Point(x, y));
-
-        } else if (cmd === 7) {
-
-            // Workaround for https://github.com/mapbox/mapnik-vector-tile/issues/90
-            if (line) {
-                line.push(line[0].clone()); // closePolygon
-            }
-
-        } else {
-            throw new Error('unknown command ' + cmd);
-        }
-    }
-
-    if (line) lines.push(line);
-
-    return lines;
-};
-
-VectorTileFeature.prototype.bbox = function() {
-    var pbf = this._pbf;
-    pbf.pos = this._geometry;
-
-    var end = pbf.readVarint() + pbf.pos,
-        cmd = 1,
-        length = 0,
-        x = 0,
-        y = 0,
-        x1 = Infinity,
-        x2 = -Infinity,
-        y1 = Infinity,
-        y2 = -Infinity;
-
-    while (pbf.pos < end) {
-        if (!length) {
-            var cmdLen = pbf.readVarint();
-            cmd = cmdLen & 0x7;
-            length = cmdLen >> 3;
-        }
-
-        length--;
-
-        if (cmd === 1 || cmd === 2) {
-            x += pbf.readSVarint();
-            y += pbf.readSVarint();
-            if (x < x1) x1 = x;
-            if (x > x2) x2 = x;
-            if (y < y1) y1 = y;
-            if (y > y2) y2 = y;
-
-        } else if (cmd !== 7) {
-            throw new Error('unknown command ' + cmd);
-        }
-    }
-
-    return [x1, y1, x2, y2];
-};
-
-VectorTileFeature.prototype.toGeoJSON = function(x, y, z) {
-    var size = this.extent * Math.pow(2, z),
-        x0 = this.extent * x,
-        y0 = this.extent * y,
-        coords = this.loadGeometry(),
-        type = VectorTileFeature.types[this.type],
-        i, j;
-
-    function project(line) {
-        for (var j = 0; j < line.length; j++) {
-            var p = line[j], y2 = 180 - (p.y + y0) * 360 / size;
-            line[j] = [
-                (p.x + x0) * 360 / size - 180,
-                360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90
-            ];
-        }
-    }
-
-    switch (this.type) {
-    case 1:
-        var points = [];
-        for (i = 0; i < coords.length; i++) {
-            points[i] = coords[i][0];
-        }
-        coords = points;
-        project(coords);
-        break;
-
-    case 2:
-        for (i = 0; i < coords.length; i++) {
-            project(coords[i]);
-        }
-        break;
-
-    case 3:
-        coords = classifyRings(coords);
-        for (i = 0; i < coords.length; i++) {
-            for (j = 0; j < coords[i].length; j++) {
-                project(coords[i][j]);
-            }
-        }
-        break;
-    }
-
-    if (coords.length === 1) {
-        coords = coords[0];
-    } else {
-        type = 'Multi' + type;
-    }
-
-    var result = {
-        type: "Feature",
-        geometry: {
-            type: type,
-            coordinates: coords
-        },
-        properties: this.properties
-    };
-
-    if ('id' in this) {
-        result.id = this.id;
-    }
-
-    return result;
-};
-
-// classifies an array of rings into polygons with outer rings and holes
-
-function classifyRings(rings) {
-    var len = rings.length;
-
-    if (len <= 1) return [rings];
-
-    var polygons = [],
-        polygon,
-        ccw;
-
-    for (var i = 0; i < len; i++) {
-        var area = signedArea(rings[i]);
-        if (area === 0) continue;
-
-        if (ccw === undefined) ccw = area < 0;
-
-        if (ccw === area < 0) {
-            if (polygon) polygons.push(polygon);
-            polygon = [rings[i]];
-
-        } else {
-            polygon.push(rings[i]);
-        }
-    }
-    if (polygon) polygons.push(polygon);
-
-    return polygons;
-}
-
-function signedArea(ring) {
-    var sum = 0;
-    for (var i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
-        p1 = ring[i];
-        p2 = ring[j];
-        sum += (p2.x - p1.x) * (p1.y + p2.y);
-    }
-    return sum;
-}
-
-},{"@mapbox/point-geometry":1}],5:[function(_dereq_,module,exports){
-'use strict';
-
-var VectorTileFeature = _dereq_('./vectortilefeature.js');
-
-module.exports = VectorTileLayer;
-
-function VectorTileLayer(pbf, end) {
-    // Public
-    this.version = 1;
-    this.name = null;
-    this.extent = 4096;
-    this.length = 0;
-
-    // Private
-    this._pbf = pbf;
-    this._keys = [];
-    this._values = [];
-    this._features = [];
-
-    pbf.readFields(readLayer, this, end);
-
-    this.length = this._features.length;
-}
-
-function readLayer(tag, layer, pbf) {
-    if (tag === 15) layer.version = pbf.readVarint();
-    else if (tag === 1) layer.name = pbf.readString();
-    else if (tag === 5) layer.extent = pbf.readVarint();
-    else if (tag === 2) layer._features.push(pbf.pos);
-    else if (tag === 3) layer._keys.push(pbf.readString());
-    else if (tag === 4) layer._values.push(readValueMessage(pbf));
-}
-
-function readValueMessage(pbf) {
-    var value = null,
-        end = pbf.readVarint() + pbf.pos;
-
-    while (pbf.pos < end) {
-        var tag = pbf.readVarint() >> 3;
-
-        value = tag === 1 ? pbf.readString() :
-            tag === 2 ? pbf.readFloat() :
-            tag === 3 ? pbf.readDouble() :
-            tag === 4 ? pbf.readVarint64() :
-            tag === 5 ? pbf.readVarint() :
-            tag === 6 ? pbf.readSVarint() :
-            tag === 7 ? pbf.readBoolean() : null;
-    }
-
-    return value;
-}
-
-// return feature `i` from this layer as a `VectorTileFeature`
-VectorTileLayer.prototype.feature = function(i) {
-    if (i < 0 || i >= this._features.length) throw new Error('feature index out of bounds');
-
-    this._pbf.pos = this._features[i];
-
-    var end = this._pbf.readVarint() + this._pbf.pos;
-    return new VectorTileFeature(this._pbf, end, this.extent, this._keys, this._values);
-};
-
-},{"./vectortilefeature.js":4}],6:[function(_dereq_,module,exports){
+(function(){var target = (typeof self === "undefined" || !(typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope)) && ((typeof module !== "undefined" && module.exports) || (typeof window !== "undefined"));if (target) {var __worker_src__ = arguments.callee.toString();var __worker_src_origin__ = typeof document !== "undefined" && document.currentScript !== undefined ? document.currentScript.src : '';var __worker_src_map__ = 'tangram.debug.js.map';};(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Tangram = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 "use strict";
 
 // rawAsap provides everything we need except exception management.
@@ -702,7 +66,7 @@ RawTask.prototype.call = function () {
     }
 };
 
-},{"./raw":7}],7:[function(_dereq_,module,exports){
+},{"./raw":2}],2:[function(_dereq_,module,exports){
 (function (global){
 "use strict";
 
@@ -930,7 +294,7 @@ rawAsap.makeRequestCallFromTimer = makeRequestCallFromTimer;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],8:[function(_dereq_,module,exports){
+},{}],3:[function(_dereq_,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -1046,13 +410,13 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],9:[function(_dereq_,module,exports){
+},{}],4:[function(_dereq_,module,exports){
 
-},{}],10:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
- * @author   Feross Aboukhadijeh <https://feross.org>
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
  * @license  MIT
  */
 /* eslint-disable no-proto */
@@ -2764,18 +2128,18 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":8,"ieee754":98}],11:[function(_dereq_,module,exports){
+},{"base64-js":3,"ieee754":99}],6:[function(_dereq_,module,exports){
 _dereq_('../modules/es6.object.to-string');
 _dereq_('../modules/es6.string.iterator');
 _dereq_('../modules/web.dom.iterable');
 _dereq_('../modules/es6.promise');
 module.exports = _dereq_('../modules/_core').Promise;
-},{"../modules/_core":19,"../modules/es6.object.to-string":71,"../modules/es6.promise":72,"../modules/es6.string.iterator":73,"../modules/web.dom.iterable":74}],12:[function(_dereq_,module,exports){
+},{"../modules/_core":14,"../modules/es6.object.to-string":66,"../modules/es6.promise":67,"../modules/es6.string.iterator":68,"../modules/web.dom.iterable":69}],7:[function(_dereq_,module,exports){
 module.exports = function(it){
   if(typeof it != 'function')throw TypeError(it + ' is not a function!');
   return it;
 };
-},{}],13:[function(_dereq_,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 // 22.1.3.31 Array.prototype[@@unscopables]
 var UNSCOPABLES = _dereq_('./_wks')('unscopables')
   , ArrayProto  = Array.prototype;
@@ -2783,19 +2147,19 @@ if(ArrayProto[UNSCOPABLES] == undefined)_dereq_('./_hide')(ArrayProto, UNSCOPABL
 module.exports = function(key){
   ArrayProto[UNSCOPABLES][key] = true;
 };
-},{"./_hide":30,"./_wks":68}],14:[function(_dereq_,module,exports){
+},{"./_hide":25,"./_wks":63}],9:[function(_dereq_,module,exports){
 module.exports = function(it, Constructor, name, forbiddenField){
   if(!(it instanceof Constructor) || (forbiddenField !== undefined && forbiddenField in it)){
     throw TypeError(name + ': incorrect invocation!');
   } return it;
 };
-},{}],15:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 var isObject = _dereq_('./_is-object');
 module.exports = function(it){
   if(!isObject(it))throw TypeError(it + ' is not an object!');
   return it;
 };
-},{"./_is-object":36}],16:[function(_dereq_,module,exports){
+},{"./_is-object":31}],11:[function(_dereq_,module,exports){
 // false -> Array#indexOf
 // true  -> Array#includes
 var toIObject = _dereq_('./_to-iobject')
@@ -2817,7 +2181,7 @@ module.exports = function(IS_INCLUDES){
     } return !IS_INCLUDES && -1;
   };
 };
-},{"./_to-index":61,"./_to-iobject":63,"./_to-length":64}],17:[function(_dereq_,module,exports){
+},{"./_to-index":56,"./_to-iobject":58,"./_to-length":59}],12:[function(_dereq_,module,exports){
 // getting tag from 19.1.3.6 Object.prototype.toString()
 var cof = _dereq_('./_cof')
   , TAG = _dereq_('./_wks')('toStringTag')
@@ -2841,16 +2205,16 @@ module.exports = function(it){
     // ES3 arguments fallback
     : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
 };
-},{"./_cof":18,"./_wks":68}],18:[function(_dereq_,module,exports){
+},{"./_cof":13,"./_wks":63}],13:[function(_dereq_,module,exports){
 var toString = {}.toString;
 
 module.exports = function(it){
   return toString.call(it).slice(8, -1);
 };
-},{}],19:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 var core = module.exports = {version: '2.4.0'};
 if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
-},{}],20:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 // optional / simple context binding
 var aFunction = _dereq_('./_a-function');
 module.exports = function(fn, that, length){
@@ -2871,18 +2235,18 @@ module.exports = function(fn, that, length){
     return fn.apply(that, arguments);
   };
 };
-},{"./_a-function":12}],21:[function(_dereq_,module,exports){
+},{"./_a-function":7}],16:[function(_dereq_,module,exports){
 // 7.2.1 RequireObjectCoercible(argument)
 module.exports = function(it){
   if(it == undefined)throw TypeError("Can't call method on  " + it);
   return it;
 };
-},{}],22:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 // Thank's IE8 for his funny defineProperty
 module.exports = !_dereq_('./_fails')(function(){
   return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
 });
-},{"./_fails":26}],23:[function(_dereq_,module,exports){
+},{"./_fails":21}],18:[function(_dereq_,module,exports){
 var isObject = _dereq_('./_is-object')
   , document = _dereq_('./_global').document
   // in old IE typeof document.createElement is 'object'
@@ -2890,12 +2254,12 @@ var isObject = _dereq_('./_is-object')
 module.exports = function(it){
   return is ? document.createElement(it) : {};
 };
-},{"./_global":28,"./_is-object":36}],24:[function(_dereq_,module,exports){
+},{"./_global":23,"./_is-object":31}],19:[function(_dereq_,module,exports){
 // IE 8- don't enum bug keys
 module.exports = (
   'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
 ).split(',');
-},{}],25:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 var global    = _dereq_('./_global')
   , core      = _dereq_('./_core')
   , hide      = _dereq_('./_hide')
@@ -2939,7 +2303,7 @@ $export.W = 32;  // wrap
 $export.U = 64;  // safe
 $export.R = 128; // real proto method for `library` 
 module.exports = $export;
-},{"./_core":19,"./_ctx":20,"./_global":28,"./_hide":30,"./_redefine":53}],26:[function(_dereq_,module,exports){
+},{"./_core":14,"./_ctx":15,"./_global":23,"./_hide":25,"./_redefine":48}],21:[function(_dereq_,module,exports){
 module.exports = function(exec){
   try {
     return !!exec();
@@ -2947,7 +2311,7 @@ module.exports = function(exec){
     return true;
   }
 };
-},{}],27:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 var ctx         = _dereq_('./_ctx')
   , call        = _dereq_('./_iter-call')
   , isArrayIter = _dereq_('./_is-array-iter')
@@ -2973,17 +2337,17 @@ var exports = module.exports = function(iterable, entries, fn, that, ITERATOR){
 };
 exports.BREAK  = BREAK;
 exports.RETURN = RETURN;
-},{"./_an-object":15,"./_ctx":20,"./_is-array-iter":35,"./_iter-call":37,"./_to-length":64,"./core.get-iterator-method":69}],28:[function(_dereq_,module,exports){
+},{"./_an-object":10,"./_ctx":15,"./_is-array-iter":30,"./_iter-call":32,"./_to-length":59,"./core.get-iterator-method":64}],23:[function(_dereq_,module,exports){
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 var global = module.exports = typeof window != 'undefined' && window.Math == Math
   ? window : typeof self != 'undefined' && self.Math == Math ? self : Function('return this')();
 if(typeof __g == 'number')__g = global; // eslint-disable-line no-undef
-},{}],29:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 var hasOwnProperty = {}.hasOwnProperty;
 module.exports = function(it, key){
   return hasOwnProperty.call(it, key);
 };
-},{}],30:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 var dP         = _dereq_('./_object-dp')
   , createDesc = _dereq_('./_property-desc');
 module.exports = _dereq_('./_descriptors') ? function(object, key, value){
@@ -2992,13 +2356,13 @@ module.exports = _dereq_('./_descriptors') ? function(object, key, value){
   object[key] = value;
   return object;
 };
-},{"./_descriptors":22,"./_object-dp":46,"./_property-desc":51}],31:[function(_dereq_,module,exports){
+},{"./_descriptors":17,"./_object-dp":41,"./_property-desc":46}],26:[function(_dereq_,module,exports){
 module.exports = _dereq_('./_global').document && document.documentElement;
-},{"./_global":28}],32:[function(_dereq_,module,exports){
+},{"./_global":23}],27:[function(_dereq_,module,exports){
 module.exports = !_dereq_('./_descriptors') && !_dereq_('./_fails')(function(){
   return Object.defineProperty(_dereq_('./_dom-create')('div'), 'a', {get: function(){ return 7; }}).a != 7;
 });
-},{"./_descriptors":22,"./_dom-create":23,"./_fails":26}],33:[function(_dereq_,module,exports){
+},{"./_descriptors":17,"./_dom-create":18,"./_fails":21}],28:[function(_dereq_,module,exports){
 // fast apply, http://jsperf.lnkit.com/fast-apply/5
 module.exports = function(fn, args, that){
   var un = that === undefined;
@@ -3015,13 +2379,13 @@ module.exports = function(fn, args, that){
                       : fn.call(that, args[0], args[1], args[2], args[3]);
   } return              fn.apply(that, args);
 };
-},{}],34:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var cof = _dereq_('./_cof');
 module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
   return cof(it) == 'String' ? it.split('') : Object(it);
 };
-},{"./_cof":18}],35:[function(_dereq_,module,exports){
+},{"./_cof":13}],30:[function(_dereq_,module,exports){
 // check on default Array iterator
 var Iterators  = _dereq_('./_iterators')
   , ITERATOR   = _dereq_('./_wks')('iterator')
@@ -3030,11 +2394,11 @@ var Iterators  = _dereq_('./_iterators')
 module.exports = function(it){
   return it !== undefined && (Iterators.Array === it || ArrayProto[ITERATOR] === it);
 };
-},{"./_iterators":42,"./_wks":68}],36:[function(_dereq_,module,exports){
+},{"./_iterators":37,"./_wks":63}],31:[function(_dereq_,module,exports){
 module.exports = function(it){
   return typeof it === 'object' ? it !== null : typeof it === 'function';
 };
-},{}],37:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 // call something on iterator step with safe closing on error
 var anObject = _dereq_('./_an-object');
 module.exports = function(iterator, fn, value, entries){
@@ -3047,7 +2411,7 @@ module.exports = function(iterator, fn, value, entries){
     throw e;
   }
 };
-},{"./_an-object":15}],38:[function(_dereq_,module,exports){
+},{"./_an-object":10}],33:[function(_dereq_,module,exports){
 'use strict';
 var create         = _dereq_('./_object-create')
   , descriptor     = _dereq_('./_property-desc')
@@ -3061,7 +2425,7 @@ module.exports = function(Constructor, NAME, next){
   Constructor.prototype = create(IteratorPrototype, {next: descriptor(1, next)});
   setToStringTag(Constructor, NAME + ' Iterator');
 };
-},{"./_hide":30,"./_object-create":45,"./_property-desc":51,"./_set-to-string-tag":55,"./_wks":68}],39:[function(_dereq_,module,exports){
+},{"./_hide":25,"./_object-create":40,"./_property-desc":46,"./_set-to-string-tag":50,"./_wks":63}],34:[function(_dereq_,module,exports){
 'use strict';
 var LIBRARY        = _dereq_('./_library')
   , $export        = _dereq_('./_export')
@@ -3132,7 +2496,7 @@ module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED
   }
   return methods;
 };
-},{"./_export":25,"./_has":29,"./_hide":30,"./_iter-create":38,"./_iterators":42,"./_library":43,"./_object-gpo":48,"./_redefine":53,"./_set-to-string-tag":55,"./_wks":68}],40:[function(_dereq_,module,exports){
+},{"./_export":20,"./_has":24,"./_hide":25,"./_iter-create":33,"./_iterators":37,"./_library":38,"./_object-gpo":43,"./_redefine":48,"./_set-to-string-tag":50,"./_wks":63}],35:[function(_dereq_,module,exports){
 var ITERATOR     = _dereq_('./_wks')('iterator')
   , SAFE_CLOSING = false;
 
@@ -3154,15 +2518,15 @@ module.exports = function(exec, skipClosing){
   } catch(e){ /* empty */ }
   return safe;
 };
-},{"./_wks":68}],41:[function(_dereq_,module,exports){
+},{"./_wks":63}],36:[function(_dereq_,module,exports){
 module.exports = function(done, value){
   return {value: value, done: !!done};
 };
-},{}],42:[function(_dereq_,module,exports){
+},{}],37:[function(_dereq_,module,exports){
 module.exports = {};
-},{}],43:[function(_dereq_,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 module.exports = false;
-},{}],44:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 var global    = _dereq_('./_global')
   , macrotask = _dereq_('./_task').set
   , Observer  = global.MutationObserver || global.WebKitMutationObserver
@@ -3231,7 +2595,7 @@ module.exports = function(){
     } last = task;
   };
 };
-},{"./_cof":18,"./_global":28,"./_task":60}],45:[function(_dereq_,module,exports){
+},{"./_cof":13,"./_global":23,"./_task":55}],40:[function(_dereq_,module,exports){
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 var anObject    = _dereq_('./_an-object')
   , dPs         = _dereq_('./_object-dps')
@@ -3274,7 +2638,7 @@ module.exports = Object.create || function create(O, Properties){
   return Properties === undefined ? result : dPs(result, Properties);
 };
 
-},{"./_an-object":15,"./_dom-create":23,"./_enum-bug-keys":24,"./_html":31,"./_object-dps":47,"./_shared-key":56}],46:[function(_dereq_,module,exports){
+},{"./_an-object":10,"./_dom-create":18,"./_enum-bug-keys":19,"./_html":26,"./_object-dps":42,"./_shared-key":51}],41:[function(_dereq_,module,exports){
 var anObject       = _dereq_('./_an-object')
   , IE8_DOM_DEFINE = _dereq_('./_ie8-dom-define')
   , toPrimitive    = _dereq_('./_to-primitive')
@@ -3291,7 +2655,7 @@ exports.f = _dereq_('./_descriptors') ? Object.defineProperty : function defineP
   if('value' in Attributes)O[P] = Attributes.value;
   return O;
 };
-},{"./_an-object":15,"./_descriptors":22,"./_ie8-dom-define":32,"./_to-primitive":66}],47:[function(_dereq_,module,exports){
+},{"./_an-object":10,"./_descriptors":17,"./_ie8-dom-define":27,"./_to-primitive":61}],42:[function(_dereq_,module,exports){
 var dP       = _dereq_('./_object-dp')
   , anObject = _dereq_('./_an-object')
   , getKeys  = _dereq_('./_object-keys');
@@ -3305,7 +2669,7 @@ module.exports = _dereq_('./_descriptors') ? Object.defineProperties : function 
   while(length > i)dP.f(O, P = keys[i++], Properties[P]);
   return O;
 };
-},{"./_an-object":15,"./_descriptors":22,"./_object-dp":46,"./_object-keys":50}],48:[function(_dereq_,module,exports){
+},{"./_an-object":10,"./_descriptors":17,"./_object-dp":41,"./_object-keys":45}],43:[function(_dereq_,module,exports){
 // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
 var has         = _dereq_('./_has')
   , toObject    = _dereq_('./_to-object')
@@ -3319,7 +2683,7 @@ module.exports = Object.getPrototypeOf || function(O){
     return O.constructor.prototype;
   } return O instanceof Object ? ObjectProto : null;
 };
-},{"./_has":29,"./_shared-key":56,"./_to-object":65}],49:[function(_dereq_,module,exports){
+},{"./_has":24,"./_shared-key":51,"./_to-object":60}],44:[function(_dereq_,module,exports){
 var has          = _dereq_('./_has')
   , toIObject    = _dereq_('./_to-iobject')
   , arrayIndexOf = _dereq_('./_array-includes')(false)
@@ -3337,7 +2701,7 @@ module.exports = function(object, names){
   }
   return result;
 };
-},{"./_array-includes":16,"./_has":29,"./_shared-key":56,"./_to-iobject":63}],50:[function(_dereq_,module,exports){
+},{"./_array-includes":11,"./_has":24,"./_shared-key":51,"./_to-iobject":58}],45:[function(_dereq_,module,exports){
 // 19.1.2.14 / 15.2.3.14 Object.keys(O)
 var $keys       = _dereq_('./_object-keys-internal')
   , enumBugKeys = _dereq_('./_enum-bug-keys');
@@ -3345,7 +2709,7 @@ var $keys       = _dereq_('./_object-keys-internal')
 module.exports = Object.keys || function keys(O){
   return $keys(O, enumBugKeys);
 };
-},{"./_enum-bug-keys":24,"./_object-keys-internal":49}],51:[function(_dereq_,module,exports){
+},{"./_enum-bug-keys":19,"./_object-keys-internal":44}],46:[function(_dereq_,module,exports){
 module.exports = function(bitmap, value){
   return {
     enumerable  : !(bitmap & 1),
@@ -3354,13 +2718,13 @@ module.exports = function(bitmap, value){
     value       : value
   };
 };
-},{}],52:[function(_dereq_,module,exports){
+},{}],47:[function(_dereq_,module,exports){
 var redefine = _dereq_('./_redefine');
 module.exports = function(target, src, safe){
   for(var key in src)redefine(target, key, src[key], safe);
   return target;
 };
-},{"./_redefine":53}],53:[function(_dereq_,module,exports){
+},{"./_redefine":48}],48:[function(_dereq_,module,exports){
 var global    = _dereq_('./_global')
   , hide      = _dereq_('./_hide')
   , has       = _dereq_('./_has')
@@ -3393,7 +2757,7 @@ _dereq_('./_core').inspectSource = function(it){
 })(Function.prototype, TO_STRING, function toString(){
   return typeof this == 'function' && this[SRC] || $toString.call(this);
 });
-},{"./_core":19,"./_global":28,"./_has":29,"./_hide":30,"./_uid":67}],54:[function(_dereq_,module,exports){
+},{"./_core":14,"./_global":23,"./_has":24,"./_hide":25,"./_uid":62}],49:[function(_dereq_,module,exports){
 'use strict';
 var global      = _dereq_('./_global')
   , dP          = _dereq_('./_object-dp')
@@ -3407,7 +2771,7 @@ module.exports = function(KEY){
     get: function(){ return this; }
   });
 };
-},{"./_descriptors":22,"./_global":28,"./_object-dp":46,"./_wks":68}],55:[function(_dereq_,module,exports){
+},{"./_descriptors":17,"./_global":23,"./_object-dp":41,"./_wks":63}],50:[function(_dereq_,module,exports){
 var def = _dereq_('./_object-dp').f
   , has = _dereq_('./_has')
   , TAG = _dereq_('./_wks')('toStringTag');
@@ -3415,20 +2779,20 @@ var def = _dereq_('./_object-dp').f
 module.exports = function(it, tag, stat){
   if(it && !has(it = stat ? it : it.prototype, TAG))def(it, TAG, {configurable: true, value: tag});
 };
-},{"./_has":29,"./_object-dp":46,"./_wks":68}],56:[function(_dereq_,module,exports){
+},{"./_has":24,"./_object-dp":41,"./_wks":63}],51:[function(_dereq_,module,exports){
 var shared = _dereq_('./_shared')('keys')
   , uid    = _dereq_('./_uid');
 module.exports = function(key){
   return shared[key] || (shared[key] = uid(key));
 };
-},{"./_shared":57,"./_uid":67}],57:[function(_dereq_,module,exports){
+},{"./_shared":52,"./_uid":62}],52:[function(_dereq_,module,exports){
 var global = _dereq_('./_global')
   , SHARED = '__core-js_shared__'
   , store  = global[SHARED] || (global[SHARED] = {});
 module.exports = function(key){
   return store[key] || (store[key] = {});
 };
-},{"./_global":28}],58:[function(_dereq_,module,exports){
+},{"./_global":23}],53:[function(_dereq_,module,exports){
 // 7.3.20 SpeciesConstructor(O, defaultConstructor)
 var anObject  = _dereq_('./_an-object')
   , aFunction = _dereq_('./_a-function')
@@ -3437,7 +2801,7 @@ module.exports = function(O, D){
   var C = anObject(O).constructor, S;
   return C === undefined || (S = anObject(C)[SPECIES]) == undefined ? D : aFunction(S);
 };
-},{"./_a-function":12,"./_an-object":15,"./_wks":68}],59:[function(_dereq_,module,exports){
+},{"./_a-function":7,"./_an-object":10,"./_wks":63}],54:[function(_dereq_,module,exports){
 var toInteger = _dereq_('./_to-integer')
   , defined   = _dereq_('./_defined');
 // true  -> String#at
@@ -3455,7 +2819,7 @@ module.exports = function(TO_STRING){
       : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
   };
 };
-},{"./_defined":21,"./_to-integer":62}],60:[function(_dereq_,module,exports){
+},{"./_defined":16,"./_to-integer":57}],55:[function(_dereq_,module,exports){
 var ctx                = _dereq_('./_ctx')
   , invoke             = _dereq_('./_invoke')
   , html               = _dereq_('./_html')
@@ -3531,7 +2895,7 @@ module.exports = {
   set:   setTask,
   clear: clearTask
 };
-},{"./_cof":18,"./_ctx":20,"./_dom-create":23,"./_global":28,"./_html":31,"./_invoke":33}],61:[function(_dereq_,module,exports){
+},{"./_cof":13,"./_ctx":15,"./_dom-create":18,"./_global":23,"./_html":26,"./_invoke":28}],56:[function(_dereq_,module,exports){
 var toInteger = _dereq_('./_to-integer')
   , max       = Math.max
   , min       = Math.min;
@@ -3539,34 +2903,34 @@ module.exports = function(index, length){
   index = toInteger(index);
   return index < 0 ? max(index + length, 0) : min(index, length);
 };
-},{"./_to-integer":62}],62:[function(_dereq_,module,exports){
+},{"./_to-integer":57}],57:[function(_dereq_,module,exports){
 // 7.1.4 ToInteger
 var ceil  = Math.ceil
   , floor = Math.floor;
 module.exports = function(it){
   return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 };
-},{}],63:[function(_dereq_,module,exports){
+},{}],58:[function(_dereq_,module,exports){
 // to indexed object, toObject with fallback for non-array-like ES3 strings
 var IObject = _dereq_('./_iobject')
   , defined = _dereq_('./_defined');
 module.exports = function(it){
   return IObject(defined(it));
 };
-},{"./_defined":21,"./_iobject":34}],64:[function(_dereq_,module,exports){
+},{"./_defined":16,"./_iobject":29}],59:[function(_dereq_,module,exports){
 // 7.1.15 ToLength
 var toInteger = _dereq_('./_to-integer')
   , min       = Math.min;
 module.exports = function(it){
   return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 };
-},{"./_to-integer":62}],65:[function(_dereq_,module,exports){
+},{"./_to-integer":57}],60:[function(_dereq_,module,exports){
 // 7.1.13 ToObject(argument)
 var defined = _dereq_('./_defined');
 module.exports = function(it){
   return Object(defined(it));
 };
-},{"./_defined":21}],66:[function(_dereq_,module,exports){
+},{"./_defined":16}],61:[function(_dereq_,module,exports){
 // 7.1.1 ToPrimitive(input [, PreferredType])
 var isObject = _dereq_('./_is-object');
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
@@ -3579,13 +2943,13 @@ module.exports = function(it, S){
   if(!S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it)))return val;
   throw TypeError("Can't convert object to primitive value");
 };
-},{"./_is-object":36}],67:[function(_dereq_,module,exports){
+},{"./_is-object":31}],62:[function(_dereq_,module,exports){
 var id = 0
   , px = Math.random();
 module.exports = function(key){
   return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
 };
-},{}],68:[function(_dereq_,module,exports){
+},{}],63:[function(_dereq_,module,exports){
 var store      = _dereq_('./_shared')('wks')
   , uid        = _dereq_('./_uid')
   , Symbol     = _dereq_('./_global').Symbol
@@ -3597,7 +2961,7 @@ var $exports = module.exports = function(name){
 };
 
 $exports.store = store;
-},{"./_global":28,"./_shared":57,"./_uid":67}],69:[function(_dereq_,module,exports){
+},{"./_global":23,"./_shared":52,"./_uid":62}],64:[function(_dereq_,module,exports){
 var classof   = _dereq_('./_classof')
   , ITERATOR  = _dereq_('./_wks')('iterator')
   , Iterators = _dereq_('./_iterators');
@@ -3606,7 +2970,7 @@ module.exports = _dereq_('./_core').getIteratorMethod = function(it){
     || it['@@iterator']
     || Iterators[classof(it)];
 };
-},{"./_classof":17,"./_core":19,"./_iterators":42,"./_wks":68}],70:[function(_dereq_,module,exports){
+},{"./_classof":12,"./_core":14,"./_iterators":37,"./_wks":63}],65:[function(_dereq_,module,exports){
 'use strict';
 var addToUnscopables = _dereq_('./_add-to-unscopables')
   , step             = _dereq_('./_iter-step')
@@ -3641,7 +3005,7 @@ Iterators.Arguments = Iterators.Array;
 addToUnscopables('keys');
 addToUnscopables('values');
 addToUnscopables('entries');
-},{"./_add-to-unscopables":13,"./_iter-define":39,"./_iter-step":41,"./_iterators":42,"./_to-iobject":63}],71:[function(_dereq_,module,exports){
+},{"./_add-to-unscopables":8,"./_iter-define":34,"./_iter-step":36,"./_iterators":37,"./_to-iobject":58}],66:[function(_dereq_,module,exports){
 'use strict';
 // 19.1.3.6 Object.prototype.toString()
 var classof = _dereq_('./_classof')
@@ -3652,7 +3016,7 @@ if(test + '' != '[object z]'){
     return '[object ' + classof(this) + ']';
   }, true);
 }
-},{"./_classof":17,"./_redefine":53,"./_wks":68}],72:[function(_dereq_,module,exports){
+},{"./_classof":12,"./_redefine":48,"./_wks":63}],67:[function(_dereq_,module,exports){
 'use strict';
 var LIBRARY            = _dereq_('./_library')
   , global             = _dereq_('./_global')
@@ -3952,7 +3316,7 @@ $export($export.S + $export.F * !(USE_NATIVE && _dereq_('./_iter-detect')(functi
     return capability.promise;
   }
 });
-},{"./_a-function":12,"./_an-instance":14,"./_classof":17,"./_core":19,"./_ctx":20,"./_export":25,"./_for-of":27,"./_global":28,"./_is-object":36,"./_iter-detect":40,"./_library":43,"./_microtask":44,"./_redefine-all":52,"./_set-species":54,"./_set-to-string-tag":55,"./_species-constructor":58,"./_task":60,"./_wks":68}],73:[function(_dereq_,module,exports){
+},{"./_a-function":7,"./_an-instance":9,"./_classof":12,"./_core":14,"./_ctx":15,"./_export":20,"./_for-of":22,"./_global":23,"./_is-object":31,"./_iter-detect":35,"./_library":38,"./_microtask":39,"./_redefine-all":47,"./_set-species":49,"./_set-to-string-tag":50,"./_species-constructor":53,"./_task":55,"./_wks":63}],68:[function(_dereq_,module,exports){
 'use strict';
 var $at  = _dereq_('./_string-at')(true);
 
@@ -3970,7 +3334,7 @@ _dereq_('./_iter-define')(String, 'String', function(iterated){
   this._i += point.length;
   return {value: point, done: false};
 });
-},{"./_iter-define":39,"./_string-at":59}],74:[function(_dereq_,module,exports){
+},{"./_iter-define":34,"./_string-at":54}],69:[function(_dereq_,module,exports){
 var $iterators    = _dereq_('./es6.array.iterator')
   , redefine      = _dereq_('./_redefine')
   , global        = _dereq_('./_global')
@@ -3993,7 +3357,7 @@ for(var collections = ['NodeList', 'DOMTokenList', 'MediaList', 'StyleSheetList'
     for(key in $iterators)if(!proto[key])redefine(proto, key, $iterators[key], true);
   }
 }
-},{"./_global":28,"./_hide":30,"./_iterators":42,"./_redefine":53,"./_wks":68,"./es6.array.iterator":70}],75:[function(_dereq_,module,exports){
+},{"./_global":23,"./_hide":25,"./_iterators":37,"./_redefine":48,"./_wks":63,"./es6.array.iterator":65}],70:[function(_dereq_,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4105,7 +3469,7 @@ function objectToString(o) {
 
 }).call(this,{"isBuffer":_dereq_("../../is-buffer/index.js")})
 
-},{"../../is-buffer/index.js":100}],76:[function(_dereq_,module,exports){
+},{"../../is-buffer/index.js":101}],71:[function(_dereq_,module,exports){
 // (c) Dean McNamee <dean@gmail.com>, 2012.
 //
 // https://github.com/deanm/css-color-parser-js
@@ -4308,7 +3672,7 @@ function parseCSSColor(css_str) {
 
 try { exports.parseCSSColor = parseCSSColor } catch(e) { }
 
-},{}],77:[function(_dereq_,module,exports){
+},{}],72:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = earcut;
@@ -4954,7 +4318,7 @@ earcut.flatten = function (data) {
     return result;
 };
 
-},{}],78:[function(_dereq_,module,exports){
+},{}],73:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5258,7 +4622,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],79:[function(_dereq_,module,exports){
+},{}],74:[function(_dereq_,module,exports){
 (function(){function m(a,b){document.addEventListener?a.addEventListener("scroll",b,!1):a.attachEvent("scroll",b)}function n(a){document.body?a():document.addEventListener?document.addEventListener("DOMContentLoaded",function c(){document.removeEventListener("DOMContentLoaded",c);a()}):document.attachEvent("onreadystatechange",function l(){if("interactive"==document.readyState||"complete"==document.readyState)document.detachEvent("onreadystatechange",l),a()})};function t(a){this.a=document.createElement("div");this.a.setAttribute("aria-hidden","true");this.a.appendChild(document.createTextNode(a));this.b=document.createElement("span");this.c=document.createElement("span");this.h=document.createElement("span");this.f=document.createElement("span");this.g=-1;this.b.style.cssText="max-width:none;display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;";this.c.style.cssText="max-width:none;display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;";
 this.f.style.cssText="max-width:none;display:inline-block;position:absolute;height:100%;width:100%;overflow:scroll;font-size:16px;";this.h.style.cssText="display:inline-block;width:200%;height:200%;font-size:16px;max-width:none;";this.b.appendChild(this.h);this.c.appendChild(this.f);this.a.appendChild(this.b);this.a.appendChild(this.c)}
 function x(a,b){a.a.style.cssText="max-width:none;min-width:20px;min-height:20px;display:inline-block;overflow:hidden;position:absolute;width:auto;margin:0;padding:0;top:-999px;left:-999px;white-space:nowrap;font:"+b+";"}function y(a){var b=a.a.offsetWidth,c=b+100;a.f.style.width=c+"px";a.c.scrollLeft=c;a.b.scrollLeft=a.b.scrollWidth+100;return a.g!==b?(a.g=b,!0):!1}function z(a,b){function c(){var a=l;y(a)&&a.a.parentNode&&b(a.g)}var l=a;m(a.b,c);m(a.c,c);y(a)};function A(a,b){var c=b||{};this.family=a;this.style=c.style||"normal";this.weight=c.weight||"normal";this.stretch=c.stretch||"normal"}var B=null,C=null,E=null,F=null;function I(){if(null===E){var a=document.createElement("div");try{a.style.font="condensed 100px sans-serif"}catch(b){}E=""!==a.style.font}return E}function J(a,b){return[a.style,a.weight,I()?a.stretch:"","100px",b].join(" ")}
@@ -5267,7 +4631,7 @@ c){r=setTimeout(c,D)});Promise.race([K,e]).then(function(){clearTimeout(r);a(c)}
 function H(){if((new Date).getTime()-G>=D)d.parentNode&&d.parentNode.removeChild(d),b(c);else{var a=document.hidden;if(!0===a||void 0===a)g=f.a.offsetWidth,h=p.a.offsetWidth,k=q.a.offsetWidth,e();r=setTimeout(H,50)}}var f=new t(l),p=new t(l),q=new t(l),g=-1,h=-1,k=-1,u=-1,v=-1,w=-1,d=document.createElement("div");d.dir="ltr";x(f,J(c,"sans-serif"));x(p,J(c,"serif"));x(q,J(c,"monospace"));d.appendChild(f.a);d.appendChild(p.a);d.appendChild(q.a);document.body.appendChild(d);u=f.a.offsetWidth;v=p.a.offsetWidth;
 w=q.a.offsetWidth;H();z(f,function(a){g=a;e()});x(f,J(c,'"'+c.family+'",sans-serif'));z(p,function(a){h=a;e()});x(p,J(c,'"'+c.family+'",serif'));z(q,function(a){k=a;e()});x(q,J(c,'"'+c.family+'",monospace'))})})};"undefined"!==typeof module?module.exports=A:(window.FontFaceObserver=A,window.FontFaceObserver.prototype.load=A.prototype.load);}());
 
-},{}],80:[function(_dereq_,module,exports){
+},{}],75:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = clip;
@@ -5418,7 +4782,7 @@ function newSlice(slices, slice, area, dist, outer) {
     return [];
 }
 
-},{"./feature":82}],81:[function(_dereq_,module,exports){
+},{"./feature":77}],76:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = convert;
@@ -5541,7 +4905,7 @@ function calcSize(points) {
     points.dist = dist;
 }
 
-},{"./feature":82,"./simplify":84}],82:[function(_dereq_,module,exports){
+},{"./feature":77,"./simplify":79}],77:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = createFeature;
@@ -5586,7 +4950,7 @@ function calcRingBBox(min, max, points) {
     }
 }
 
-},{}],83:[function(_dereq_,module,exports){
+},{}],78:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = geojsonvt;
@@ -5830,7 +5194,7 @@ function isClippedSquare(tile, extent, buffer) {
     return true;
 }
 
-},{"./clip":80,"./convert":81,"./tile":85,"./transform":86,"./wrap":87}],84:[function(_dereq_,module,exports){
+},{"./clip":75,"./convert":76,"./tile":80,"./transform":81,"./wrap":82}],79:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = simplify;
@@ -5906,7 +5270,7 @@ function getSqSegDist(p, a, b) {
     return dx * dx + dy * dy;
 }
 
-},{}],85:[function(_dereq_,module,exports){
+},{}],80:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = createTile;
@@ -6014,7 +5378,7 @@ function signedArea(ring) {
     return sum;
 }
 
-},{}],86:[function(_dereq_,module,exports){
+},{}],81:[function(_dereq_,module,exports){
 'use strict';
 
 exports.tile = transformTile;
@@ -6057,7 +5421,7 @@ function transformPoint(p, extent, z2, tx, ty) {
     return [x, y];
 }
 
-},{}],87:[function(_dereq_,module,exports){
+},{}],82:[function(_dereq_,module,exports){
 'use strict';
 
 var clip = _dereq_('./clip');
@@ -6115,7 +5479,48 @@ function shiftCoords(points, offset) {
     return newPoints;
 }
 
-},{"./clip":80,"./feature":82}],88:[function(_dereq_,module,exports){
+},{"./clip":75,"./feature":77}],83:[function(_dereq_,module,exports){
+module.exports = create
+
+/**
+ * Creates a new identity mat2
+ *
+ * @alias mat2.create
+ * @returns {mat2} a new 2x2 matrix
+ */
+function create() {
+  var out = new Float32Array(4)
+  out[0] = 1
+  out[1] = 0
+  out[2] = 0
+  out[3] = 1
+  return out
+}
+
+},{}],84:[function(_dereq_,module,exports){
+module.exports = rotate
+
+/**
+ * Rotates a mat2 by the given angle
+ *
+ * @alias mat2.rotate
+ * @param {mat2} out the receiving matrix
+ * @param {mat2} a the matrix to rotate
+ * @param {Number} rad the angle to rotate the matrix by
+ * @returns {mat2} out
+ */
+function rotate(out, a, rad) {
+  var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3]
+  var s = Math.sin(rad)
+  var c = Math.cos(rad)
+  out[0] = a0 *  c + a2 * s
+  out[1] = a1 *  c + a3 * s
+  out[2] = a0 * -s + a2 * c
+  out[3] = a1 * -s + a3 * c
+  return out
+}
+
+},{}],85:[function(_dereq_,module,exports){
 module.exports = invert
 
 /**
@@ -6154,7 +5559,7 @@ function invert(out, a) {
   return out
 }
 
-},{}],89:[function(_dereq_,module,exports){
+},{}],86:[function(_dereq_,module,exports){
 module.exports = normalFromMat4
 
 /**
@@ -6211,7 +5616,7 @@ function normalFromMat4(out, a) {
   return out
 }
 
-},{}],90:[function(_dereq_,module,exports){
+},{}],87:[function(_dereq_,module,exports){
 module.exports = copy;
 
 /**
@@ -6240,7 +5645,7 @@ function copy(out, a) {
     out[15] = a[15];
     return out;
 };
-},{}],91:[function(_dereq_,module,exports){
+},{}],88:[function(_dereq_,module,exports){
 module.exports = identity;
 
 /**
@@ -6268,7 +5673,7 @@ function identity(out) {
     out[15] = 1;
     return out;
 };
-},{}],92:[function(_dereq_,module,exports){
+},{}],89:[function(_dereq_,module,exports){
 var identity = _dereq_('./identity');
 
 module.exports = lookAt;
@@ -6359,7 +5764,7 @@ function lookAt(out, eye, center, up) {
 
     return out;
 };
-},{"./identity":91}],93:[function(_dereq_,module,exports){
+},{"./identity":88}],90:[function(_dereq_,module,exports){
 module.exports = multiply;
 
 /**
@@ -6402,7 +5807,7 @@ function multiply(out, a, b) {
     out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
     return out;
 };
-},{}],94:[function(_dereq_,module,exports){
+},{}],91:[function(_dereq_,module,exports){
 module.exports = perspective;
 
 /**
@@ -6436,7 +5841,207 @@ function perspective(out, fovy, aspect, near, far) {
     out[15] = 0;
     return out;
 };
+},{}],92:[function(_dereq_,module,exports){
+module.exports = rotate;
+
+/**
+ * Rotates a mat4 by the given angle
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {mat4} a the matrix to rotate
+ * @param {Number} rad the angle to rotate the matrix by
+ * @param {vec3} axis the axis to rotate around
+ * @returns {mat4} out
+ */
+function rotate(out, a, rad, axis) {
+    var x = axis[0], y = axis[1], z = axis[2],
+        len = Math.sqrt(x * x + y * y + z * z),
+        s, c, t,
+        a00, a01, a02, a03,
+        a10, a11, a12, a13,
+        a20, a21, a22, a23,
+        b00, b01, b02,
+        b10, b11, b12,
+        b20, b21, b22;
+
+    if (Math.abs(len) < 0.000001) { return null; }
+    
+    len = 1 / len;
+    x *= len;
+    y *= len;
+    z *= len;
+
+    s = Math.sin(rad);
+    c = Math.cos(rad);
+    t = 1 - c;
+
+    a00 = a[0]; a01 = a[1]; a02 = a[2]; a03 = a[3];
+    a10 = a[4]; a11 = a[5]; a12 = a[6]; a13 = a[7];
+    a20 = a[8]; a21 = a[9]; a22 = a[10]; a23 = a[11];
+
+    // Construct the elements of the rotation matrix
+    b00 = x * x * t + c; b01 = y * x * t + z * s; b02 = z * x * t - y * s;
+    b10 = x * y * t - z * s; b11 = y * y * t + c; b12 = z * y * t + x * s;
+    b20 = x * z * t + y * s; b21 = y * z * t - x * s; b22 = z * z * t + c;
+
+    // Perform rotation-specific matrix multiplication
+    out[0] = a00 * b00 + a10 * b01 + a20 * b02;
+    out[1] = a01 * b00 + a11 * b01 + a21 * b02;
+    out[2] = a02 * b00 + a12 * b01 + a22 * b02;
+    out[3] = a03 * b00 + a13 * b01 + a23 * b02;
+    out[4] = a00 * b10 + a10 * b11 + a20 * b12;
+    out[5] = a01 * b10 + a11 * b11 + a21 * b12;
+    out[6] = a02 * b10 + a12 * b11 + a22 * b12;
+    out[7] = a03 * b10 + a13 * b11 + a23 * b12;
+    out[8] = a00 * b20 + a10 * b21 + a20 * b22;
+    out[9] = a01 * b20 + a11 * b21 + a21 * b22;
+    out[10] = a02 * b20 + a12 * b21 + a22 * b22;
+    out[11] = a03 * b20 + a13 * b21 + a23 * b22;
+
+    if (a !== out) { // If the source and destination differ, copy the unchanged last row
+        out[12] = a[12];
+        out[13] = a[13];
+        out[14] = a[14];
+        out[15] = a[15];
+    }
+    return out;
+};
+},{}],93:[function(_dereq_,module,exports){
+module.exports = rotateX;
+
+/**
+ * Rotates a matrix by the given angle around the X axis
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {mat4} a the matrix to rotate
+ * @param {Number} rad the angle to rotate the matrix by
+ * @returns {mat4} out
+ */
+function rotateX(out, a, rad) {
+    var s = Math.sin(rad),
+        c = Math.cos(rad),
+        a10 = a[4],
+        a11 = a[5],
+        a12 = a[6],
+        a13 = a[7],
+        a20 = a[8],
+        a21 = a[9],
+        a22 = a[10],
+        a23 = a[11];
+
+    if (a !== out) { // If the source and destination differ, copy the unchanged rows
+        out[0]  = a[0];
+        out[1]  = a[1];
+        out[2]  = a[2];
+        out[3]  = a[3];
+        out[12] = a[12];
+        out[13] = a[13];
+        out[14] = a[14];
+        out[15] = a[15];
+    }
+
+    // Perform axis-specific matrix multiplication
+    out[4] = a10 * c + a20 * s;
+    out[5] = a11 * c + a21 * s;
+    out[6] = a12 * c + a22 * s;
+    out[7] = a13 * c + a23 * s;
+    out[8] = a20 * c - a10 * s;
+    out[9] = a21 * c - a11 * s;
+    out[10] = a22 * c - a12 * s;
+    out[11] = a23 * c - a13 * s;
+    return out;
+};
+},{}],94:[function(_dereq_,module,exports){
+module.exports = rotateY;
+
+/**
+ * Rotates a matrix by the given angle around the Y axis
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {mat4} a the matrix to rotate
+ * @param {Number} rad the angle to rotate the matrix by
+ * @returns {mat4} out
+ */
+function rotateY(out, a, rad) {
+    var s = Math.sin(rad),
+        c = Math.cos(rad),
+        a00 = a[0],
+        a01 = a[1],
+        a02 = a[2],
+        a03 = a[3],
+        a20 = a[8],
+        a21 = a[9],
+        a22 = a[10],
+        a23 = a[11];
+
+    if (a !== out) { // If the source and destination differ, copy the unchanged rows
+        out[4]  = a[4];
+        out[5]  = a[5];
+        out[6]  = a[6];
+        out[7]  = a[7];
+        out[12] = a[12];
+        out[13] = a[13];
+        out[14] = a[14];
+        out[15] = a[15];
+    }
+
+    // Perform axis-specific matrix multiplication
+    out[0] = a00 * c - a20 * s;
+    out[1] = a01 * c - a21 * s;
+    out[2] = a02 * c - a22 * s;
+    out[3] = a03 * c - a23 * s;
+    out[8] = a00 * s + a20 * c;
+    out[9] = a01 * s + a21 * c;
+    out[10] = a02 * s + a22 * c;
+    out[11] = a03 * s + a23 * c;
+    return out;
+};
 },{}],95:[function(_dereq_,module,exports){
+module.exports = rotateZ;
+
+/**
+ * Rotates a matrix by the given angle around the Z axis
+ *
+ * @param {mat4} out the receiving matrix
+ * @param {mat4} a the matrix to rotate
+ * @param {Number} rad the angle to rotate the matrix by
+ * @returns {mat4} out
+ */
+function rotateZ(out, a, rad) {
+    var s = Math.sin(rad),
+        c = Math.cos(rad),
+        a00 = a[0],
+        a01 = a[1],
+        a02 = a[2],
+        a03 = a[3],
+        a10 = a[4],
+        a11 = a[5],
+        a12 = a[6],
+        a13 = a[7];
+
+    if (a !== out) { // If the source and destination differ, copy the unchanged last row
+        out[8]  = a[8];
+        out[9]  = a[9];
+        out[10] = a[10];
+        out[11] = a[11];
+        out[12] = a[12];
+        out[13] = a[13];
+        out[14] = a[14];
+        out[15] = a[15];
+    }
+
+    // Perform axis-specific matrix multiplication
+    out[0] = a00 * c + a10 * s;
+    out[1] = a01 * c + a11 * s;
+    out[2] = a02 * c + a12 * s;
+    out[3] = a03 * c + a13 * s;
+    out[4] = a10 * c - a00 * s;
+    out[5] = a11 * c - a01 * s;
+    out[6] = a12 * c - a02 * s;
+    out[7] = a13 * c - a03 * s;
+    return out;
+};
+},{}],96:[function(_dereq_,module,exports){
 module.exports = scale;
 
 /**
@@ -6468,7 +6073,7 @@ function scale(out, a, v) {
     out[15] = a[15];
     return out;
 };
-},{}],96:[function(_dereq_,module,exports){
+},{}],97:[function(_dereq_,module,exports){
 module.exports = translate;
 
 /**
@@ -6507,7 +6112,7 @@ function translate(out, a, v) {
 
     return out;
 };
-},{}],97:[function(_dereq_,module,exports){
+},{}],98:[function(_dereq_,module,exports){
 module.exports = parseErrors
 
 function parseErrors(log) {
@@ -6535,7 +6140,7 @@ function parseErrors(log) {
   return logs
 }
 
-},{}],98:[function(_dereq_,module,exports){
+},{}],99:[function(_dereq_,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -6621,7 +6226,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],99:[function(_dereq_,module,exports){
+},{}],100:[function(_dereq_,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -6646,7 +6251,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],100:[function(_dereq_,module,exports){
+},{}],101:[function(_dereq_,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -6669,14 +6274,14 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],101:[function(_dereq_,module,exports){
+},{}],102:[function(_dereq_,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],102:[function(_dereq_,module,exports){
+},{}],103:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -6685,7 +6290,7 @@ var yaml = _dereq_('./lib/js-yaml.js');
 
 module.exports = yaml;
 
-},{"./lib/js-yaml.js":103}],103:[function(_dereq_,module,exports){
+},{"./lib/js-yaml.js":104}],104:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -6726,7 +6331,7 @@ module.exports.parse          = deprecated('parse');
 module.exports.compose        = deprecated('compose');
 module.exports.addConstructor = deprecated('addConstructor');
 
-},{"./js-yaml/exception":105,"./js-yaml/loader":106,"./js-yaml/schema":108,"./js-yaml/schema/core":109,"./js-yaml/schema/default_full":110,"./js-yaml/schema/default_safe":111,"./js-yaml/schema/failsafe":112,"./js-yaml/schema/json":113,"./js-yaml/type":114}],104:[function(_dereq_,module,exports){
+},{"./js-yaml/exception":106,"./js-yaml/loader":107,"./js-yaml/schema":109,"./js-yaml/schema/core":110,"./js-yaml/schema/default_full":111,"./js-yaml/schema/default_safe":112,"./js-yaml/schema/failsafe":113,"./js-yaml/schema/json":114,"./js-yaml/type":115}],105:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -6787,7 +6392,7 @@ module.exports.repeat         = repeat;
 module.exports.isNegativeZero = isNegativeZero;
 module.exports.extend         = extend;
 
-},{}],105:[function(_dereq_,module,exports){
+},{}],106:[function(_dereq_,module,exports){
 // YAML error class. http://stackoverflow.com/questions/8458984
 //
 'use strict';
@@ -6832,7 +6437,7 @@ YAMLException.prototype.toString = function toString(compact) {
 
 module.exports = YAMLException;
 
-},{}],106:[function(_dereq_,module,exports){
+},{}],107:[function(_dereq_,module,exports){
 'use strict';
 
 /*eslint-disable max-len,no-use-before-define*/
@@ -8420,7 +8025,7 @@ module.exports.load        = load;
 module.exports.safeLoadAll = safeLoadAll;
 module.exports.safeLoad    = safeLoad;
 
-},{"./common":104,"./exception":105,"./mark":107,"./schema/default_full":110,"./schema/default_safe":111}],107:[function(_dereq_,module,exports){
+},{"./common":105,"./exception":106,"./mark":108,"./schema/default_full":111,"./schema/default_safe":112}],108:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -8498,7 +8103,7 @@ Mark.prototype.toString = function toString(compact) {
 
 module.exports = Mark;
 
-},{"./common":104}],108:[function(_dereq_,module,exports){
+},{"./common":105}],109:[function(_dereq_,module,exports){
 'use strict';
 
 /*eslint-disable max-len*/
@@ -8604,7 +8209,7 @@ Schema.create = function createSchema() {
 
 module.exports = Schema;
 
-},{"./common":104,"./exception":105,"./type":114}],109:[function(_dereq_,module,exports){
+},{"./common":105,"./exception":106,"./type":115}],110:[function(_dereq_,module,exports){
 // Standard YAML's Core schema.
 // http://www.yaml.org/spec/1.2/spec.html#id2804923
 //
@@ -8624,7 +8229,7 @@ module.exports = new Schema({
   ]
 });
 
-},{"../schema":108,"./json":113}],110:[function(_dereq_,module,exports){
+},{"../schema":109,"./json":114}],111:[function(_dereq_,module,exports){
 // JS-YAML's default schema for `load` function.
 // It is not described in the YAML specification.
 //
@@ -8651,7 +8256,7 @@ module.exports = Schema.DEFAULT = new Schema({
   ]
 });
 
-},{"../schema":108,"../type/js/function":119,"../type/js/regexp":120,"../type/js/undefined":121,"./default_safe":111}],111:[function(_dereq_,module,exports){
+},{"../schema":109,"../type/js/function":120,"../type/js/regexp":121,"../type/js/undefined":122,"./default_safe":112}],112:[function(_dereq_,module,exports){
 // JS-YAML's default schema for `safeLoad` function.
 // It is not described in the YAML specification.
 //
@@ -8681,7 +8286,7 @@ module.exports = new Schema({
   ]
 });
 
-},{"../schema":108,"../type/binary":115,"../type/merge":123,"../type/omap":125,"../type/pairs":126,"../type/set":128,"../type/timestamp":130,"./core":109}],112:[function(_dereq_,module,exports){
+},{"../schema":109,"../type/binary":116,"../type/merge":124,"../type/omap":126,"../type/pairs":127,"../type/set":129,"../type/timestamp":131,"./core":110}],113:[function(_dereq_,module,exports){
 // Standard YAML's Failsafe schema.
 // http://www.yaml.org/spec/1.2/spec.html#id2802346
 
@@ -8700,7 +8305,7 @@ module.exports = new Schema({
   ]
 });
 
-},{"../schema":108,"../type/map":122,"../type/seq":127,"../type/str":129}],113:[function(_dereq_,module,exports){
+},{"../schema":109,"../type/map":123,"../type/seq":128,"../type/str":130}],114:[function(_dereq_,module,exports){
 // Standard YAML's JSON schema.
 // http://www.yaml.org/spec/1.2/spec.html#id2803231
 //
@@ -8727,7 +8332,7 @@ module.exports = new Schema({
   ]
 });
 
-},{"../schema":108,"../type/bool":116,"../type/float":117,"../type/int":118,"../type/null":124,"./failsafe":112}],114:[function(_dereq_,module,exports){
+},{"../schema":109,"../type/bool":117,"../type/float":118,"../type/int":119,"../type/null":125,"./failsafe":113}],115:[function(_dereq_,module,exports){
 'use strict';
 
 var YAMLException = _dereq_('./exception');
@@ -8790,7 +8395,7 @@ function Type(tag, options) {
 
 module.exports = Type;
 
-},{"./exception":105}],115:[function(_dereq_,module,exports){
+},{"./exception":106}],116:[function(_dereq_,module,exports){
 'use strict';
 
 /*eslint-disable no-bitwise*/
@@ -8922,7 +8527,7 @@ module.exports = new Type('tag:yaml.org,2002:binary', {
   represent: representYamlBinary
 });
 
-},{"../type":114,"buffer":9}],116:[function(_dereq_,module,exports){
+},{"../type":115,"buffer":4}],117:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -8959,7 +8564,7 @@ module.exports = new Type('tag:yaml.org,2002:bool', {
   defaultStyle: 'lowercase'
 });
 
-},{"../type":114}],117:[function(_dereq_,module,exports){
+},{"../type":115}],118:[function(_dereq_,module,exports){
 'use strict';
 
 var common = _dereq_('../common');
@@ -9066,7 +8671,7 @@ module.exports = new Type('tag:yaml.org,2002:float', {
   defaultStyle: 'lowercase'
 });
 
-},{"../common":104,"../type":114}],118:[function(_dereq_,module,exports){
+},{"../common":105,"../type":115}],119:[function(_dereq_,module,exports){
 'use strict';
 
 var common = _dereq_('../common');
@@ -9236,7 +8841,7 @@ module.exports = new Type('tag:yaml.org,2002:int', {
   }
 });
 
-},{"../common":104,"../type":114}],119:[function(_dereq_,module,exports){
+},{"../common":105,"../type":115}],120:[function(_dereq_,module,exports){
 'use strict';
 
 var esprima;
@@ -9322,7 +8927,7 @@ module.exports = new Type('tag:yaml.org,2002:js/function', {
   represent: representJavascriptFunction
 });
 
-},{"../../type":114}],120:[function(_dereq_,module,exports){
+},{"../../type":115}],121:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../../type');
@@ -9384,7 +8989,7 @@ module.exports = new Type('tag:yaml.org,2002:js/regexp', {
   represent: representJavascriptRegExp
 });
 
-},{"../../type":114}],121:[function(_dereq_,module,exports){
+},{"../../type":115}],122:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../../type');
@@ -9414,7 +9019,7 @@ module.exports = new Type('tag:yaml.org,2002:js/undefined', {
   represent: representJavascriptUndefined
 });
 
-},{"../../type":114}],122:[function(_dereq_,module,exports){
+},{"../../type":115}],123:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9424,7 +9029,7 @@ module.exports = new Type('tag:yaml.org,2002:map', {
   construct: function (data) { return data !== null ? data : {}; }
 });
 
-},{"../type":114}],123:[function(_dereq_,module,exports){
+},{"../type":115}],124:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9438,7 +9043,7 @@ module.exports = new Type('tag:yaml.org,2002:merge', {
   resolve: resolveYamlMerge
 });
 
-},{"../type":114}],124:[function(_dereq_,module,exports){
+},{"../type":115}],125:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9474,7 +9079,7 @@ module.exports = new Type('tag:yaml.org,2002:null', {
   defaultStyle: 'lowercase'
 });
 
-},{"../type":114}],125:[function(_dereq_,module,exports){
+},{"../type":115}],126:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9520,7 +9125,7 @@ module.exports = new Type('tag:yaml.org,2002:omap', {
   construct: constructYamlOmap
 });
 
-},{"../type":114}],126:[function(_dereq_,module,exports){
+},{"../type":115}],127:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9575,7 +9180,7 @@ module.exports = new Type('tag:yaml.org,2002:pairs', {
   construct: constructYamlPairs
 });
 
-},{"../type":114}],127:[function(_dereq_,module,exports){
+},{"../type":115}],128:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9585,7 +9190,7 @@ module.exports = new Type('tag:yaml.org,2002:seq', {
   construct: function (data) { return data !== null ? data : []; }
 });
 
-},{"../type":114}],128:[function(_dereq_,module,exports){
+},{"../type":115}],129:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9616,7 +9221,7 @@ module.exports = new Type('tag:yaml.org,2002:set', {
   construct: constructYamlSet
 });
 
-},{"../type":114}],129:[function(_dereq_,module,exports){
+},{"../type":115}],130:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9626,7 +9231,7 @@ module.exports = new Type('tag:yaml.org,2002:str', {
   construct: function (data) { return data !== null ? data : ''; }
 });
 
-},{"../type":114}],130:[function(_dereq_,module,exports){
+},{"../type":115}],131:[function(_dereq_,module,exports){
 'use strict';
 
 var Type = _dereq_('../type');
@@ -9709,7 +9314,7 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
   represent: representYamlTimestamp
 });
 
-},{"../type":114}],131:[function(_dereq_,module,exports){
+},{"../type":115}],132:[function(_dereq_,module,exports){
 'use strict';
 var utils = _dereq_('./utils');
 var support = _dereq_('./support');
@@ -9796,7 +9401,7 @@ exports.decode = function(input) {
     return output;
 };
 
-},{"./support":157,"./utils":159}],132:[function(_dereq_,module,exports){
+},{"./support":158,"./utils":160}],133:[function(_dereq_,module,exports){
 'use strict';
 
 var external = _dereq_("./external");
@@ -9873,7 +9478,7 @@ CompressedObject.createWorkerFrom = function (uncompressedWorker, compression, c
 
 module.exports = CompressedObject;
 
-},{"./external":136,"./stream/Crc32Probe":152,"./stream/DataLengthProbe":153,"./stream/DataWorker":154}],133:[function(_dereq_,module,exports){
+},{"./external":137,"./stream/Crc32Probe":153,"./stream/DataLengthProbe":154,"./stream/DataWorker":155}],134:[function(_dereq_,module,exports){
 'use strict';
 
 var GenericWorker = _dereq_("./stream/GenericWorker");
@@ -9889,7 +9494,7 @@ exports.STORE = {
 };
 exports.DEFLATE = _dereq_('./flate');
 
-},{"./flate":137,"./stream/GenericWorker":155}],134:[function(_dereq_,module,exports){
+},{"./flate":138,"./stream/GenericWorker":156}],135:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./utils');
@@ -9969,7 +9574,7 @@ module.exports = function crc32wrapper(input, crc) {
 };
 // vim: set shiftwidth=4 softtabstop=4:
 
-},{"./utils":159}],135:[function(_dereq_,module,exports){
+},{"./utils":160}],136:[function(_dereq_,module,exports){
 'use strict';
 exports.base64 = false;
 exports.binary = false;
@@ -9982,7 +9587,7 @@ exports.comment = null;
 exports.unixPermissions = null;
 exports.dosPermissions = null;
 
-},{}],136:[function(_dereq_,module,exports){
+},{}],137:[function(_dereq_,module,exports){
 'use strict';
 
 // var ES6Promise = require("es6-promise").Promise;
@@ -9994,7 +9599,7 @@ module.exports = {
     Promise: window.Promise
 };
 
-},{}],137:[function(_dereq_,module,exports){
+},{}],138:[function(_dereq_,module,exports){
 'use strict';
 var USE_TYPEDARRAY = (typeof Uint8Array !== 'undefined') && (typeof Uint16Array !== 'undefined') && (typeof Uint32Array !== 'undefined');
 
@@ -10064,7 +9669,7 @@ exports.uncompressWorker = function () {
     return new FlateWorker("Inflate", {});
 };
 
-},{"./stream/GenericWorker":155,"./utils":159,"pako":170}],138:[function(_dereq_,module,exports){
+},{"./stream/GenericWorker":156,"./utils":160,"pako":171}],139:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -10114,7 +9719,7 @@ JSZip.loadAsync = function (content, options) {
 JSZip.external = _dereq_("./external");
 module.exports = JSZip;
 
-},{"./defaults":135,"./external":136,"./load":139,"./object":143,"./support":157}],139:[function(_dereq_,module,exports){
+},{"./defaults":136,"./external":137,"./load":140,"./object":144,"./support":158}],140:[function(_dereq_,module,exports){
 'use strict';
 var utils = _dereq_('./utils');
 var external = _dereq_("./external");
@@ -10198,7 +9803,7 @@ module.exports = function(data, options) {
     });
 };
 
-},{"./external":136,"./nodejsUtils":142,"./stream/Crc32Probe":152,"./utf8":158,"./utils":159,"./zipEntries":160}],140:[function(_dereq_,module,exports){
+},{"./external":137,"./nodejsUtils":143,"./stream/Crc32Probe":153,"./utf8":159,"./utils":160,"./zipEntries":161}],141:[function(_dereq_,module,exports){
 "use strict";
 
 var utils = _dereq_('../utils');
@@ -10274,7 +9879,7 @@ NodejsStreamInputAdapter.prototype.resume = function () {
 
 module.exports = NodejsStreamInputAdapter;
 
-},{"../stream/GenericWorker":155,"../utils":159}],141:[function(_dereq_,module,exports){
+},{"../stream/GenericWorker":156,"../utils":160}],142:[function(_dereq_,module,exports){
 'use strict';
 
 var Readable = _dereq_('readable-stream').Readable;
@@ -10318,7 +9923,7 @@ NodejsStreamOutputAdapter.prototype._read = function() {
 
 module.exports = NodejsStreamOutputAdapter;
 
-},{"readable-stream":168,"util":194}],142:[function(_dereq_,module,exports){
+},{"readable-stream":169,"util":199}],143:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -10357,7 +9962,7 @@ module.exports = {
 
 }).call(this,_dereq_("buffer").Buffer)
 
-},{"buffer":10}],143:[function(_dereq_,module,exports){
+},{"buffer":5}],144:[function(_dereq_,module,exports){
 'use strict';
 // var utf8 = require('./utf8');
 var utils = _dereq_('./utils');
@@ -10746,7 +10351,7 @@ var out = {
 };
 module.exports = out;
 
-},{"./compressedObject":132,"./defaults":135,"./nodejs/NodejsStreamInputAdapter":140,"./nodejsUtils":142,"./stream/GenericWorker":155,"./utils":159,"./zipObject":162}],144:[function(_dereq_,module,exports){
+},{"./compressedObject":133,"./defaults":136,"./nodejs/NodejsStreamInputAdapter":141,"./nodejsUtils":143,"./stream/GenericWorker":156,"./utils":160,"./zipObject":163}],145:[function(_dereq_,module,exports){
 'use strict';
 var DataReader = _dereq_('./DataReader');
 var utils = _dereq_('../utils');
@@ -10805,7 +10410,7 @@ ArrayReader.prototype.readData = function(size) {
 };
 module.exports = ArrayReader;
 
-},{"../utils":159,"./DataReader":145}],145:[function(_dereq_,module,exports){
+},{"../utils":160,"./DataReader":146}],146:[function(_dereq_,module,exports){
 'use strict';
 var utils = _dereq_('../utils');
 
@@ -10923,7 +10528,7 @@ DataReader.prototype = {
 };
 module.exports = DataReader;
 
-},{"../utils":159}],146:[function(_dereq_,module,exports){
+},{"../utils":160}],147:[function(_dereq_,module,exports){
 'use strict';
 var Uint8ArrayReader = _dereq_('./Uint8ArrayReader');
 var utils = _dereq_('../utils');
@@ -10944,7 +10549,7 @@ NodeBufferReader.prototype.readData = function(size) {
 };
 module.exports = NodeBufferReader;
 
-},{"../utils":159,"./Uint8ArrayReader":148}],147:[function(_dereq_,module,exports){
+},{"../utils":160,"./Uint8ArrayReader":149}],148:[function(_dereq_,module,exports){
 'use strict';
 var DataReader = _dereq_('./DataReader');
 var utils = _dereq_('../utils');
@@ -10984,7 +10589,7 @@ StringReader.prototype.readData = function(size) {
 };
 module.exports = StringReader;
 
-},{"../utils":159,"./DataReader":145}],148:[function(_dereq_,module,exports){
+},{"../utils":160,"./DataReader":146}],149:[function(_dereq_,module,exports){
 'use strict';
 var ArrayReader = _dereq_('./ArrayReader');
 var utils = _dereq_('../utils');
@@ -11008,7 +10613,7 @@ Uint8ArrayReader.prototype.readData = function(size) {
 };
 module.exports = Uint8ArrayReader;
 
-},{"../utils":159,"./ArrayReader":144}],149:[function(_dereq_,module,exports){
+},{"../utils":160,"./ArrayReader":145}],150:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('../utils');
@@ -11040,7 +10645,7 @@ module.exports = function (data) {
 
 // vim: set shiftwidth=4 softtabstop=4:
 
-},{"../support":157,"../utils":159,"./ArrayReader":144,"./NodeBufferReader":146,"./StringReader":147,"./Uint8ArrayReader":148}],150:[function(_dereq_,module,exports){
+},{"../support":158,"../utils":160,"./ArrayReader":145,"./NodeBufferReader":147,"./StringReader":148,"./Uint8ArrayReader":149}],151:[function(_dereq_,module,exports){
 'use strict';
 exports.LOCAL_FILE_HEADER = "PK\x03\x04";
 exports.CENTRAL_FILE_HEADER = "PK\x01\x02";
@@ -11049,7 +10654,7 @@ exports.ZIP64_CENTRAL_DIRECTORY_LOCATOR = "PK\x06\x07";
 exports.ZIP64_CENTRAL_DIRECTORY_END = "PK\x06\x06";
 exports.DATA_DESCRIPTOR = "PK\x07\x08";
 
-},{}],151:[function(_dereq_,module,exports){
+},{}],152:[function(_dereq_,module,exports){
 'use strict';
 
 var GenericWorker = _dereq_('./GenericWorker');
@@ -11077,7 +10682,7 @@ ConvertWorker.prototype.processChunk = function (chunk) {
 };
 module.exports = ConvertWorker;
 
-},{"../utils":159,"./GenericWorker":155}],152:[function(_dereq_,module,exports){
+},{"../utils":160,"./GenericWorker":156}],153:[function(_dereq_,module,exports){
 'use strict';
 
 var GenericWorker = _dereq_('./GenericWorker');
@@ -11102,7 +10707,7 @@ Crc32Probe.prototype.processChunk = function (chunk) {
 };
 module.exports = Crc32Probe;
 
-},{"../crc32":134,"../utils":159,"./GenericWorker":155}],153:[function(_dereq_,module,exports){
+},{"../crc32":135,"../utils":160,"./GenericWorker":156}],154:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('../utils');
@@ -11133,7 +10738,7 @@ DataLengthProbe.prototype.processChunk = function (chunk) {
 module.exports = DataLengthProbe;
 
 
-},{"../utils":159,"./GenericWorker":155}],154:[function(_dereq_,module,exports){
+},{"../utils":160,"./GenericWorker":156}],155:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('../utils');
@@ -11251,7 +10856,7 @@ DataWorker.prototype._tick = function() {
 
 module.exports = DataWorker;
 
-},{"../utils":159,"./GenericWorker":155}],155:[function(_dereq_,module,exports){
+},{"../utils":160,"./GenericWorker":156}],156:[function(_dereq_,module,exports){
 'use strict';
 
 /**
@@ -11516,7 +11121,7 @@ GenericWorker.prototype = {
 
 module.exports = GenericWorker;
 
-},{}],156:[function(_dereq_,module,exports){
+},{}],157:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -11726,7 +11331,7 @@ module.exports = StreamHelper;
 
 }).call(this,_dereq_("buffer").Buffer)
 
-},{"../base64":131,"../external":136,"../nodejs/NodejsStreamOutputAdapter":141,"../utils":159,"./ConvertWorker":151,"./GenericWorker":155,"buffer":10}],157:[function(_dereq_,module,exports){
+},{"../base64":132,"../external":137,"../nodejs/NodejsStreamOutputAdapter":142,"../utils":160,"./ConvertWorker":152,"./GenericWorker":156,"buffer":5}],158:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -11765,7 +11370,7 @@ exports.nodestream = !!_dereq_("./nodejs/NodejsStreamOutputAdapter").prototype;
 
 }).call(this,_dereq_("buffer").Buffer)
 
-},{"./nodejs/NodejsStreamOutputAdapter":141,"buffer":10}],158:[function(_dereq_,module,exports){
+},{"./nodejs/NodejsStreamOutputAdapter":142,"buffer":5}],159:[function(_dereq_,module,exports){
 'use strict';
 
 var utils = _dereq_('./utils');
@@ -12042,7 +11647,7 @@ Utf8EncodeWorker.prototype.processChunk = function (chunk) {
 };
 exports.Utf8EncodeWorker = Utf8EncodeWorker;
 
-},{"./nodejsUtils":142,"./stream/GenericWorker":155,"./support":157,"./utils":159}],159:[function(_dereq_,module,exports){
+},{"./nodejsUtils":143,"./stream/GenericWorker":156,"./support":158,"./utils":160}],160:[function(_dereq_,module,exports){
 'use strict';
 
 var support = _dereq_('./support');
@@ -12509,7 +12114,7 @@ exports.prepareContent = function(name, inputData, isBinary, isOptimizedBinarySt
     });
 };
 
-},{"./base64":131,"./external":136,"./nodejsUtils":142,"./support":157,"asap":6}],160:[function(_dereq_,module,exports){
+},{"./base64":132,"./external":137,"./nodejsUtils":143,"./support":158,"asap":1}],161:[function(_dereq_,module,exports){
 'use strict';
 var readerFor = _dereq_('./reader/readerFor');
 var utils = _dereq_('./utils');
@@ -12773,7 +12378,7 @@ ZipEntries.prototype = {
 // }}} end of ZipEntries
 module.exports = ZipEntries;
 
-},{"./reader/readerFor":149,"./signature":150,"./support":157,"./utf8":158,"./utils":159,"./zipEntry":161}],161:[function(_dereq_,module,exports){
+},{"./reader/readerFor":150,"./signature":151,"./support":158,"./utf8":159,"./utils":160,"./zipEntry":162}],162:[function(_dereq_,module,exports){
 'use strict';
 var readerFor = _dereq_('./reader/readerFor');
 var utils = _dereq_('./utils');
@@ -13067,7 +12672,7 @@ ZipEntry.prototype = {
 };
 module.exports = ZipEntry;
 
-},{"./compressedObject":132,"./compressions":133,"./crc32":134,"./reader/readerFor":149,"./support":157,"./utf8":158,"./utils":159}],162:[function(_dereq_,module,exports){
+},{"./compressedObject":133,"./compressions":134,"./crc32":135,"./reader/readerFor":150,"./support":158,"./utf8":159,"./utils":160}],163:[function(_dereq_,module,exports){
 'use strict';
 
 var StreamHelper = _dereq_('./stream/StreamHelper');
@@ -13193,7 +12798,7 @@ for(var i = 0; i < removedMethods.length; i++) {
 }
 module.exports = ZipObject;
 
-},{"./compressedObject":132,"./stream/DataWorker":154,"./stream/GenericWorker":155,"./stream/StreamHelper":156,"./utf8":158}],163:[function(_dereq_,module,exports){
+},{"./compressedObject":133,"./stream/DataWorker":155,"./stream/GenericWorker":156,"./stream/StreamHelper":157,"./utf8":159}],164:[function(_dereq_,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
@@ -13269,7 +12874,7 @@ function forEach(xs, f) {
     f(xs[i], i);
   }
 }
-},{"./_stream_readable":165,"./_stream_writable":167,"core-util-is":75,"inherits":99,"process-nextick-args":187}],164:[function(_dereq_,module,exports){
+},{"./_stream_readable":166,"./_stream_writable":168,"core-util-is":70,"inherits":100,"process-nextick-args":190}],165:[function(_dereq_,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
@@ -13296,7 +12901,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":166,"core-util-is":75,"inherits":99}],165:[function(_dereq_,module,exports){
+},{"./_stream_transform":167,"core-util-is":70,"inherits":100}],166:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
@@ -14180,7 +13785,7 @@ function indexOf(xs, x) {
 }
 }).call(this,_dereq_('_process'))
 
-},{"./_stream_duplex":163,"_process":188,"buffer":10,"core-util-is":75,"events":78,"inherits":99,"isarray":101,"process-nextick-args":187,"string_decoder/":169,"util":9}],166:[function(_dereq_,module,exports){
+},{"./_stream_duplex":164,"_process":191,"buffer":5,"core-util-is":70,"events":73,"inherits":100,"isarray":102,"process-nextick-args":190,"string_decoder/":170,"util":4}],167:[function(_dereq_,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -14361,7 +13966,7 @@ function done(stream, er) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":163,"core-util-is":75,"inherits":99}],167:[function(_dereq_,module,exports){
+},{"./_stream_duplex":164,"core-util-is":70,"inherits":100}],168:[function(_dereq_,module,exports){
 (function (process){
 // A bit simpler than readable streams.
 // Implement an async ._write(chunk, encoding, cb), and it'll handle all
@@ -14881,7 +14486,7 @@ function CorkedRequest(state) {
 }
 }).call(this,_dereq_('_process'))
 
-},{"./_stream_duplex":163,"_process":188,"buffer":10,"core-util-is":75,"events":78,"inherits":99,"process-nextick-args":187,"util-deprecate":191}],168:[function(_dereq_,module,exports){
+},{"./_stream_duplex":164,"_process":191,"buffer":5,"core-util-is":70,"events":73,"inherits":100,"process-nextick-args":190,"util-deprecate":196}],169:[function(_dereq_,module,exports){
 var Stream = (function (){
   try {
     return _dereq_('st' + 'ream'); // hack to fix a circular dependency issue when used with browserify
@@ -14895,7 +14500,7 @@ exports.Duplex = _dereq_('./lib/_stream_duplex.js');
 exports.Transform = _dereq_('./lib/_stream_transform.js');
 exports.PassThrough = _dereq_('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":163,"./lib/_stream_passthrough.js":164,"./lib/_stream_readable.js":165,"./lib/_stream_transform.js":166,"./lib/_stream_writable.js":167}],169:[function(_dereq_,module,exports){
+},{"./lib/_stream_duplex.js":164,"./lib/_stream_passthrough.js":165,"./lib/_stream_readable.js":166,"./lib/_stream_transform.js":167,"./lib/_stream_writable.js":168}],170:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15118,7 +14723,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":10}],170:[function(_dereq_,module,exports){
+},{"buffer":5}],171:[function(_dereq_,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -15134,7 +14739,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":171,"./lib/inflate":172,"./lib/utils/common":173,"./lib/zlib/constants":176}],171:[function(_dereq_,module,exports){
+},{"./lib/deflate":172,"./lib/inflate":173,"./lib/utils/common":174,"./lib/zlib/constants":177}],172:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -15536,7 +15141,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":173,"./utils/strings":174,"./zlib/deflate":178,"./zlib/messages":183,"./zlib/zstream":185}],172:[function(_dereq_,module,exports){
+},{"./utils/common":174,"./utils/strings":175,"./zlib/deflate":179,"./zlib/messages":184,"./zlib/zstream":186}],173:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -15956,7 +15561,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":173,"./utils/strings":174,"./zlib/constants":176,"./zlib/gzheader":179,"./zlib/inflate":181,"./zlib/messages":183,"./zlib/zstream":185}],173:[function(_dereq_,module,exports){
+},{"./utils/common":174,"./utils/strings":175,"./zlib/constants":177,"./zlib/gzheader":180,"./zlib/inflate":182,"./zlib/messages":184,"./zlib/zstream":186}],174:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -16063,7 +15668,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],174:[function(_dereq_,module,exports){
+},{}],175:[function(_dereq_,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -16250,7 +15855,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":173}],175:[function(_dereq_,module,exports){
+},{"./common":174}],176:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -16303,7 +15908,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],176:[function(_dereq_,module,exports){
+},{}],177:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -16373,7 +15978,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],177:[function(_dereq_,module,exports){
+},{}],178:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -16434,7 +16039,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],178:[function(_dereq_,module,exports){
+},{}],179:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -18310,7 +17915,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":173,"./adler32":175,"./crc32":177,"./messages":183,"./trees":184}],179:[function(_dereq_,module,exports){
+},{"../utils/common":174,"./adler32":176,"./crc32":178,"./messages":184,"./trees":185}],180:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -18370,7 +17975,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],180:[function(_dereq_,module,exports){
+},{}],181:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -18717,7 +18322,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],181:[function(_dereq_,module,exports){
+},{}],182:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -20275,7 +19880,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":173,"./adler32":175,"./crc32":177,"./inffast":180,"./inftrees":182}],182:[function(_dereq_,module,exports){
+},{"../utils/common":174,"./adler32":176,"./crc32":178,"./inffast":181,"./inftrees":183}],183:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -20620,7 +20225,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":173}],183:[function(_dereq_,module,exports){
+},{"../utils/common":174}],184:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -20654,7 +20259,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],184:[function(_dereq_,module,exports){
+},{}],185:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -21876,7 +21481,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":173}],185:[function(_dereq_,module,exports){
+},{"../utils/common":174}],186:[function(_dereq_,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -21925,17 +21530,178 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],186:[function(_dereq_,module,exports){
+},{}],187:[function(_dereq_,module,exports){
+'use strict';
+
+// lightweight Buffer shim for pbf browser build
+// based on code from github.com/feross/buffer (MIT-licensed)
+
+module.exports = Buffer;
+
+var ieee754 = _dereq_('ieee754');
+
+var BufferMethods;
+
+function Buffer(length) {
+    var arr;
+    if (length && length.length) {
+        arr = length;
+        length = arr.length;
+    }
+    var buf = new Uint8Array(length || 0);
+    if (arr) buf.set(arr);
+
+    buf.readUInt32LE = BufferMethods.readUInt32LE;
+    buf.writeUInt32LE = BufferMethods.writeUInt32LE;
+    buf.readInt32LE = BufferMethods.readInt32LE;
+    buf.writeInt32LE = BufferMethods.writeInt32LE;
+    buf.readFloatLE = BufferMethods.readFloatLE;
+    buf.writeFloatLE = BufferMethods.writeFloatLE;
+    buf.readDoubleLE = BufferMethods.readDoubleLE;
+    buf.writeDoubleLE = BufferMethods.writeDoubleLE;
+    buf.toString = BufferMethods.toString;
+    buf.write = BufferMethods.write;
+    buf.slice = BufferMethods.slice;
+    buf.copy = BufferMethods.copy;
+
+    buf._isBuffer = true;
+    return buf;
+}
+
+var lastStr, lastStrEncoded;
+
+BufferMethods = {
+    readUInt32LE: function(pos) {
+        return ((this[pos]) |
+            (this[pos + 1] << 8) |
+            (this[pos + 2] << 16)) +
+            (this[pos + 3] * 0x1000000);
+    },
+
+    writeUInt32LE: function(val, pos) {
+        this[pos] = val;
+        this[pos + 1] = (val >>> 8);
+        this[pos + 2] = (val >>> 16);
+        this[pos + 3] = (val >>> 24);
+    },
+
+    readInt32LE: function(pos) {
+        return ((this[pos]) |
+            (this[pos + 1] << 8) |
+            (this[pos + 2] << 16)) +
+            (this[pos + 3] << 24);
+    },
+
+    readFloatLE:  function(pos) { return ieee754.read(this, pos, true, 23, 4); },
+    readDoubleLE: function(pos) { return ieee754.read(this, pos, true, 52, 8); },
+
+    writeFloatLE:  function(val, pos) { return ieee754.write(this, val, pos, true, 23, 4); },
+    writeDoubleLE: function(val, pos) { return ieee754.write(this, val, pos, true, 52, 8); },
+
+    toString: function(encoding, start, end) {
+        var str = '',
+            tmp = '';
+
+        start = start || 0;
+        end = Math.min(this.length, end || this.length);
+
+        for (var i = start; i < end; i++) {
+            var ch = this[i];
+            if (ch <= 0x7F) {
+                str += decodeURIComponent(tmp) + String.fromCharCode(ch);
+                tmp = '';
+            } else {
+                tmp += '%' + ch.toString(16);
+            }
+        }
+
+        str += decodeURIComponent(tmp);
+
+        return str;
+    },
+
+    write: function(str, pos) {
+        var bytes = str === lastStr ? lastStrEncoded : encodeString(str);
+        for (var i = 0; i < bytes.length; i++) {
+            this[pos + i] = bytes[i];
+        }
+    },
+
+    slice: function(start, end) {
+        return this.subarray(start, end);
+    },
+
+    copy: function(buf, pos) {
+        pos = pos || 0;
+        for (var i = 0; i < this.length; i++) {
+            buf[pos + i] = this[i];
+        }
+    }
+};
+
+BufferMethods.writeInt32LE = BufferMethods.writeUInt32LE;
+
+Buffer.byteLength = function(str) {
+    lastStr = str;
+    lastStrEncoded = encodeString(str);
+    return lastStrEncoded.length;
+};
+
+Buffer.isBuffer = function(buf) {
+    return !!(buf && buf._isBuffer);
+};
+
+function encodeString(str) {
+    var length = str.length,
+        bytes = [];
+
+    for (var i = 0, c, lead; i < length; i++) {
+        c = str.charCodeAt(i); // code point
+
+        if (c > 0xD7FF && c < 0xE000) {
+
+            if (lead) {
+                if (c < 0xDC00) {
+                    bytes.push(0xEF, 0xBF, 0xBD);
+                    lead = c;
+                    continue;
+
+                } else {
+                    c = lead - 0xD800 << 10 | c - 0xDC00 | 0x10000;
+                    lead = null;
+                }
+
+            } else {
+                if (c > 0xDBFF || (i + 1 === length)) bytes.push(0xEF, 0xBF, 0xBD);
+                else lead = c;
+
+                continue;
+            }
+
+        } else if (lead) {
+            bytes.push(0xEF, 0xBF, 0xBD);
+            lead = null;
+        }
+
+        if (c < 0x80) bytes.push(c);
+        else if (c < 0x800) bytes.push(c >> 0x6 | 0xC0, c & 0x3F | 0x80);
+        else if (c < 0x10000) bytes.push(c >> 0xC | 0xE0, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
+        else bytes.push(c >> 0x12 | 0xF0, c >> 0xC & 0x3F | 0x80, c >> 0x6 & 0x3F | 0x80, c & 0x3F | 0x80);
+    }
+    return bytes;
+}
+
+},{"ieee754":99}],188:[function(_dereq_,module,exports){
+(function (global){
 'use strict';
 
 module.exports = Pbf;
 
-var ieee754 = _dereq_('ieee754');
+var Buffer = global.Buffer || _dereq_('./buffer');
 
 function Pbf(buf) {
-    this.buf = ArrayBuffer.isView && ArrayBuffer.isView(buf) ? buf : new Uint8Array(buf || 0);
+    this.buf = !Buffer.isBuffer(buf) ? new Buffer(buf || 0) : buf;
     this.pos = 0;
-    this.type = 0;
     this.length = this.buf.length;
 }
 
@@ -21945,7 +21711,8 @@ Pbf.Bytes   = 2; // length-delimited: string, bytes, embedded messages, packed r
 Pbf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
 
 var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
-    SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
+    SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32,
+    POW_2_63 = Math.pow(2, 63);
 
 Pbf.prototype = {
 
@@ -21956,7 +21723,6 @@ Pbf.prototype = {
     // === READING =================================================================
 
     readFields: function(readField, result, end) {
-        // debugger
         end = end || this.length;
 
         while (this.pos < end) {
@@ -21964,7 +21730,6 @@ Pbf.prototype = {
                 tag = val >> 3,
                 startPos = this.pos;
 
-            this.type = val & 0x7;
             readField(tag, result, this);
 
             if (this.pos === startPos) this.skip(val);
@@ -21977,13 +21742,13 @@ Pbf.prototype = {
     },
 
     readFixed32: function() {
-        var val = readUInt32(this.buf, this.pos);
+        var val = this.buf.readUInt32LE(this.pos);
         this.pos += 4;
         return val;
     },
 
     readSFixed32: function() {
-        var val = readInt32(this.buf, this.pos);
+        var val = this.buf.readInt32LE(this.pos);
         this.pos += 4;
         return val;
     },
@@ -21991,30 +21756,30 @@ Pbf.prototype = {
     // 64-bit int handling is based on github.com/dpw/node-buffer-more-ints (MIT-licensed)
 
     readFixed64: function() {
-        var val = readUInt32(this.buf, this.pos) + readUInt32(this.buf, this.pos + 4) * SHIFT_LEFT_32;
+        var val = this.buf.readUInt32LE(this.pos) + this.buf.readUInt32LE(this.pos + 4) * SHIFT_LEFT_32;
         this.pos += 8;
         return val;
     },
 
     readSFixed64: function() {
-        var val = readUInt32(this.buf, this.pos) + readInt32(this.buf, this.pos + 4) * SHIFT_LEFT_32;
+        var val = this.buf.readUInt32LE(this.pos) + this.buf.readInt32LE(this.pos + 4) * SHIFT_LEFT_32;
         this.pos += 8;
         return val;
     },
 
     readFloat: function() {
-        var val = ieee754.read(this.buf, this.pos, true, 23, 4);
+        var val = this.buf.readFloatLE(this.pos);
         this.pos += 4;
         return val;
     },
 
     readDouble: function() {
-        var val = ieee754.read(this.buf, this.pos, true, 52, 8);
+        var val = this.buf.readDoubleLE(this.pos);
         this.pos += 8;
         return val;
     },
 
-    readVarint: function(isSigned) {
+    readVarint: function() {
         var buf = this.buf,
             val, b;
 
@@ -22022,13 +21787,27 @@ Pbf.prototype = {
         b = buf[this.pos++]; val |= (b & 0x7f) << 7;  if (b < 0x80) return val;
         b = buf[this.pos++]; val |= (b & 0x7f) << 14; if (b < 0x80) return val;
         b = buf[this.pos++]; val |= (b & 0x7f) << 21; if (b < 0x80) return val;
-        b = buf[this.pos];   val |= (b & 0x0f) << 28;
 
-        return readVarintRemainder(val, isSigned, this);
+        return readVarintRemainder(val, this);
     },
 
-    readVarint64: function() { // for compatibility with v2.0.1
-        return this.readVarint(true);
+    readVarint64: function() {
+        var startPos = this.pos,
+            val = this.readVarint();
+
+        if (val < POW_2_63) return val;
+
+        var pos = this.pos - 2;
+        while (this.buf[pos] === 0xff) pos--;
+        if (pos < startPos) pos = startPos;
+
+        val = 0;
+        for (var i = 0; i < pos - startPos + 1; i++) {
+            var b = ~this.buf[startPos + i] & 0x7f;
+            val += i < 4 ? b << i * 7 : b * Math.pow(2, i * 7);
+        }
+
+        return -val - 1;
     },
 
     readSVarint: function() {
@@ -22042,71 +21821,62 @@ Pbf.prototype = {
 
     readString: function() {
         var end = this.readVarint() + this.pos,
-            str = readUtf8(this.buf, this.pos, end);
+            str = this.buf.toString('utf8', this.pos, end);
         this.pos = end;
         return str;
     },
 
     readBytes: function() {
         var end = this.readVarint() + this.pos,
-            buffer = this.buf.subarray(this.pos, end);
+            buffer = this.buf.slice(this.pos, end);
         this.pos = end;
         return buffer;
     },
 
     // verbose for performance reasons; doesn't affect gzipped size
 
-    readPackedVarint: function(arr, isSigned) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
-        while (this.pos < end) arr.push(this.readVarint(isSigned));
+    readPackedVarint: function() {
+        var end = this.readVarint() + this.pos, arr = [];
+        while (this.pos < end) arr.push(this.readVarint());
         return arr;
     },
-    readPackedSVarint: function(arr) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
+    readPackedSVarint: function() {
+        var end = this.readVarint() + this.pos, arr = [];
         while (this.pos < end) arr.push(this.readSVarint());
         return arr;
     },
-    readPackedBoolean: function(arr) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
+    readPackedBoolean: function() {
+        var end = this.readVarint() + this.pos, arr = [];
         while (this.pos < end) arr.push(this.readBoolean());
         return arr;
     },
-    readPackedFloat: function(arr) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
+    readPackedFloat: function() {
+        var end = this.readVarint() + this.pos, arr = [];
         while (this.pos < end) arr.push(this.readFloat());
         return arr;
     },
-    readPackedDouble: function(arr) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
+    readPackedDouble: function() {
+        var end = this.readVarint() + this.pos, arr = [];
         while (this.pos < end) arr.push(this.readDouble());
         return arr;
     },
-    readPackedFixed32: function(arr) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
+    readPackedFixed32: function() {
+        var end = this.readVarint() + this.pos, arr = [];
         while (this.pos < end) arr.push(this.readFixed32());
         return arr;
     },
-    readPackedSFixed32: function(arr) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
+    readPackedSFixed32: function() {
+        var end = this.readVarint() + this.pos, arr = [];
         while (this.pos < end) arr.push(this.readSFixed32());
         return arr;
     },
-    readPackedFixed64: function(arr) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
+    readPackedFixed64: function() {
+        var end = this.readVarint() + this.pos, arr = [];
         while (this.pos < end) arr.push(this.readFixed64());
         return arr;
     },
-    readPackedSFixed64: function(arr) {
-        var end = readPackedEnd(this);
-        arr = arr || [];
+    readPackedSFixed64: function() {
+        var end = this.readVarint() + this.pos, arr = [];
         while (this.pos < end) arr.push(this.readSFixed64());
         return arr;
     },
@@ -22118,8 +21888,6 @@ Pbf.prototype = {
         else if (type === Pbf.Fixed32) this.pos += 4;
         else if (type === Pbf.Fixed64) this.pos += 8;
         else throw new Error('Unimplemented type: ' + type);
-        // else console.log('Unimplemented type: ' + type);
-        // else debugger
     },
 
     // === WRITING =================================================================
@@ -22134,8 +21902,8 @@ Pbf.prototype = {
         while (length < this.pos + min) length *= 2;
 
         if (length !== this.length) {
-            var buf = new Uint8Array(length);
-            buf.set(this.buf);
+            var buf = new Buffer(length);
+            this.buf.copy(buf);
             this.buf = buf;
             this.length = length;
         }
@@ -22144,39 +21912,39 @@ Pbf.prototype = {
     finish: function() {
         this.length = this.pos;
         this.pos = 0;
-        return this.buf.subarray(0, this.length);
+        return this.buf.slice(0, this.length);
     },
 
     writeFixed32: function(val) {
         this.realloc(4);
-        writeInt32(this.buf, val, this.pos);
+        this.buf.writeUInt32LE(val, this.pos);
         this.pos += 4;
     },
 
     writeSFixed32: function(val) {
         this.realloc(4);
-        writeInt32(this.buf, val, this.pos);
+        this.buf.writeInt32LE(val, this.pos);
         this.pos += 4;
     },
 
     writeFixed64: function(val) {
         this.realloc(8);
-        writeInt32(this.buf, val & -1, this.pos);
-        writeInt32(this.buf, Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
+        this.buf.writeInt32LE(val & -1, this.pos);
+        this.buf.writeUInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
         this.pos += 8;
     },
 
     writeSFixed64: function(val) {
         this.realloc(8);
-        writeInt32(this.buf, val & -1, this.pos);
-        writeInt32(this.buf, Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
+        this.buf.writeInt32LE(val & -1, this.pos);
+        this.buf.writeInt32LE(Math.floor(val * SHIFT_RIGHT_32), this.pos + 4);
         this.pos += 8;
     },
 
     writeVarint: function(val) {
-        val = +val || 0;
+        val = +val;
 
-        if (val > 0xfffffff || val < 0) {
+        if (val > 0xfffffff) {
             writeBigVarint(val, this);
             return;
         }
@@ -22199,32 +21967,22 @@ Pbf.prototype = {
 
     writeString: function(str) {
         str = String(str);
-        this.realloc(str.length * 4);
-
-        this.pos++; // reserve 1 byte for short string length
-
-        var startPos = this.pos;
-        // write the string directly to the buffer and see how much was written
-        this.pos = writeUtf8(this.buf, str, this.pos);
-        var len = this.pos - startPos;
-
-        if (len >= 0x80) makeRoomForExtraLength(startPos, len, this);
-
-        // finally, write the message length in the reserved place and restore the position
-        this.pos = startPos - 1;
-        this.writeVarint(len);
-        this.pos += len;
+        var bytes = Buffer.byteLength(str);
+        this.writeVarint(bytes);
+        this.realloc(bytes);
+        this.buf.write(str, this.pos);
+        this.pos += bytes;
     },
 
     writeFloat: function(val) {
         this.realloc(4);
-        ieee754.write(this.buf, val, this.pos, true, 23, 4);
+        this.buf.writeFloatLE(val, this.pos);
         this.pos += 4;
     },
 
     writeDouble: function(val) {
         this.realloc(8);
-        ieee754.write(this.buf, val, this.pos, true, 52, 8);
+        this.buf.writeDoubleLE(val, this.pos);
         this.pos += 8;
     },
 
@@ -22243,7 +22001,7 @@ Pbf.prototype = {
         fn(obj, this);
         var len = this.pos - startPos;
 
-        if (len >= 0x80) makeRoomForExtraLength(startPos, len, this);
+        if (len >= 0x80) reallocForRawMessage(startPos, len, this);
 
         // finally, write the message length in the reserved place and restore the position
         this.pos = startPos - 1;
@@ -22311,81 +22069,33 @@ Pbf.prototype = {
     }
 };
 
-function readVarintRemainder(l, s, p) {
-    var buf = p.buf,
-        h, b;
+function readVarintRemainder(val, pbf) {
+    var buf = pbf.buf, b;
 
-    b = buf[p.pos++]; h  = (b & 0x70) >> 4;  if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x7f) << 3;  if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x7f) << 10; if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x7f) << 17; if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x7f) << 24; if (b < 0x80) return toNum(l, h, s);
-    b = buf[p.pos++]; h |= (b & 0x01) << 31; if (b < 0x80) return toNum(l, h, s);
+    b = buf[pbf.pos++]; val += (b & 0x7f) * 0x10000000;         if (b < 0x80) return val;
+    b = buf[pbf.pos++]; val += (b & 0x7f) * 0x800000000;        if (b < 0x80) return val;
+    b = buf[pbf.pos++]; val += (b & 0x7f) * 0x40000000000;      if (b < 0x80) return val;
+    b = buf[pbf.pos++]; val += (b & 0x7f) * 0x2000000000000;    if (b < 0x80) return val;
+    b = buf[pbf.pos++]; val += (b & 0x7f) * 0x100000000000000;  if (b < 0x80) return val;
+    b = buf[pbf.pos++]; val += (b & 0x7f) * 0x8000000000000000; if (b < 0x80) return val;
 
     throw new Error('Expected varint not more than 10 bytes');
 }
 
-function readPackedEnd(pbf) {
-    return pbf.type === Pbf.Bytes ?
-        pbf.readVarint() + pbf.pos : pbf.pos + 1;
-}
-
-function toNum(low, high, isSigned) {
-    if (isSigned) {
-        return high * 0x100000000 + (low >>> 0);
-    }
-
-    return ((high >>> 0) * 0x100000000) + (low >>> 0);
-}
-
 function writeBigVarint(val, pbf) {
-    var low, high;
-
-    if (val >= 0) {
-        low  = (val % 0x100000000) | 0;
-        high = (val / 0x100000000) | 0;
-    } else {
-        low  = ~(-val % 0x100000000);
-        high = ~(-val / 0x100000000);
-
-        if (low ^ 0xffffffff) {
-            low = (low + 1) | 0;
-        } else {
-            low = 0;
-            high = (high + 1) | 0;
-        }
-    }
-
-    if (val >= 0x10000000000000000 || val < -0x10000000000000000) {
-        throw new Error('Given varint doesn\'t fit into 10 bytes');
-    }
-
     pbf.realloc(10);
 
-    writeBigVarintLow(low, high, pbf);
-    writeBigVarintHigh(high, pbf);
+    var maxPos = pbf.pos + 10;
+
+    while (val >= 1) {
+        if (pbf.pos >= maxPos) throw new Error('Given varint doesn\'t fit into 10 bytes');
+        var b = val & 0xff;
+        pbf.buf[pbf.pos++] = b | (val >= 0x80 ? 0x80 : 0);
+        val /= 0x80;
+    }
 }
 
-function writeBigVarintLow(low, high, pbf) {
-    pbf.buf[pbf.pos++] = low & 0x7f | 0x80; low >>>= 7;
-    pbf.buf[pbf.pos++] = low & 0x7f | 0x80; low >>>= 7;
-    pbf.buf[pbf.pos++] = low & 0x7f | 0x80; low >>>= 7;
-    pbf.buf[pbf.pos++] = low & 0x7f | 0x80; low >>>= 7;
-    pbf.buf[pbf.pos]   = low & 0x7f;
-}
-
-function writeBigVarintHigh(high, pbf) {
-    var lsb = (high & 0x07) << 4;
-
-    pbf.buf[pbf.pos++] |= lsb         | ((high >>>= 3) ? 0x80 : 0); if (!high) return;
-    pbf.buf[pbf.pos++]  = high & 0x7f | ((high >>>= 7) ? 0x80 : 0); if (!high) return;
-    pbf.buf[pbf.pos++]  = high & 0x7f | ((high >>>= 7) ? 0x80 : 0); if (!high) return;
-    pbf.buf[pbf.pos++]  = high & 0x7f | ((high >>>= 7) ? 0x80 : 0); if (!high) return;
-    pbf.buf[pbf.pos++]  = high & 0x7f | ((high >>>= 7) ? 0x80 : 0); if (!high) return;
-    pbf.buf[pbf.pos++]  = high & 0x7f;
-}
-
-function makeRoomForExtraLength(startPos, len, pbf) {
+function reallocForRawMessage(startPos, len, pbf) {
     var extraLen =
         len <= 0x3fff ? 1 :
         len <= 0x1fffff ? 2 :
@@ -22406,149 +22116,142 @@ function writePackedSFixed32(arr, pbf) { for (var i = 0; i < arr.length; i++) pb
 function writePackedFixed64(arr, pbf)  { for (var i = 0; i < arr.length; i++) pbf.writeFixed64(arr[i]);  }
 function writePackedSFixed64(arr, pbf) { for (var i = 0; i < arr.length; i++) pbf.writeSFixed64(arr[i]); }
 
-// Buffer code below from https://github.com/feross/buffer, MIT-licensed
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-function readUInt32(buf, pos) {
-    return ((buf[pos]) |
-        (buf[pos + 1] << 8) |
-        (buf[pos + 2] << 16)) +
-        (buf[pos + 3] * 0x1000000);
+},{"./buffer":187}],189:[function(_dereq_,module,exports){
+'use strict';
+
+module.exports = Point;
+
+function Point(x, y) {
+    this.x = x;
+    this.y = y;
 }
 
-function writeInt32(buf, val, pos) {
-    buf[pos] = val;
-    buf[pos + 1] = (val >>> 8);
-    buf[pos + 2] = (val >>> 16);
-    buf[pos + 3] = (val >>> 24);
-}
+Point.prototype = {
+    clone: function() { return new Point(this.x, this.y); },
 
-function readInt32(buf, pos) {
-    return ((buf[pos]) |
-        (buf[pos + 1] << 8) |
-        (buf[pos + 2] << 16)) +
-        (buf[pos + 3] << 24);
-}
+    add:     function(p) { return this.clone()._add(p);     },
+    sub:     function(p) { return this.clone()._sub(p);     },
+    mult:    function(k) { return this.clone()._mult(k);    },
+    div:     function(k) { return this.clone()._div(k);     },
+    rotate:  function(a) { return this.clone()._rotate(a);  },
+    matMult: function(m) { return this.clone()._matMult(m); },
+    unit:    function() { return this.clone()._unit(); },
+    perp:    function() { return this.clone()._perp(); },
+    round:   function() { return this.clone()._round(); },
 
-function readUtf8(buf, pos, end) {
-    var str = '';
-    var i = pos;
+    mag: function() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    },
 
-    while (i < end) {
-        var b0 = buf[i];
-        var c = null; // codepoint
-        var bytesPerSequence =
-            b0 > 0xEF ? 4 :
-            b0 > 0xDF ? 3 :
-            b0 > 0xBF ? 2 : 1;
+    equals: function(p) {
+        return this.x === p.x &&
+               this.y === p.y;
+    },
 
-        if (i + bytesPerSequence > end) break;
+    dist: function(p) {
+        return Math.sqrt(this.distSqr(p));
+    },
 
-        var b1, b2, b3;
+    distSqr: function(p) {
+        var dx = p.x - this.x,
+            dy = p.y - this.y;
+        return dx * dx + dy * dy;
+    },
 
-        if (bytesPerSequence === 1) {
-            if (b0 < 0x80) {
-                c = b0;
-            }
-        } else if (bytesPerSequence === 2) {
-            b1 = buf[i + 1];
-            if ((b1 & 0xC0) === 0x80) {
-                c = (b0 & 0x1F) << 0x6 | (b1 & 0x3F);
-                if (c <= 0x7F) {
-                    c = null;
-                }
-            }
-        } else if (bytesPerSequence === 3) {
-            b1 = buf[i + 1];
-            b2 = buf[i + 2];
-            if ((b1 & 0xC0) === 0x80 && (b2 & 0xC0) === 0x80) {
-                c = (b0 & 0xF) << 0xC | (b1 & 0x3F) << 0x6 | (b2 & 0x3F);
-                if (c <= 0x7FF || (c >= 0xD800 && c <= 0xDFFF)) {
-                    c = null;
-                }
-            }
-        } else if (bytesPerSequence === 4) {
-            b1 = buf[i + 1];
-            b2 = buf[i + 2];
-            b3 = buf[i + 3];
-            if ((b1 & 0xC0) === 0x80 && (b2 & 0xC0) === 0x80 && (b3 & 0xC0) === 0x80) {
-                c = (b0 & 0xF) << 0x12 | (b1 & 0x3F) << 0xC | (b2 & 0x3F) << 0x6 | (b3 & 0x3F);
-                if (c <= 0xFFFF || c >= 0x110000) {
-                    c = null;
-                }
-            }
-        }
+    angle: function() {
+        return Math.atan2(this.y, this.x);
+    },
 
-        if (c === null) {
-            c = 0xFFFD;
-            bytesPerSequence = 1;
+    angleTo: function(b) {
+        return Math.atan2(this.y - b.y, this.x - b.x);
+    },
 
-        } else if (c > 0xFFFF) {
-            c -= 0x10000;
-            str += String.fromCharCode(c >>> 10 & 0x3FF | 0xD800);
-            c = 0xDC00 | c & 0x3FF;
-        }
+    angleWith: function(b) {
+        return this.angleWithSep(b.x, b.y);
+    },
 
-        str += String.fromCharCode(c);
-        i += bytesPerSequence;
+    // Find the angle of the two vectors, solving the formula for the cross product a x b = |a||b|sin(θ) for θ.
+    angleWithSep: function(x, y) {
+        return Math.atan2(
+            this.x * y - this.y * x,
+            this.x * x + this.y * y);
+    },
+
+    _matMult: function(m) {
+        var x = m[0] * this.x + m[1] * this.y,
+            y = m[2] * this.x + m[3] * this.y;
+        this.x = x;
+        this.y = y;
+        return this;
+    },
+
+    _add: function(p) {
+        this.x += p.x;
+        this.y += p.y;
+        return this;
+    },
+
+    _sub: function(p) {
+        this.x -= p.x;
+        this.y -= p.y;
+        return this;
+    },
+
+    _mult: function(k) {
+        this.x *= k;
+        this.y *= k;
+        return this;
+    },
+
+    _div: function(k) {
+        this.x /= k;
+        this.y /= k;
+        return this;
+    },
+
+    _unit: function() {
+        this._div(this.mag());
+        return this;
+    },
+
+    _perp: function() {
+        var y = this.y;
+        this.y = this.x;
+        this.x = -y;
+        return this;
+    },
+
+    _rotate: function(angle) {
+        var cos = Math.cos(angle),
+            sin = Math.sin(angle),
+            x = cos * this.x - sin * this.y,
+            y = sin * this.x + cos * this.y;
+        this.x = x;
+        this.y = y;
+        return this;
+    },
+
+    _round: function() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        return this;
     }
+};
 
-    return str;
-}
-
-function writeUtf8(buf, str, pos) {
-    for (var i = 0, c, lead; i < str.length; i++) {
-        c = str.charCodeAt(i); // code point
-
-        if (c > 0xD7FF && c < 0xE000) {
-            if (lead) {
-                if (c < 0xDC00) {
-                    buf[pos++] = 0xEF;
-                    buf[pos++] = 0xBF;
-                    buf[pos++] = 0xBD;
-                    lead = c;
-                    continue;
-                } else {
-                    c = lead - 0xD800 << 10 | c - 0xDC00 | 0x10000;
-                    lead = null;
-                }
-            } else {
-                if (c > 0xDBFF || (i + 1 === str.length)) {
-                    buf[pos++] = 0xEF;
-                    buf[pos++] = 0xBF;
-                    buf[pos++] = 0xBD;
-                } else {
-                    lead = c;
-                }
-                continue;
-            }
-        } else if (lead) {
-            buf[pos++] = 0xEF;
-            buf[pos++] = 0xBF;
-            buf[pos++] = 0xBD;
-            lead = null;
-        }
-
-        if (c < 0x80) {
-            buf[pos++] = c;
-        } else {
-            if (c < 0x800) {
-                buf[pos++] = c >> 0x6 | 0xC0;
-            } else {
-                if (c < 0x10000) {
-                    buf[pos++] = c >> 0xC | 0xE0;
-                } else {
-                    buf[pos++] = c >> 0x12 | 0xF0;
-                    buf[pos++] = c >> 0xC & 0x3F | 0x80;
-                }
-                buf[pos++] = c >> 0x6 & 0x3F | 0x80;
-            }
-            buf[pos++] = c & 0x3F | 0x80;
-        }
+// constructs Point from an array if necessary
+Point.convert = function (a) {
+    if (a instanceof Point) {
+        return a;
     }
-    return pos;
-}
+    if (Array.isArray(a)) {
+        return new Point(a[0], a[1]);
+    }
+    return a;
+};
 
-},{"ieee754":98}],187:[function(_dereq_,module,exports){
+},{}],190:[function(_dereq_,module,exports){
 (function (process){
 'use strict';
 
@@ -22596,7 +22299,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 
 }).call(this,_dereq_('_process'))
 
-},{"_process":188}],188:[function(_dereq_,module,exports){
+},{"_process":191}],191:[function(_dereq_,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -22782,7 +22485,632 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],189:[function(_dereq_,module,exports){
+},{}],192:[function(_dereq_,module,exports){
+'use strict';
+
+module.exports = partialSort;
+
+// Floyd-Rivest selection algorithm:
+// Rearrange items so that all items in the [left, k] range are smaller than all items in (k, right];
+// The k-th element will have the (k - left + 1)th smallest value in [left, right]
+
+function partialSort(arr, k, left, right, compare) {
+    left = left || 0;
+    right = right || (arr.length - 1);
+    compare = compare || defaultCompare;
+
+    while (right > left) {
+        if (right - left > 600) {
+            var n = right - left + 1;
+            var m = k - left + 1;
+            var z = Math.log(n);
+            var s = 0.5 * Math.exp(2 * z / 3);
+            var sd = 0.5 * Math.sqrt(z * s * (n - s) / n) * (m - n / 2 < 0 ? -1 : 1);
+            var newLeft = Math.max(left, Math.floor(k - m * s / n + sd));
+            var newRight = Math.min(right, Math.floor(k + (n - m) * s / n + sd));
+            partialSort(arr, k, newLeft, newRight, compare);
+        }
+
+        var t = arr[k];
+        var i = left;
+        var j = right;
+
+        swap(arr, left, k);
+        if (compare(arr[right], t) > 0) swap(arr, left, right);
+
+        while (i < j) {
+            swap(arr, i, j);
+            i++;
+            j--;
+            while (compare(arr[i], t) < 0) i++;
+            while (compare(arr[j], t) > 0) j--;
+        }
+
+        if (compare(arr[left], t) === 0) swap(arr, left, j);
+        else {
+            j++;
+            swap(arr, j, right);
+        }
+
+        if (j <= k) left = j + 1;
+        if (k <= j) right = j - 1;
+    }
+}
+
+function swap(arr, i, j) {
+    var tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+}
+
+function defaultCompare(a, b) {
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+
+},{}],193:[function(_dereq_,module,exports){
+'use strict';
+
+module.exports = rbush;
+
+var quickselect = _dereq_('quickselect');
+
+function rbush(maxEntries, format) {
+    if (!(this instanceof rbush)) return new rbush(maxEntries, format);
+
+    // max entries in a node is 9 by default; min node fill is 40% for best performance
+    this._maxEntries = Math.max(4, maxEntries || 9);
+    this._minEntries = Math.max(2, Math.ceil(this._maxEntries * 0.4));
+
+    if (format) {
+        this._initFormat(format);
+    }
+
+    this.clear();
+}
+
+rbush.prototype = {
+
+    all: function () {
+        return this._all(this.data, []);
+    },
+
+    search: function (bbox) {
+
+        var node = this.data,
+            result = [],
+            toBBox = this.toBBox;
+
+        if (!intersects(bbox, node)) return result;
+
+        var nodesToSearch = [],
+            i, len, child, childBBox;
+
+        while (node) {
+            for (i = 0, len = node.children.length; i < len; i++) {
+
+                child = node.children[i];
+                childBBox = node.leaf ? toBBox(child) : child;
+
+                if (intersects(bbox, childBBox)) {
+                    if (node.leaf) result.push(child);
+                    else if (contains(bbox, childBBox)) this._all(child, result);
+                    else nodesToSearch.push(child);
+                }
+            }
+            node = nodesToSearch.pop();
+        }
+
+        return result;
+    },
+
+    collides: function (bbox) {
+
+        var node = this.data,
+            toBBox = this.toBBox;
+
+        if (!intersects(bbox, node)) return false;
+
+        var nodesToSearch = [],
+            i, len, child, childBBox;
+
+        while (node) {
+            for (i = 0, len = node.children.length; i < len; i++) {
+
+                child = node.children[i];
+                childBBox = node.leaf ? toBBox(child) : child;
+
+                if (intersects(bbox, childBBox)) {
+                    if (node.leaf || contains(bbox, childBBox)) return true;
+                    nodesToSearch.push(child);
+                }
+            }
+            node = nodesToSearch.pop();
+        }
+
+        return false;
+    },
+
+    load: function (data) {
+        if (!(data && data.length)) return this;
+
+        if (data.length < this._minEntries) {
+            for (var i = 0, len = data.length; i < len; i++) {
+                this.insert(data[i]);
+            }
+            return this;
+        }
+
+        // recursively build the tree with the given data from stratch using OMT algorithm
+        var node = this._build(data.slice(), 0, data.length - 1, 0);
+
+        if (!this.data.children.length) {
+            // save as is if tree is empty
+            this.data = node;
+
+        } else if (this.data.height === node.height) {
+            // split root if trees have the same height
+            this._splitRoot(this.data, node);
+
+        } else {
+            if (this.data.height < node.height) {
+                // swap trees if inserted one is bigger
+                var tmpNode = this.data;
+                this.data = node;
+                node = tmpNode;
+            }
+
+            // insert the small tree into the large tree at appropriate level
+            this._insert(node, this.data.height - node.height - 1, true);
+        }
+
+        return this;
+    },
+
+    insert: function (item) {
+        if (item) this._insert(item, this.data.height - 1);
+        return this;
+    },
+
+    clear: function () {
+        this.data = createNode([]);
+        return this;
+    },
+
+    remove: function (item, equalsFn) {
+        if (!item) return this;
+
+        var node = this.data,
+            bbox = this.toBBox(item),
+            path = [],
+            indexes = [],
+            i, parent, index, goingUp;
+
+        // depth-first iterative tree traversal
+        while (node || path.length) {
+
+            if (!node) { // go up
+                node = path.pop();
+                parent = path[path.length - 1];
+                i = indexes.pop();
+                goingUp = true;
+            }
+
+            if (node.leaf) { // check current node
+                index = findItem(item, node.children, equalsFn);
+
+                if (index !== -1) {
+                    // item found, remove the item and condense tree upwards
+                    node.children.splice(index, 1);
+                    path.push(node);
+                    this._condense(path);
+                    return this;
+                }
+            }
+
+            if (!goingUp && !node.leaf && contains(node, bbox)) { // go down
+                path.push(node);
+                indexes.push(i);
+                i = 0;
+                parent = node;
+                node = node.children[0];
+
+            } else if (parent) { // go right
+                i++;
+                node = parent.children[i];
+                goingUp = false;
+
+            } else node = null; // nothing found
+        }
+
+        return this;
+    },
+
+    toBBox: function (item) { return item; },
+
+    compareMinX: compareNodeMinX,
+    compareMinY: compareNodeMinY,
+
+    toJSON: function () { return this.data; },
+
+    fromJSON: function (data) {
+        this.data = data;
+        return this;
+    },
+
+    _all: function (node, result) {
+        var nodesToSearch = [];
+        while (node) {
+            if (node.leaf) result.push.apply(result, node.children);
+            else nodesToSearch.push.apply(nodesToSearch, node.children);
+
+            node = nodesToSearch.pop();
+        }
+        return result;
+    },
+
+    _build: function (items, left, right, height) {
+
+        var N = right - left + 1,
+            M = this._maxEntries,
+            node;
+
+        if (N <= M) {
+            // reached leaf level; return leaf
+            node = createNode(items.slice(left, right + 1));
+            calcBBox(node, this.toBBox);
+            return node;
+        }
+
+        if (!height) {
+            // target height of the bulk-loaded tree
+            height = Math.ceil(Math.log(N) / Math.log(M));
+
+            // target number of root entries to maximize storage utilization
+            M = Math.ceil(N / Math.pow(M, height - 1));
+        }
+
+        node = createNode([]);
+        node.leaf = false;
+        node.height = height;
+
+        // split the items into M mostly square tiles
+
+        var N2 = Math.ceil(N / M),
+            N1 = N2 * Math.ceil(Math.sqrt(M)),
+            i, j, right2, right3;
+
+        multiSelect(items, left, right, N1, this.compareMinX);
+
+        for (i = left; i <= right; i += N1) {
+
+            right2 = Math.min(i + N1 - 1, right);
+
+            multiSelect(items, i, right2, N2, this.compareMinY);
+
+            for (j = i; j <= right2; j += N2) {
+
+                right3 = Math.min(j + N2 - 1, right2);
+
+                // pack each entry recursively
+                node.children.push(this._build(items, j, right3, height - 1));
+            }
+        }
+
+        calcBBox(node, this.toBBox);
+
+        return node;
+    },
+
+    _chooseSubtree: function (bbox, node, level, path) {
+
+        var i, len, child, targetNode, area, enlargement, minArea, minEnlargement;
+
+        while (true) {
+            path.push(node);
+
+            if (node.leaf || path.length - 1 === level) break;
+
+            minArea = minEnlargement = Infinity;
+
+            for (i = 0, len = node.children.length; i < len; i++) {
+                child = node.children[i];
+                area = bboxArea(child);
+                enlargement = enlargedArea(bbox, child) - area;
+
+                // choose entry with the least area enlargement
+                if (enlargement < minEnlargement) {
+                    minEnlargement = enlargement;
+                    minArea = area < minArea ? area : minArea;
+                    targetNode = child;
+
+                } else if (enlargement === minEnlargement) {
+                    // otherwise choose one with the smallest area
+                    if (area < minArea) {
+                        minArea = area;
+                        targetNode = child;
+                    }
+                }
+            }
+
+            node = targetNode || node.children[0];
+        }
+
+        return node;
+    },
+
+    _insert: function (item, level, isNode) {
+
+        var toBBox = this.toBBox,
+            bbox = isNode ? item : toBBox(item),
+            insertPath = [];
+
+        // find the best node for accommodating the item, saving all nodes along the path too
+        var node = this._chooseSubtree(bbox, this.data, level, insertPath);
+
+        // put the item into the node
+        node.children.push(item);
+        extend(node, bbox);
+
+        // split on node overflow; propagate upwards if necessary
+        while (level >= 0) {
+            if (insertPath[level].children.length > this._maxEntries) {
+                this._split(insertPath, level);
+                level--;
+            } else break;
+        }
+
+        // adjust bboxes along the insertion path
+        this._adjustParentBBoxes(bbox, insertPath, level);
+    },
+
+    // split overflowed node into two
+    _split: function (insertPath, level) {
+
+        var node = insertPath[level],
+            M = node.children.length,
+            m = this._minEntries;
+
+        this._chooseSplitAxis(node, m, M);
+
+        var splitIndex = this._chooseSplitIndex(node, m, M);
+
+        var newNode = createNode(node.children.splice(splitIndex, node.children.length - splitIndex));
+        newNode.height = node.height;
+        newNode.leaf = node.leaf;
+
+        calcBBox(node, this.toBBox);
+        calcBBox(newNode, this.toBBox);
+
+        if (level) insertPath[level - 1].children.push(newNode);
+        else this._splitRoot(node, newNode);
+    },
+
+    _splitRoot: function (node, newNode) {
+        // split root node
+        this.data = createNode([node, newNode]);
+        this.data.height = node.height + 1;
+        this.data.leaf = false;
+        calcBBox(this.data, this.toBBox);
+    },
+
+    _chooseSplitIndex: function (node, m, M) {
+
+        var i, bbox1, bbox2, overlap, area, minOverlap, minArea, index;
+
+        minOverlap = minArea = Infinity;
+
+        for (i = m; i <= M - m; i++) {
+            bbox1 = distBBox(node, 0, i, this.toBBox);
+            bbox2 = distBBox(node, i, M, this.toBBox);
+
+            overlap = intersectionArea(bbox1, bbox2);
+            area = bboxArea(bbox1) + bboxArea(bbox2);
+
+            // choose distribution with minimum overlap
+            if (overlap < minOverlap) {
+                minOverlap = overlap;
+                index = i;
+
+                minArea = area < minArea ? area : minArea;
+
+            } else if (overlap === minOverlap) {
+                // otherwise choose distribution with minimum area
+                if (area < minArea) {
+                    minArea = area;
+                    index = i;
+                }
+            }
+        }
+
+        return index;
+    },
+
+    // sorts node children by the best axis for split
+    _chooseSplitAxis: function (node, m, M) {
+
+        var compareMinX = node.leaf ? this.compareMinX : compareNodeMinX,
+            compareMinY = node.leaf ? this.compareMinY : compareNodeMinY,
+            xMargin = this._allDistMargin(node, m, M, compareMinX),
+            yMargin = this._allDistMargin(node, m, M, compareMinY);
+
+        // if total distributions margin value is minimal for x, sort by minX,
+        // otherwise it's already sorted by minY
+        if (xMargin < yMargin) node.children.sort(compareMinX);
+    },
+
+    // total margin of all possible split distributions where each node is at least m full
+    _allDistMargin: function (node, m, M, compare) {
+
+        node.children.sort(compare);
+
+        var toBBox = this.toBBox,
+            leftBBox = distBBox(node, 0, m, toBBox),
+            rightBBox = distBBox(node, M - m, M, toBBox),
+            margin = bboxMargin(leftBBox) + bboxMargin(rightBBox),
+            i, child;
+
+        for (i = m; i < M - m; i++) {
+            child = node.children[i];
+            extend(leftBBox, node.leaf ? toBBox(child) : child);
+            margin += bboxMargin(leftBBox);
+        }
+
+        for (i = M - m - 1; i >= m; i--) {
+            child = node.children[i];
+            extend(rightBBox, node.leaf ? toBBox(child) : child);
+            margin += bboxMargin(rightBBox);
+        }
+
+        return margin;
+    },
+
+    _adjustParentBBoxes: function (bbox, path, level) {
+        // adjust bboxes along the given tree path
+        for (var i = level; i >= 0; i--) {
+            extend(path[i], bbox);
+        }
+    },
+
+    _condense: function (path) {
+        // go through the path, removing empty nodes and updating bboxes
+        for (var i = path.length - 1, siblings; i >= 0; i--) {
+            if (path[i].children.length === 0) {
+                if (i > 0) {
+                    siblings = path[i - 1].children;
+                    siblings.splice(siblings.indexOf(path[i]), 1);
+
+                } else this.clear();
+
+            } else calcBBox(path[i], this.toBBox);
+        }
+    },
+
+    _initFormat: function (format) {
+        // data format (minX, minY, maxX, maxY accessors)
+
+        // uses eval-type function compilation instead of just accepting a toBBox function
+        // because the algorithms are very sensitive to sorting functions performance,
+        // so they should be dead simple and without inner calls
+
+        var compareArr = ['return a', ' - b', ';'];
+
+        this.compareMinX = new Function('a', 'b', compareArr.join(format[0]));
+        this.compareMinY = new Function('a', 'b', compareArr.join(format[1]));
+
+        this.toBBox = new Function('a',
+            'return {minX: a' + format[0] +
+            ', minY: a' + format[1] +
+            ', maxX: a' + format[2] +
+            ', maxY: a' + format[3] + '};');
+    }
+};
+
+function findItem(item, items, equalsFn) {
+    if (!equalsFn) return items.indexOf(item);
+
+    for (var i = 0; i < items.length; i++) {
+        if (equalsFn(item, items[i])) return i;
+    }
+    return -1;
+}
+
+// calculate node's bbox from bboxes of its children
+function calcBBox(node, toBBox) {
+    distBBox(node, 0, node.children.length, toBBox, node);
+}
+
+// min bounding rectangle of node children from k to p-1
+function distBBox(node, k, p, toBBox, destNode) {
+    if (!destNode) destNode = createNode(null);
+    destNode.minX = Infinity;
+    destNode.minY = Infinity;
+    destNode.maxX = -Infinity;
+    destNode.maxY = -Infinity;
+
+    for (var i = k, child; i < p; i++) {
+        child = node.children[i];
+        extend(destNode, node.leaf ? toBBox(child) : child);
+    }
+
+    return destNode;
+}
+
+function extend(a, b) {
+    a.minX = Math.min(a.minX, b.minX);
+    a.minY = Math.min(a.minY, b.minY);
+    a.maxX = Math.max(a.maxX, b.maxX);
+    a.maxY = Math.max(a.maxY, b.maxY);
+    return a;
+}
+
+function compareNodeMinX(a, b) { return a.minX - b.minX; }
+function compareNodeMinY(a, b) { return a.minY - b.minY; }
+
+function bboxArea(a)   { return (a.maxX - a.minX) * (a.maxY - a.minY); }
+function bboxMargin(a) { return (a.maxX - a.minX) + (a.maxY - a.minY); }
+
+function enlargedArea(a, b) {
+    return (Math.max(b.maxX, a.maxX) - Math.min(b.minX, a.minX)) *
+           (Math.max(b.maxY, a.maxY) - Math.min(b.minY, a.minY));
+}
+
+function intersectionArea(a, b) {
+    var minX = Math.max(a.minX, b.minX),
+        minY = Math.max(a.minY, b.minY),
+        maxX = Math.min(a.maxX, b.maxX),
+        maxY = Math.min(a.maxY, b.maxY);
+
+    return Math.max(0, maxX - minX) *
+           Math.max(0, maxY - minY);
+}
+
+function contains(a, b) {
+    return a.minX <= b.minX &&
+           a.minY <= b.minY &&
+           b.maxX <= a.maxX &&
+           b.maxY <= a.maxY;
+}
+
+function intersects(a, b) {
+    return b.minX <= a.maxX &&
+           b.minY <= a.maxY &&
+           b.maxX >= a.minX &&
+           b.maxY >= a.minY;
+}
+
+function createNode(children) {
+    return {
+        children: children,
+        height: 1,
+        leaf: true,
+        minX: Infinity,
+        minY: Infinity,
+        maxX: -Infinity,
+        maxY: -Infinity
+    };
+}
+
+// sort an array so that items come in groups of n unsorted items, with groups sorted between each other;
+// combines selection algorithm with binary divide & conquer approach
+
+function multiSelect(arr, left, right, n, compare) {
+    var stack = [left, right],
+        mid;
+
+    while (stack.length) {
+        right = stack.pop();
+        left = stack.pop();
+
+        if (right - left <= n) continue;
+
+        mid = left + Math.ceil((right - left) / n / 2) * n;
+        quickselect(arr, mid, left, right, compare);
+
+        stack.push(left, mid, mid, right);
+    }
+}
+
+},{"quickselect":192}],194:[function(_dereq_,module,exports){
 /*!
  * strip-comments <https://github.com/jonschlinkert/strip-comments>
  *
@@ -22857,7 +23185,7 @@ strip.line = function(str, opts) {
   return str ? str.replace(re, '') : '';
 };
 
-},{}],190:[function(_dereq_,module,exports){
+},{}],195:[function(_dereq_,module,exports){
 // https://github.com/topojson/topojson-client Version 2.1.0. Copyright 2016 Mike Bostock.
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -22973,7 +23301,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 
-},{}],191:[function(_dereq_,module,exports){
+},{}],196:[function(_dereq_,module,exports){
 (function (global){
 
 /**
@@ -23045,16 +23373,16 @@ function config (name) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],192:[function(_dereq_,module,exports){
-arguments[4][99][0].apply(exports,arguments)
-},{"dup":99}],193:[function(_dereq_,module,exports){
+},{}],197:[function(_dereq_,module,exports){
+arguments[4][100][0].apply(exports,arguments)
+},{"dup":100}],198:[function(_dereq_,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],194:[function(_dereq_,module,exports){
+},{}],199:[function(_dereq_,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -23645,7 +23973,329 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./support/isBuffer":193,"_process":188,"inherits":192}],195:[function(_dereq_,module,exports){
+},{"./support/isBuffer":198,"_process":191,"inherits":197}],200:[function(_dereq_,module,exports){
+module.exports.VectorTile = _dereq_('./lib/vectortile.js');
+module.exports.VectorTileFeature = _dereq_('./lib/vectortilefeature.js');
+module.exports.VectorTileLayer = _dereq_('./lib/vectortilelayer.js');
+
+},{"./lib/vectortile.js":201,"./lib/vectortilefeature.js":202,"./lib/vectortilelayer.js":203}],201:[function(_dereq_,module,exports){
+'use strict';
+
+var VectorTileLayer = _dereq_('./vectortilelayer');
+
+module.exports = VectorTile;
+
+function VectorTile(pbf, end) {
+    this.layers = pbf.readFields(readTile, {}, end);
+}
+
+function readTile(tag, layers, pbf) {
+    if (tag === 3) {
+        var layer = new VectorTileLayer(pbf, pbf.readVarint() + pbf.pos);
+        if (layer.length) layers[layer.name] = layer;
+    }
+}
+
+
+},{"./vectortilelayer":203}],202:[function(_dereq_,module,exports){
+'use strict';
+
+var Point = _dereq_('point-geometry');
+
+module.exports = VectorTileFeature;
+
+function VectorTileFeature(pbf, end, extent, keys, values) {
+    // Public
+    this.properties = {};
+    this.extent = extent;
+    this.type = 0;
+
+    // Private
+    this._pbf = pbf;
+    this._geometry = -1;
+    this._keys = keys;
+    this._values = values;
+
+    pbf.readFields(readFeature, this, end);
+}
+
+function readFeature(tag, feature, pbf) {
+    if (tag == 1) feature.id = pbf.readVarint();
+    else if (tag == 2) readTag(pbf, feature);
+    else if (tag == 3) feature.type = pbf.readVarint();
+    else if (tag == 4) feature._geometry = pbf.pos;
+}
+
+function readTag(pbf, feature) {
+    var end = pbf.readVarint() + pbf.pos;
+
+    while (pbf.pos < end) {
+        var key = feature._keys[pbf.readVarint()],
+            value = feature._values[pbf.readVarint()];
+        feature.properties[key] = value;
+    }
+}
+
+VectorTileFeature.types = ['Unknown', 'Point', 'LineString', 'Polygon'];
+
+VectorTileFeature.prototype.loadGeometry = function() {
+    var pbf = this._pbf;
+    pbf.pos = this._geometry;
+
+    var end = pbf.readVarint() + pbf.pos,
+        cmd = 1,
+        length = 0,
+        x = 0,
+        y = 0,
+        lines = [],
+        line;
+
+    while (pbf.pos < end) {
+        if (!length) {
+            var cmdLen = pbf.readVarint();
+            cmd = cmdLen & 0x7;
+            length = cmdLen >> 3;
+        }
+
+        length--;
+
+        if (cmd === 1 || cmd === 2) {
+            x += pbf.readSVarint();
+            y += pbf.readSVarint();
+
+            if (cmd === 1) { // moveTo
+                if (line) lines.push(line);
+                line = [];
+            }
+
+            line.push(new Point(x, y));
+
+        } else if (cmd === 7) {
+
+            // Workaround for https://github.com/mapbox/mapnik-vector-tile/issues/90
+            if (line) {
+                line.push(line[0].clone()); // closePolygon
+            }
+
+        } else {
+            throw new Error('unknown command ' + cmd);
+        }
+    }
+
+    if (line) lines.push(line);
+
+    return lines;
+};
+
+VectorTileFeature.prototype.bbox = function() {
+    var pbf = this._pbf;
+    pbf.pos = this._geometry;
+
+    var end = pbf.readVarint() + pbf.pos,
+        cmd = 1,
+        length = 0,
+        x = 0,
+        y = 0,
+        x1 = Infinity,
+        x2 = -Infinity,
+        y1 = Infinity,
+        y2 = -Infinity;
+
+    while (pbf.pos < end) {
+        if (!length) {
+            var cmdLen = pbf.readVarint();
+            cmd = cmdLen & 0x7;
+            length = cmdLen >> 3;
+        }
+
+        length--;
+
+        if (cmd === 1 || cmd === 2) {
+            x += pbf.readSVarint();
+            y += pbf.readSVarint();
+            if (x < x1) x1 = x;
+            if (x > x2) x2 = x;
+            if (y < y1) y1 = y;
+            if (y > y2) y2 = y;
+
+        } else if (cmd !== 7) {
+            throw new Error('unknown command ' + cmd);
+        }
+    }
+
+    return [x1, y1, x2, y2];
+};
+
+VectorTileFeature.prototype.toGeoJSON = function(x, y, z) {
+    var size = this.extent * Math.pow(2, z),
+        x0 = this.extent * x,
+        y0 = this.extent * y,
+        coords = this.loadGeometry(),
+        type = VectorTileFeature.types[this.type],
+        i, j;
+
+    function project(line) {
+        for (var j = 0; j < line.length; j++) {
+            var p = line[j], y2 = 180 - (p.y + y0) * 360 / size;
+            line[j] = [
+                (p.x + x0) * 360 / size - 180,
+                360 / Math.PI * Math.atan(Math.exp(y2 * Math.PI / 180)) - 90
+            ];
+        }
+    }
+
+    switch (this.type) {
+    case 1:
+        var points = [];
+        for (i = 0; i < coords.length; i++) {
+            points[i] = coords[i][0];
+        }
+        coords = points;
+        project(coords);
+        break;
+
+    case 2:
+        for (i = 0; i < coords.length; i++) {
+            project(coords[i]);
+        }
+        break;
+
+    case 3:
+        coords = classifyRings(coords);
+        for (i = 0; i < coords.length; i++) {
+            for (j = 0; j < coords[i].length; j++) {
+                project(coords[i][j]);
+            }
+        }
+        break;
+    }
+
+    if (coords.length === 1) {
+        coords = coords[0];
+    } else {
+        type = 'Multi' + type;
+    }
+
+    var result = {
+        type: "Feature",
+        geometry: {
+            type: type,
+            coordinates: coords
+        },
+        properties: this.properties
+    };
+
+    if ('id' in this) {
+        result.id = this.id;
+    }
+
+    return result;
+};
+
+// classifies an array of rings into polygons with outer rings and holes
+
+function classifyRings(rings) {
+    var len = rings.length;
+
+    if (len <= 1) return [rings];
+
+    var polygons = [],
+        polygon,
+        ccw;
+
+    for (var i = 0; i < len; i++) {
+        var area = signedArea(rings[i]);
+        if (area === 0) continue;
+
+        if (ccw === undefined) ccw = area < 0;
+
+        if (ccw === area < 0) {
+            if (polygon) polygons.push(polygon);
+            polygon = [rings[i]];
+
+        } else {
+            polygon.push(rings[i]);
+        }
+    }
+    if (polygon) polygons.push(polygon);
+
+    return polygons;
+}
+
+function signedArea(ring) {
+    var sum = 0;
+    for (var i = 0, len = ring.length, j = len - 1, p1, p2; i < len; j = i++) {
+        p1 = ring[i];
+        p2 = ring[j];
+        sum += (p2.x - p1.x) * (p1.y + p2.y);
+    }
+    return sum;
+}
+
+},{"point-geometry":189}],203:[function(_dereq_,module,exports){
+'use strict';
+
+var VectorTileFeature = _dereq_('./vectortilefeature.js');
+
+module.exports = VectorTileLayer;
+
+function VectorTileLayer(pbf, end) {
+    // Public
+    this.version = 1;
+    this.name = null;
+    this.extent = 4096;
+    this.length = 0;
+
+    // Private
+    this._pbf = pbf;
+    this._keys = [];
+    this._values = [];
+    this._features = [];
+
+    pbf.readFields(readLayer, this, end);
+
+    this.length = this._features.length;
+}
+
+function readLayer(tag, layer, pbf) {
+    if (tag === 15) layer.version = pbf.readVarint();
+    else if (tag === 1) layer.name = pbf.readString();
+    else if (tag === 5) layer.extent = pbf.readVarint();
+    else if (tag === 2) layer._features.push(pbf.pos);
+    else if (tag === 3) layer._keys.push(pbf.readString());
+    else if (tag === 4) layer._values.push(readValueMessage(pbf));
+}
+
+function readValueMessage(pbf) {
+    var value = null,
+        end = pbf.readVarint() + pbf.pos;
+
+    while (pbf.pos < end) {
+        var tag = pbf.readVarint() >> 3;
+
+        value = tag === 1 ? pbf.readString() :
+            tag === 2 ? pbf.readFloat() :
+            tag === 3 ? pbf.readDouble() :
+            tag === 4 ? pbf.readVarint64() :
+            tag === 5 ? pbf.readVarint() :
+            tag === 6 ? pbf.readSVarint() :
+            tag === 7 ? pbf.readBoolean() : null;
+    }
+
+    return value;
+}
+
+// return feature `i` from this layer as a `VectorTileFeature`
+VectorTileLayer.prototype.feature = function(i) {
+    if (i < 0 || i >= this._features.length) throw new Error('feature index out of bounds');
+
+    this._pbf.pos = this._features[i];
+
+    var end = this._pbf.readVarint() + this._pbf.pos;
+    return new VectorTileFeature(this._pbf, end, this.extent, this._keys, this._values);
+};
+
+},{"./vectortilefeature.js":202}],204:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -23687,7 +24337,7 @@ function isCoordOutsideTile(coord, tolerance) {
     return coord[0] <= tile_min.x + tolerance || coord[0] >= tile_max.x - tolerance || coord[1] >= tile_min.y - tolerance || coord[1] <= tile_max.y + tolerance;
 }
 
-},{"../geo":200}],196:[function(_dereq_,module,exports){
+},{"../geo":209}],205:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -23812,7 +24462,7 @@ function buildQuadsForPoints(points, vertex_data, vertex_template, _ref, _ref2) 
     return geom_count;
 }
 
-},{"./common":195}],197:[function(_dereq_,module,exports){
+},{"./common":204}],206:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -24018,7 +24668,7 @@ function triangulatePolygon(data) {
     return (0, _earcut2.default)(data.vertices, data.holes, data.dimensions);
 }
 
-},{"../geo":200,"../vector":272,"./common":195,"earcut":77}],198:[function(_dereq_,module,exports){
+},{"../geo":209,"../vector":280,"./common":204,"earcut":72}],207:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -24084,7 +24734,7 @@ function buildPolylines(lines, width, vertex_data, vertex_template, _ref) {
         miter_limit = _ref.miter_limit,
         offset = _ref.offset;
 
-    var cap_type = cap ? CAP_TYPE[cap] : CAP_TYPE.butt;
+    var cap_type = cap ? CAP_TYPE[cap] : CAP_TYPE.round;
     var join_type = join ? JOIN_TYPE[join] : JOIN_TYPE.miter;
 
     // Configure miter limit
@@ -24111,7 +24761,7 @@ function buildPolylines(lines, width, vertex_data, vertex_template, _ref) {
         cap_type: cap_type,
         vertex_data: vertex_data,
         vertex_template: vertex_template,
-        half_width: width / 2,
+        half_width: width / 3,
         extrude_index: extrude_index,
         offset_index: offset_index,
         v_scale: v_scale,
@@ -24223,6 +24873,9 @@ function buildPolyline(line, context) {
             if (has_texcoord && cap_type !== CAP_TYPE.butt) {
                 v += 0.5 * v_scale * context.texcoord_width;
             }
+        } else {
+            addCap(coordCurr, v, normNext, CAP_TYPE.round, true, context);
+            if (has_texcoord) v += 0.5 * v_scale * context.texcoord_width;
         }
 
         // Add first pair of points for the line strip
@@ -24294,6 +24947,8 @@ function buildPolyline(line, context) {
         // If line ends at edge, don't add a cap
         if (!(0, _common.isCoordOutsideTile)(coordCurr)) {
             addCap(coordCurr, v, normPrev, cap_type, false, context);
+        } else {
+            addCap(coordCurr, v, normPrev, CAP_TYPE.round, false, context);
         }
     }
 }
@@ -24695,7 +25350,7 @@ function permuteLine(line, startIndex) {
     return newLine;
 }
 
-},{"../geo":200,"../vector":272,"./common":195}],199:[function(_dereq_,module,exports){
+},{"../geo":209,"../vector":280,"./common":204}],208:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -24734,12 +25389,49 @@ var Camera = function () {
         this.view = view;
         this.position = options.position;
         this.zoom = options.zoom;
+        this._angle = 0;
+        this._pitch = 0;
     }
 
-    // Create a camera by type name, factory-style
-
-
     _createClass(Camera, [{
+        key: 'updateMatrices',
+        value: function updateMatrices() {}
+    }, {
+        key: 'getBearing',
+        value: function getBearing() {
+            return -this._angle / Math.PI * 180;
+        }
+    }, {
+        key: 'setBearing',
+        value: function setBearing(bearing) {
+            var b = -_utils2.default.wrap(bearing, -180, 180) * Math.PI / 180;
+            if (this.angle === b) return;
+            this._unmodified = false;
+            this._angle = b;
+            this.updateMatrices();
+
+            // 2x2 matrix for rotating points
+            this.rotationMatrix = _glMatrix.mat2.create();
+            _glMatrix.mat2.rotate(this.rotationMatrix, this.rotationMatrix, this._angle);
+        }
+    }, {
+        key: 'getPitch',
+        value: function getPitch() {
+            return this._pitch / Math.PI * 180;
+        }
+    }, {
+        key: 'setPitch',
+        value: function setPitch(pitch) {
+            var p = _utils2.default.clamp(pitch, 0, 60) / 180 * Math.PI;
+            if (this._pitch === p) return;
+            this._unmodified = false;
+            this._pitch = p;
+            this.updateMatrices();
+        }
+
+        // Create a camera by type name, factory-style
+
+    }, {
         key: 'update',
 
 
@@ -24941,6 +25633,10 @@ var PerspectiveCamera = function (_Camera) {
 
             // Include camera height in projection matrix
             _glMatrix.mat4.translate(this.projection_matrix, this.projection_matrix, _glMatrix.vec3.fromValues(0, 0, -height));
+            //console.log("this._pitch:"+this._pitch);
+            _glMatrix.mat4.rotateX(this.projection_matrix, this.projection_matrix, -this._pitch);
+            //console.log("this._angle:"+this._angle);
+            _glMatrix.mat4.rotateZ(this.projection_matrix, this.projection_matrix, this._angle);
         }
     }, {
         key: 'update',
@@ -25062,7 +25758,7 @@ var FlatCamera = function (_IsometricCamera) {
     return FlatCamera;
 }(IsometricCamera);
 
-},{"./gl/shader_program":206,"./utils/gl-matrix":257,"./utils/utils":269}],200:[function(_dereq_,module,exports){
+},{"./gl/shader_program":215,"./utils/gl-matrix":265,"./utils/utils":277}],209:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25114,6 +25810,27 @@ Geo.metersForTile = function (tile) {
         x: tile.x * Geo.circumference_meters / Math.pow(2, tile.z) - Geo.half_circumference_meters,
         y: -(tile.y * Geo.circumference_meters / Math.pow(2, tile.z) - Geo.half_circumference_meters)
     };
+};
+
+Geo.lnglatForTile = function (min, max) {
+
+    var minx = min.x;
+    var miny = min.y;
+    minx /= Geo.half_circumference_meters;
+    miny /= Geo.half_circumference_meters;
+    miny = (2 * Math.atan(Math.exp(miny * Math.PI)) - Math.PI / 2) / Math.PI;
+    minx *= 180;
+    miny *= 180;
+
+    var maxx = max.x;
+    var maxy = max.y;
+    maxx /= Geo.half_circumference_meters;
+    maxy /= Geo.half_circumference_meters;
+    maxy = (2 * Math.atan(Math.exp(maxy * Math.PI)) - Math.PI / 2) / Math.PI;
+    maxx *= 180;
+    maxy *= 180;
+
+    return { sw: { x: minx, y: maxy }, ne: { x: maxx, y: miny } };
 };
 
 /**
@@ -25187,7 +25904,7 @@ Geo.latLngToMeters = function (_ref6) {
 };
 
 // Transform from local tile coordinats to lat lng
-Geo.tileSpaceToLatlng = function (geometry, z, min) {
+Geo.tileSpaceToLatlng = function (geometry, z, min, max) {
     var units_per_meter = Geo.unitsPerMeter(z);
     Geo.transformGeometry(geometry, function (coord) {
         coord[0] = coord[0] / units_per_meter + min.x;
@@ -25263,6 +25980,57 @@ Geo.transformGeometry = function (geometry, transform) {
 
 Geo.boxIntersect = function (b1, b2) {
     return !(b2.sw.x > b1.ne.x || b2.ne.x < b1.sw.x || b2.sw.y > b1.ne.y || b2.ne.y < b1.sw.y);
+};
+
+Geo.getBoundingBox = function (geometry) {
+    if (geometry == null) {
+        return; // skip if missing geometry (valid GeoJSON)
+    }
+    var bounds = [];
+    if (geometry.type === 'Point') {
+        var bbox = [Infinity, Infinity, -Infinity, -Infinity];
+        bbox[0] = bbox[2] = geometry.coordinates[0];
+        bbox[1] = bbox[3] = geometry.coordinates[1];
+        Array.prototype.push.apply(bounds, bbox);
+    } else if (geometry.type === 'LineString' || geometry.type === 'MultiPoint') {
+        var _bbox = [Infinity, Infinity, -Infinity, -Infinity];
+        var num_coords = geometry.coordinates.length;
+        for (var c = 0; c < num_coords; c++) {
+            var p = geometry.coordinates[c];
+            _bbox[0] = Math.min(_bbox[0], p[0]);
+            _bbox[1] = Math.min(_bbox[1], p[1]);
+            _bbox[2] = Math.max(_bbox[2], p[0]);
+            _bbox[3] = Math.max(_bbox[3], p[1]);
+        }
+        Array.prototype.push.apply(bounds, _bbox);
+    } else if (geometry.type === 'Polygon' || geometry.type === 'MultiLineString') {
+        var _bbox2 = [Infinity, Infinity, -Infinity, -Infinity];
+        var _num_coords = geometry.coordinates[0].length;
+        for (var _c = 0; _c < _num_coords; _c++) {
+            var _p = geometry.coordinates[0][_c];
+            _bbox2[0] = Math.min(_bbox2[0], _p[0]);
+            _bbox2[1] = Math.min(_bbox2[1], _p[1]);
+            _bbox2[2] = Math.max(_bbox2[2], _p[0]);
+            _bbox2[3] = Math.max(_bbox2[3], _p[1]);
+        }
+        Array.prototype.push.apply(bounds, _bbox2);
+    } else if (geometry.type === 'MultiPolygon') {
+        var num_geos = geometry.coordinates.length;
+        for (var i = 0; i < num_geos; i++) {
+            var _bbox3 = [Infinity, Infinity, -Infinity, -Infinity];
+            var _num_coords2 = geometry.coordinates[i][0].length;
+            for (var _c2 = 0; _c2 < _num_coords2; _c2++) {
+                var _p2 = geometry.coordinates[i][0][_c2];
+                _bbox3[0] = Math.min(_bbox3[0], _p2[0]);
+                _bbox3[1] = Math.min(_bbox3[1], _p2[1]);
+                _bbox3[2] = Math.max(_bbox3[2], _p2[0]);
+                _bbox3[3] = Math.max(_bbox3[3], _p2[1]);
+            }
+            Array.prototype.push.apply(bounds, _bbox3);
+        }
+    }
+
+    return bounds;
 };
 
 // Finds the axis-aligned bounding box for a polygon
@@ -25411,7 +26179,7 @@ Geo.ringWinding = function (ring) {
     // return undefined on zero area polygon
 };
 
-},{}],201:[function(_dereq_,module,exports){
+},{}],210:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -25432,7 +26200,7 @@ gl.INT = 0x1404;
 gl.UNSIGNED_INT = 0x1405;
 gl.FLOAT = 0x1406;
 
-},{}],202:[function(_dereq_,module,exports){
+},{}],211:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25488,7 +26256,7 @@ Context.resize = function (gl, width, height, device_pixel_ratio) {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 };
 
-},{}],203:[function(_dereq_,module,exports){
+},{}],212:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -25518,7 +26286,7 @@ function getExtension(gl, name) {
     return exts[name];
 }
 
-},{}],204:[function(_dereq_,module,exports){
+},{}],213:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25802,7 +26570,7 @@ GLSL.expandVec4 = function (v) {
     }
 };
 
-},{}],205:[function(_dereq_,module,exports){
+},{}],214:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -25905,7 +26673,7 @@ var RenderStateManager = function RenderStateManager(gl) {
 
 exports.default = RenderStateManager;
 
-},{}],206:[function(_dereq_,module,exports){
+},{}],215:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -26744,7 +27512,7 @@ ShaderProgram.createShader = function (gl, source, stype) {
     return shader;
 };
 
-},{"../utils/hash":258,"../utils/log":259,"./extensions":203,"./glsl":204,"./texture":207,"gl-shader-errors":97,"strip-comments":189}],207:[function(_dereq_,module,exports){
+},{"../utils/hash":266,"../utils/log":267,"./extensions":212,"./glsl":213,"./texture":216,"gl-shader-errors":98,"strip-comments":194}],216:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -26800,7 +27568,6 @@ var Texture = function () {
         this.texcoords = {}; // sprite UVs ([0, 1] range)
         this.sizes = {}; // sprite sizes (pixel size)
         this.css_sizes = {}; // sprite sizes, adjusted for native texture pixel density
-        this.aspects = {}; // sprite aspect ratios
 
         // Default to a 1-pixel transparent black texture so we can safely render while we wait for an image to load
         // See: http://stackoverflow.com/questions/19722247/webgl-wait-for-texture-to-load
@@ -27119,7 +27886,6 @@ var Texture = function () {
                     // Divide by native texture density to get correct CSS pixels
                     this.sizes[s] = [sprite[2], sprite[3]];
                     this.css_sizes[s] = [sprite[2] / this.density, sprite[3] / this.density];
-                    this.aspects[s] = sprite[2] / sprite[3];
                 }
             }
         }
@@ -27164,7 +27930,6 @@ Texture.getSpriteInfo = function (texname, sprite) {
     return texture && {
         size: texture.sizes[sprite],
         css_size: texture.css_sizes[sprite],
-        aspect: texture.aspects[sprite],
         texcoords: texture.texcoords[sprite]
     };
 };
@@ -27276,7 +28041,6 @@ Texture.getInfo = function (name) {
                 texcoords: tex.texcoords,
                 sizes: tex.sizes,
                 css_sizes: tex.css_sizes,
-                aspects: tex.aspects,
                 filtering: tex.filtering,
                 power_of_2: tex.power_of_2,
                 valid: tex.valid
@@ -27314,7 +28078,7 @@ Texture.activeUnit = null;
 _worker_broker2.default.addTarget('Texture', Texture);
 (0, _subscribe2.default)(Texture);
 
-},{"../utils/log":259,"../utils/subscribe":265,"../utils/utils":269,"../utils/worker_broker":271}],208:[function(_dereq_,module,exports){
+},{"../utils/log":267,"../utils/subscribe":273,"../utils/utils":277,"../utils/worker_broker":279}],217:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27413,7 +28177,7 @@ exports.default = {
     }
 };
 
-},{"../utils/log":259,"./extensions":203}],209:[function(_dereq_,module,exports){
+},{"../utils/log":267,"./extensions":212}],218:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27430,10 +28194,6 @@ var _shader_program2 = _interopRequireDefault(_shader_program);
 var _vao = _dereq_('./vao');
 
 var _vao2 = _interopRequireDefault(_vao);
-
-var _texture = _dereq_('./texture');
-
-var _texture2 = _interopRequireDefault(_texture);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -27456,7 +28216,6 @@ var VBOMesh = function () {
         this.data_usage = options.data_usage || this.gl.STATIC_DRAW;
         this.vertices_per_geometry = 3; // TODO: support lines, strip, fan, etc.
         this.uniforms = options.uniforms;
-        this.textures = options.textures; // any textures owned by this mesh
         this.retain = options.retain || false; // whether to retain mesh data in CPU after uploading to GPU
         this.created_at = +new Date();
         this.fade_in_time = options.fade_in_time || 0; // optional time to fade in mesh
@@ -27479,7 +28238,8 @@ var VBOMesh = function () {
             this.geometry_count = this.vertex_count / this.vertices_per_geometry;
         }
 
-        this.upload();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertex_data, this.data_usage);
 
         if (!this.retain) {
             delete this.vertex_data;
@@ -27551,15 +28311,6 @@ var VBOMesh = function () {
                 });
             }
         }
-
-        // Upload buffer data to GPU
-
-    }, {
-        key: 'upload',
-        value: function upload() {
-            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertex_buffer);
-            this.gl.bufferData(this.gl.ARRAY_BUFFER, this.vertex_data, this.data_usage);
-        }
     }, {
         key: 'destroy',
         value: function destroy() {
@@ -27583,12 +28334,6 @@ var VBOMesh = function () {
             delete this.vertex_data;
             delete this.element_data;
 
-            if (this.textures) {
-                this.textures.forEach(function (t) {
-                    return _texture2.default.release(t);
-                });
-            }
-
             return true;
         }
     }]);
@@ -27598,7 +28343,7 @@ var VBOMesh = function () {
 
 exports.default = VBOMesh;
 
-},{"./shader_program":206,"./texture":207,"./vao":208}],210:[function(_dereq_,module,exports){
+},{"./shader_program":215,"./vao":217}],219:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27744,7 +28489,7 @@ exports.default = VertexData;
 
 VertexData.array_pool = []; // pool of currently available (previously used) buffers (uint8)
 
-},{"../utils/log":259,"./constants":201,"./vertex_elements":211}],211:[function(_dereq_,module,exports){
+},{"../utils/log":267,"./constants":210,"./vertex_elements":220}],220:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27813,7 +28558,7 @@ function createBuffer(array, overflown) {
     return new typedArray(array);
 }
 
-},{}],212:[function(_dereq_,module,exports){
+},{}],221:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27853,8 +28598,7 @@ var VertexLayout = function () {
             return !x.static;
         }); // attributes with per-vertex values, used to build VBOs
         this.components = []; // list of type and offset info about each attribute component
-        this.index = {}; // JS buffer index of each attribute component, e.g. this.index.position
-        this.offset = {}; // VBO buffer byte offset of each attribute component, e.g. this.offset.color
+        this.index = {}; // linear buffer index of each attribute component, e.g. this.index.position.x
         this.stride = 0; // byte stride of a single vertex
 
         var index = 0,
@@ -27900,12 +28644,9 @@ var VertexLayout = function () {
                     });
                 }
 
-                // Provide an index into the vertex data buffer for each attribute by name
+                // Provide an index into the vertex data buffer for each attribute component
                 this.index[attrib.name] = index;
                 index += attrib.size;
-
-                // Store byte offset of each attribute by name
-                this.offset[attrib.name] = attrib.offset;
             }
             // Static attribute
             else {
@@ -28045,16 +28786,12 @@ VertexLayout.enabled_attribs = {};
 // Functions to add plain JS vertex array to typed VBO arrays
 VertexLayout.add_vertex_funcs = {}; // keyed by unique set of attributes
 
-},{"../utils/hash":258,"./constants":201,"./vertex_data":210}],213:[function(_dereq_,module,exports){
+},{"../utils/hash":266,"./constants":210,"./vertex_data":219}],222:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-
-var _label = _dereq_('./label');
-
-var _label2 = _interopRequireDefault(_label);
 
 var _repeat_group = _dereq_('./repeat_group');
 
@@ -28073,22 +28810,16 @@ exports.default = Collision = {
     tiles: {},
 
     startTile: function startTile(tile) {
-        var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-            _ref$apply_repeat_gro = _ref.apply_repeat_groups,
-            apply_repeat_groups = _ref$apply_repeat_gro === undefined ? true : _ref$apply_repeat_gro,
-            _ref$return_hidden = _ref.return_hidden,
-            return_hidden = _ref$return_hidden === undefined ? false : _ref$return_hidden;
-
         var state = this.tiles[tile] = {
             bboxes: { // current set of placed bounding boxes
                 aabb: [],
-                obb: []
+                obb: [],
+                icons: [],
+                priorities: []
             },
             objects: {}, // objects to collide, grouped by priority, then by style
-            labels: {}, // objects post-collision, grouped by style, marked as show/hide
-            styles: {}, // styles contributing collision objects
-            repeat: apply_repeat_groups,
-            return_hidden: return_hidden
+            keep: {}, // objects that were kept after collision, grouped by style
+            styles: {} // styles contributing collision objects
         };
 
         // Promise resolved when all registered styles have added objects
@@ -28129,6 +28860,7 @@ exports.default = Collision = {
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
             var priority = obj.label.layout.priority;
+            if (priority != null) obj.label.priority = priority;else priority = obj.label.priority;
             tile_objects[priority] = tile_objects[priority] || {};
             tile_objects[priority][style] = tile_objects[priority][style] || [];
             tile_objects[priority][style].push(obj);
@@ -28143,24 +28875,22 @@ exports.default = Collision = {
         // Wait for objects to be added from all styles
         return state.complete.then(function () {
             state.resolve = null;
-            return state.labels[style] || [];
+            return state.keep[style] || [];
         });
     },
 
 
     // Test labels for collisions, higher to lower priority
-    // When two collide, hide the lower-priority label
+    // When two collide, discard the lower-priority label
     endTile: function endTile(tile) {
         var state = this.tiles[tile];
-        var labels = state.labels;
+        var keep = state.keep;
 
-        if (state.repeat) {
-            _repeat_group2.default.clear(tile);
-        }
+        _repeat_group2.default.clear(tile);
 
         // Process labels by priority, then by style
         var priorities = Object.keys(state.objects).sort(function (a, b) {
-            return a - b;
+            return parseFloat(a) - parseFloat(b);
         });
         for (var p = 0; p < priorities.length; p++) {
             var style_objects = state.objects[priorities[p]];
@@ -28172,38 +28902,27 @@ exports.default = Collision = {
             // For each style
             for (var style in style_objects) {
                 var objects = style_objects[style];
-                labels[style] = labels[style] || [];
+                keep[style] = keep[style] || [];
 
                 for (var i = 0; i < objects.length; i++) {
                     var object = objects[i];
-                    if (this.canBePlaced(object, tile, object.linked, state)) {
-                        // show object if it isn't dependent on a parent object
+                    //if (object.label.layout.id.properties.name == "中岩CBI^科技产业园")
+                    //    console.log("object.linked:"+JSON.stringify(object.linked.label))
+                    console.log("object.text:"+JSON.stringify(object.text))
+                    if (this.canBePlaced(object, tile, object.linked)) {
+                        // Keep object if it isn't dependent on a parent object
                         if (!object.linked) {
-                            object.show = true;
-                            labels[style].push(object);
-                            this.place(object, tile, state);
+                            keep[style].push(object);
+                            this.place(object, tile);
                         }
-                        // If object is dependent on a parent, only show if both can be placed
-                        else if (this.canBePlaced(object.linked, tile, object, state)) {
-                                object.show = true;
-
-                                // If a label is breach, its linked label should be considered breach as well
-                                // (this keeps linked labels from staying (in)visible in tandem)
-                                if (object.label.breach || object.linked.label.breach) {
-                                    object.label.breach = true;
-                                    object.linked.label.breach = true;
-                                }
-
-                                labels[style].push(object);
-                                this.place(object, tile, state);
-                                this.place(object.linked, tile, state);
-                            } else if (state.return_hidden) {
-                                object.show = false;
-                                labels[style].push(object);
+                        // If object is dependent on a parent, only keep if both can be placed
+                        else if (this.canBePlaced(object.linked, tile, object)) {
+                                keep[style].push(object);
+                                this.place(object, tile);
+                                this.place(object.linked, tile);
                             }
-                    } else if (state.return_hidden) {
-                        object.show = false;
-                        labels[style].push(object);
+                            else
+                                console.log("place:"+false)
                     }
                 }
             }
@@ -28218,10 +28937,6 @@ exports.default = Collision = {
     canBePlaced: function canBePlaced(object, tile) {
         var exclude = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
-        var _ref2 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
-            _ref2$repeat = _ref2.repeat,
-            repeat = _ref2$repeat === undefined ? true : _ref2$repeat;
-
         var label = object.label;
         var layout = object.label.layout;
 
@@ -28232,43 +28947,47 @@ exports.default = Collision = {
 
         // Test the label for intersections with other labels in the tile
         var bboxes = this.tiles[tile].bboxes;
+        //if (layout.id.properties.name == "中岩CBI^科技产业园")
+        //    console.log("label.placed:"+label.discard(bboxes, exclude && exclude.label))
         if (!layout.collide || !label.discard(bboxes, exclude && exclude.label)) {
             // check for repeats
-            var is_repeat = repeat && _repeat_group2.default.check(label, layout, tile);
-            if (is_repeat) {
-                // log('trace', `hide label '${label.text}', dist ${Math.sqrt(is_repeat.dist_sq)/layout.units_per_pixel} < ${Math.sqrt(is_repeat.repeat_dist_sq)/layout.units_per_pixel}`);
+            var repeat = _repeat_group2.default.check(label, layout, tile);
+            if (repeat) {
+                // log('trace', `discard label '${label.text}', (one_per_group: ${repeat.one_per_group}), dist ${Math.sqrt(repeat.dist_sq)/layout.units_per_pixel} < ${Math.sqrt(repeat.repeat_dist_sq)/layout.units_per_pixel}`);
                 label.placed = false;
             } else {
+                if (layout.id.properties.name == "中岩CBI^科技产业园")
+                    console.log("repeat:"+false)
                 return true;
             }
         } else if (layout.collide) {
-            // log('trace', `hide label '${label.text}' due to collision`);
+            // log('trace', `discard label '${label.text}' due to collision`);
             label.placed = false;
+            //if (layout.id.properties.name == "中岩CBI^科技产业园")
+            //    console.log("label.placed:"+label.placed)
         }
+        //if (layout.id.properties.name == "中岩CBI^科技产业园")
+        //    console.log("label.placed:"+label.placed)
         return label.placed;
     },
 
 
     // Place label
-    place: function place(_ref3, tile, _ref4) {
-        var label = _ref3.label;
-        var _ref4$repeat = _ref4.repeat,
-            repeat = _ref4$repeat === undefined ? true : _ref4$repeat;
+    place: function place(_ref, tile) {
+        var label = _ref.label;
 
         // Skip if already processed (e.g. by parent object)
         if (label.placed != null) {
             return;
         }
-
+        //console.log("tile:"+JSON.stringify(tile)+"---label:"+JSON.stringify(label))
         // Register as placed for future collision and repeat culling
-        if (repeat) {
-            _repeat_group2.default.add(label, label.layout, tile);
-        }
-        _label2.default.add(label, this.tiles[tile].bboxes);
+        _repeat_group2.default.add(label, label.layout, tile);
+        label.add(this.tiles[tile].bboxes);
     }
 };
 
-},{"../utils/log":259,"./label":215,"./repeat_group":221}],214:[function(_dereq_,module,exports){
+},{"../utils/log":267,"./repeat_group":229}],223:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28302,7 +29021,7 @@ function boxIntersectsList(a, boxes, callback) {
     }
 }
 
-},{}],215:[function(_dereq_,module,exports){
+},{}],224:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -28310,8 +29029,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-exports.textLayoutToJSON = textLayoutToJSON;
 
 var _point_anchor = _dereq_('./point_anchor');
 
@@ -28339,39 +29056,23 @@ var Label = function () {
 
         _classCallCheck(this, Label);
 
-        this.id = Label.nextLabelId();
-        this.type = ''; // set by subclass
+        this.icon = false;
+        this.priority = 5000;
         this.size = size;
         this.layout = layout;
+        this.angle = layout.angle;
+        this.spacing = layout.spacing;
         this.position = null;
         this.anchor = Array.isArray(this.layout.anchor) ? this.layout.anchor[0] : this.layout.anchor; // initial anchor
         this.placed = null;
         this.offset = layout.offset;
-        this.unit_scale = this.layout.units_per_pixel;
         this.aabb = null;
         this.obb = null;
         this.align = 'center';
         this.throw_away = false; // if label does not fit (exceeds tile boundary, etc) this boolean will be true
     }
 
-    // Minimal representation of label
-
-
     _createClass(Label, [{
-        key: 'toJSON',
-        value: function toJSON() {
-            return {
-                id: this.id,
-                type: this.type,
-                obb: this.obb.toJSON(),
-                position: this.position,
-                size: this.size,
-                offset: this.offset,
-                breach: this.breach,
-                layout: textLayoutToJSON(this.layout)
-            };
-        }
-    }, {
         key: 'update',
         value: function update() {
             this.align = this.layout.align || _point_anchor2.default.alignForAnchor(this.anchor);
@@ -28389,12 +29090,16 @@ var Label = function () {
             var intersect = false;
             var aabbs = bboxes.aabb;
             var obbs = bboxes.obb;
-
+            var icons = bboxes.icons;
+            var priorities = bboxes.priorities;
+            if (_this && _this.layout && _this.layout.id.properties.name == "中岩CBI^科技产业园")
+                console.log("_this:"+JSON.stringify(_this))
             // Broad phase
             if (aabbs.length > 0) {
                 (0, _intersect.boxIntersectsList)(this.aabb, aabbs, function (j) {
                     // log('trace', 'collision: broad phase collide', this.layout.id, this, this.aabb, aabbs[j]);
-
+                    //检查一下优先级是否正确
+                    if (_this.priority && priorities[j] && _this.priority < priorities[j]) return;
                     // Skip if colliding with excluded label
                     if (exclude && aabbs[j] === exclude.aabb) {
                         // log('trace', 'collision: skipping due to explicit exclusion', this, exclude);
@@ -28416,7 +29121,21 @@ var Label = function () {
                     }
                 });
             }
+            if (_this && _this.layout && _this.layout.id.properties.name == "中岩CBI^科技产业园")
+                console.log("intersect:"+intersect)
             return intersect;
+        }
+
+        // Add this label's bounding box to the provided set
+
+    }, {
+        key: 'add',
+        value: function add(bboxes) {
+            this.placed = true;
+            bboxes.aabb.push(this.aabb);
+            bboxes.obb.push(this.obb);
+            bboxes.icons.push(this.icon);
+            bboxes.priorities.push(this.priority);
         }
 
         // checks whether the label is within the tile boundaries
@@ -28426,7 +29145,14 @@ var Label = function () {
         value: function inTileBounds() {
             var min = [this.aabb[0], this.aabb[1]];
             var max = [this.aabb[2], this.aabb[3]];
-
+            if (this.layout && this.layout.id.properties.name == "中岩CBI^科技产业园"){
+                console.log("min:"+JSON.stringify(min))
+                console.log("max:"+JSON.stringify(max))
+                console.log("this.anchor:"+this.anchor)
+                console.log("this.anchor:"+_utils2.default.pointInTile2(min, max, this.anchor))
+            }
+            if (_utils2.default.pointInTile2(min, max, this.anchor))
+                return true;
             if (!_utils2.default.pointInTile(min) || !_utils2.default.pointInTile(max)) {
                 return false;
             }
@@ -28441,10 +29167,13 @@ var Label = function () {
         key: 'discard',
         value: function discard(bboxes) {
             var exclude = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
+            if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                console.log("this.throw_away:"+this.throw_away)
             if (this.throw_away) {
                 return true;
             }
+            //if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+            //    console.log("label.placed:"+this.occluded(bboxes, exclude))
             return this.occluded(bboxes, exclude);
         }
     }]);
@@ -28452,55 +29181,17 @@ var Label = function () {
     return Label;
 }();
 
-// Generic label placement function, adds a label's bounding boxes to the currently placed set
-//  Supports single or multiple collision boxes
-
-
 exports.default = Label;
-Label.add = function (label, bboxes) {
-    label.placed = true;
 
-    if (label.aabb) {
-        bboxes.aabb.push(label.aabb);
-        bboxes.obb.push(label.obb);
-    }
-
-    if (label.aabbs) {
-        for (var i = 0; i < label.aabbs.length; i++) {
-            bboxes.aabb.push(label.aabbs[i]);
-            bboxes.obb.push(label.obbs[i]);
-        }
-    }
-};
-
-Label.id = 0;
-Label.id_prefix = ''; // id prefix scoped to worker thread
-
-Label.nextLabelId = function () {
-    return Label.id_prefix + '/' + Label.id++;
-};
 
 Label.epsilon = 0.9999; // tolerance around collision boxes, prevent perfectly adjacent objects from colliding
 
-// Minimal representation of text layout, sent to main thread for label collisions
-function textLayoutToJSON(layout) {
-    return {
-        priority: layout.priority,
-        collide: layout.collide,
-        repeat_distance: layout.repeat_distance,
-        repeat_group: layout.repeat_group,
-        buffer: layout.buffer,
-        italic: layout.italic // affects bounding box size
-    };
-}
-
-},{"../utils/obb":262,"../utils/utils":269,"./intersect":214,"./point_anchor":219}],216:[function(_dereq_,module,exports){
+},{"../utils/obb":270,"../utils/utils":277,"./intersect":223,"./point_anchor":227}],225:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.LabelLineStraight = exports.LabelLineBase = undefined;
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
@@ -28514,9 +29205,9 @@ var _vector = _dereq_('../vector');
 
 var _vector2 = _interopRequireDefault(_vector);
 
-var _obb = _dereq_('../utils/obb');
+var _obb2 = _dereq_('../utils/obb');
 
-var _obb2 = _interopRequireDefault(_obb);
+var _obb3 = _interopRequireDefault(_obb2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28570,52 +29261,48 @@ exports.default = LabelLine;
 
 // Base class for a labels.
 
-var LabelLineBase = exports.LabelLineBase = function () {
+var LabelLineBase = function () {
     function LabelLineBase(layout) {
         _classCallCheck(this, LabelLineBase);
 
-        this.id = _label2.default.nextLabelId();
         this.layout = layout;
         this.position = [];
         this.angle = 0;
         this.offset = layout.offset.slice();
-        this.unit_scale = this.layout.units_per_pixel;
         this.obbs = [];
         this.aabbs = [];
         this.type = ''; // "curved" or "straight" to be set by child class
         this.throw_away = false; // boolean that determines if label should be discarded
     }
 
-    // Minimal representation of label
+    // Given a line, find the longest series of segments that maintains a constant orientation in the x-direction.
+    // This assures us that the line has no orientation flip, so text would not appear upside-down.
+    // If the line's orientation is reversed, the flip return value will be true, otherwise false
 
 
     _createClass(LabelLineBase, [{
-        key: 'toJSON',
-        value: function toJSON() {
-            return {
-                id: this.id,
-                type: this.type,
-                position: this.position,
-                size: this.size,
-                offset: this.offset,
-                angle: this.angle,
-                breach: this.breach,
-                layout: (0, _label.textLayoutToJSON)(this.layout)
-            };
+        key: 'add',
+
+
+        // Add each bounding box to the collision pass
+        value: function add(bboxes) {
+            this.placed = true;
+            for (var i = 0; i < this.aabbs.length; i++) {
+                var aabb = this.aabbs[i];
+                var obb = this.obbs[i];
+                var obj = { aabb: aabb, obb: obb };
+                _label2.default.prototype.add.call(obj, bboxes);
+            }
         }
 
-        // Given a line, find the longest series of segments that maintains a constant orientation in the x-direction.
-        // This assures us that the line has no orientation flip, so text would not appear upside-down.
-        // If the line's orientation is reversed, the flip return value will be true, otherwise false
+        // Checks each segment to see if it should be discarded (via collision). If any segment fails this test, they all fail.
 
     }, {
         key: 'discard',
-
-
-        // Checks each segment to see if it should be discarded (via collision). If any segment fails this test, they all fail.
         value: function discard(bboxes) {
             var exclude = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
+            if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                console.log("throw-away:"+throw_away)
             if (this.throw_away) {
                 return true;
             }
@@ -28744,7 +29431,7 @@ var LabelLineBase = exports.LabelLineBase = function () {
             }
 
             // the angle of the obb is negative since it's the tile system y axis is pointing down
-            return new _obb2.default(p0, p1, -angle, width, height);
+            return new _obb3.default(p0, p1, -angle, width, height);
         }
     }]);
 
@@ -28755,7 +29442,7 @@ var LabelLineBase = exports.LabelLineBase = function () {
 // Extends base LabelLine class.
 
 
-var LabelLineStraight = exports.LabelLineStraight = function (_LabelLineBase) {
+var LabelLineStraight = function (_LabelLineBase) {
     _inherits(LabelLineStraight, _LabelLineBase);
 
     function LabelLineStraight(size, line, layout, tolerance) {
@@ -28764,7 +29451,6 @@ var LabelLineStraight = exports.LabelLineStraight = function (_LabelLineBase) {
         var _this = _possibleConstructorReturn(this, (LabelLineStraight.__proto__ || Object.getPrototypeOf(LabelLineStraight)).call(this, layout));
 
         _this.type = 'straight';
-        _this.size = size;
         _this.throw_away = !_this.fit(size, line, layout, tolerance);
         return _this;
     }
@@ -28777,7 +29463,7 @@ var LabelLineStraight = exports.LabelLineStraight = function (_LabelLineBase) {
     _createClass(LabelLineStraight, [{
         key: 'fit',
         value: function fit(size, line, layout, tolerance) {
-            var upp = this.unit_scale;
+            var upp = layout.units_per_pixel;
             var flipped = void 0; // boolean indicating if orientation of line is changed
 
             // Make new copy of line, with consistent orientation
@@ -28863,8 +29549,12 @@ var LabelLineStraight = exports.LabelLineStraight = function (_LabelLineBase) {
                         }
 
                         this.position = curr_midpt;
+
                         this.updateBBoxes(this.position, size, this.angle, this.angle, this.offset);
-                        return true; // use this placement
+
+                        if (this.inTileBounds()) {
+                            return true;
+                        }
                     }
 
                     prev_angle = next_angle;
@@ -28880,7 +29570,7 @@ var LabelLineStraight = exports.LabelLineStraight = function (_LabelLineBase) {
     }, {
         key: 'updateBBoxes',
         value: function updateBBoxes(position, size, angle, angle_offset, offset) {
-            var upp = this.unit_scale;
+            var upp = this.layout.units_per_pixel;
 
             // reset bounding boxes
             this.obbs = [];
@@ -28894,9 +29584,6 @@ var LabelLineStraight = exports.LabelLineStraight = function (_LabelLineBase) {
 
             this.obbs.push(obb);
             this.aabbs.push(aabb);
-            if (this.inTileBounds) {
-                this.breach = !this.inTileBounds();
-            }
         }
     }]);
 
@@ -28922,37 +29609,19 @@ var LabelLineCurved = function (_LabelLineBase2) {
         _this2.pre_angles = [];
         _this2.offsets = [];
         _this2.num_segments = segment_sizes.length;
-        _this2.sizes = segment_sizes;
 
-        _this2.throw_away = !_this2.fit(_this2.sizes, line, layout);
+        _this2.throw_away = !_this2.fit(segment_sizes, line, layout);
         return _this2;
     }
 
-    // Minimal representation of label
+    // Determine if the curved label can fit the geometry.
+    // No tolerance is provided because the label must fit entirely within the line geometry.
 
 
     _createClass(LabelLineCurved, [{
-        key: 'toJSON',
-        value: function toJSON() {
-            return {
-                id: this.id,
-                type: this.type,
-                obbs: this.obbs.map(function (o) {
-                    return o.toJSON();
-                }),
-                position: this.position,
-                breach: this.breach,
-                layout: (0, _label.textLayoutToJSON)(this.layout)
-            };
-        }
-
-        // Determine if the curved label can fit the geometry.
-        // No tolerance is provided because the label must fit entirely within the line geometry.
-
-    }, {
         key: 'fit',
         value: function fit(size, line, layout) {
-            var upp = this.unit_scale;
+            var upp = layout.units_per_pixel;
             var flipped = void 0; // boolean determining if the line orientation is reversed
 
             var height_px = Math.max.apply(Math, _toConsumableArray(size.map(function (s) {
@@ -28999,10 +29668,18 @@ var LabelLineCurved = function (_LabelLineBase2) {
                 return false;
             }
 
+            // find start and end indices that the label can fit on without overlapping tile boundaries
+            // TODO: there is a small probability of a tile boundary crossing on an internal line segment
+            // another option is to create a buffer around the line and check if it overlaps a tile boundary
+
+            var _LabelLineCurved$chec = LabelLineCurved.checkTileBoundary(line, line_lengths, height, this.offset, upp),
+                _LabelLineCurved$chec2 = _slicedToArray(_LabelLineCurved$chec, 2),
+                start_index = _LabelLineCurved$chec2[0],
+                end_index = _LabelLineCurved$chec2[1];
+
             // need two line segments for a curved label
-            // NB: single segment lines should still be labeled if possible during straight label placement pass
-            var start_index = 0,
-                end_index = line.length - 1;
+
+
             if (end_index - start_index < 2) {
                 return false;
             }
@@ -29063,11 +29740,11 @@ var LabelLineCurved = function (_LabelLineBase2) {
                         });
 
                         // calculate bounding boxes for collision at zoom level 0
-                        for (var _i = 0; _i < positions.length; _i++) {
-                            var position = positions[_i];
-                            var pre_angle = pre_angles[_i];
-                            var width = label_lengths[_i];
-                            var angle_segment = pre_angle + angles[_i];
+                        for (var _i2 = 0; _i2 < positions.length; _i2++) {
+                            var position = positions[_i2];
+                            var pre_angle = pre_angles[_i2];
+                            var width = label_lengths[_i2];
+                            var angle_segment = pre_angle + angles[_i2];
                             var angle_offset = this.angle;
 
                             var obb = LabelLineBase.createOBB(position, width, height, angle_segment, angle_offset, this.offset, upp);
@@ -29088,13 +29765,59 @@ var LabelLineCurved = function (_LabelLineBase2) {
             return true;
         }
 
+        // Test if line intersects tile boundary. Return indices at beginning and end of line that are within tile.
+        // Burn candle from both ends strategy - meaning shift and pop until vertices are within tile, but an interior vertex
+        // may still be outside of tile (can potentially result in label collision across tiles).
+
+    }], [{
+        key: 'checkTileBoundary',
+        value: function checkTileBoundary(line, widths, height, offset, upp) {
+            var start = 0;
+            var end = line.length - 1;
+
+            height *= _label2.default.epsilon;
+
+            var start_width = widths[start] * _label2.default.epsilon;
+            var end_width = widths[widths.length - 1] * _label2.default.epsilon;
+
+            // Burn candle from start
+            while (start < end) {
+                var angle = getAngleForSegment(line[start], line[start + 1]);
+                var position = _vector2.default.add(_vector2.default.rot([start_width / 2, 0], angle), line[start]);
+                var obb = LabelLineBase.createOBB(position, start_width, height, -angle, -angle, offset, upp);
+                var aabb = obb.getExtent();
+                var in_tile = _label2.default.prototype.inTileBounds.call({ aabb: aabb });
+                if (in_tile) {
+                    break;
+                } else {
+                    start++;
+                }
+            }
+
+            // Burn candle from end
+            while (end > start) {
+                var _angle = getAngleForSegment(line[end - 1], line[end]);
+                var _position = _vector2.default.add(_vector2.default.rot([-end_width / 2, 0], _angle), line[end]);
+                var _obb = LabelLineBase.createOBB(_position, end_width, height, -_angle, -_angle, offset, upp);
+                var _aabb = _obb.getExtent();
+                var _in_tile = _label2.default.prototype.inTileBounds.call({ aabb: _aabb });
+                if (_in_tile) {
+                    break;
+                } else {
+                    end--;
+                }
+            }
+
+            return [start, end];
+        }
+
         // Find optimal starting segment for placing a curved label along a line within provided tolerances
         // This is determined by calculating the curvature at each interior vertex of a line
         // then construct a "window" whose breadth is the length of the label. Place this label at each vertex
         // and add the curvatures of each vertex within the window. The vertex mimimizing this value is the "best" placement.
         // Return -1 is no placement found.
 
-    }], [{
+    }, {
         key: 'curvaturePlacement',
         value: function curvaturePlacement(line, total_line_length, line_lengths, label_length, start_index, end_index) {
             start_index = start_index || 0;
@@ -29130,8 +29853,8 @@ var LabelLineCurved = function (_LabelLineBase2) {
             var line_index = start_index;
             var position = 0;
 
-            for (var _i2 = 0; _i2 < start_index; _i2++) {
-                position += line_lengths[_i2];
+            for (var _i3 = 0; _i3 < start_index; _i3++) {
+                position += line_lengths[_i3];
             }
 
             // move window along line, starting at first vertex
@@ -29393,7 +30116,7 @@ function getAbsAngleDiff(angle1, angle2) {
     return Math.abs(big - small);
 }
 
-},{"../utils/obb":262,"../vector":272,"./label":215}],217:[function(_dereq_,module,exports){
+},{"../utils/obb":270,"../vector":280,"./label":224}],226:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -29422,8 +30145,6 @@ var _obb2 = _interopRequireDefault(_obb);
 
 var _style_parser = _dereq_('../styles/style_parser');
 
-var _style_parser2 = _interopRequireDefault(_style_parser);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -29440,14 +30161,13 @@ var LabelPoint = function (_Label) {
 
         var _this = _possibleConstructorReturn(this, (LabelPoint.__proto__ || Object.getPrototypeOf(LabelPoint)).call(this, size, layout));
 
-        _this.type = 'point';
         _this.position = [position[0], position[1]];
         _this.parent = _this.layout.parent;
         _this.update();
 
         _this.start_anchor_index = 1;
         _this.degenerate = !_this.size[0] && !_this.size[1] && !_this.layout.buffer[0] && !_this.layout.buffer[1];
-        _this.throw_away = false;
+        _this.throw_away = !_this.getNextFit();
         return _this;
     }
 
@@ -29469,9 +30189,9 @@ var LabelPoint = function (_Label) {
                 // point's own anchor, text anchor applied to point, additional point offset
                 this.offset = _point_anchor2.default.computeOffset(this.offset, parent.size, parent.anchor, _point_anchor2.default.zero_buffer);
                 this.offset = _point_anchor2.default.computeOffset(this.offset, parent.size, this.anchor, _point_anchor2.default.zero_buffer);
-                if (parent.offset !== _style_parser2.default.zeroPair) {
+                if (parent.offset !== _style_parser.StyleParser.zeroPair) {
                     // point has an offset
-                    if (this.offset === _style_parser2.default.zeroPair) {
+                    if (this.offset === _style_parser.StyleParser.zeroPair) {
                         // no text offset, use point's
                         this.offset = parent.offset;
                     } else {
@@ -29487,21 +30207,18 @@ var LabelPoint = function (_Label) {
     }, {
         key: 'updateBBoxes',
         value: function updateBBoxes() {
-            var width = (this.size[0] + this.layout.buffer[0] * 2) * this.unit_scale * _label2.default.epsilon;
-            var height = (this.size[1] + this.layout.buffer[1] * 2) * this.unit_scale * _label2.default.epsilon;
+            var width = (this.size[0] + this.layout.buffer[0] * 2) * this.layout.units_per_pixel * _label2.default.epsilon;
+            var height = (this.size[1] + this.layout.buffer[1] * 2) * this.layout.units_per_pixel * _label2.default.epsilon;
 
             // fudge width value as text may overflow bounding box if it has italic, bold, etc style
             if (this.layout.italic) {
-                width += 5 * this.unit_scale;
+                width += 5 * this.layout.units_per_pixel;
             }
 
-            var p = [this.position[0] + this.offset[0] * this.unit_scale, this.position[1] - this.offset[1] * this.unit_scale];
+            var p = [this.position[0] + this.offset[0] * this.layout.units_per_pixel, this.position[1] - this.offset[1] * this.layout.units_per_pixel];
 
             this.obb = new _obb2.default(p[0], p[1], 0, width, height);
             this.aabb = this.obb.getExtent();
-            if (this.inTileBounds) {
-                this.breach = !this.inTileBounds();
-            }
         }
 
         // Try to move the label into the tile bounds
@@ -29539,6 +30256,42 @@ var LabelPoint = function (_Label) {
             return updated;
         }
     }, {
+        key: 'getNextFit',
+        value: function getNextFit() {
+            if (this.layout.id.properties.name == "中岩CBI^科技产业园"){
+                console.log("this.layout.cull_from_tile:"+this.layout.cull_from_tile)
+                console.log("this.inTileBounds():"+this.inTileBounds())
+                console.log("this.layout.move_into_tile:"+this.layout.move_into_tile)
+            }
+            if (!this.layout.cull_from_tile || this.inTileBounds()) {
+                return true;
+            }
+
+            if (this.layout.move_into_tile) {
+                this.moveIntoTile();
+                return true;
+            } else {
+                if (Array.isArray(this.layout.anchor)) {
+                    // Start on second anchor (first anchor was set on creation)
+                    for (var i = 1; i < this.layout.anchor.length; i++) {
+                        this.anchor = this.layout.anchor[i];
+                        this.update();
+
+                        this.start_anchor_index = i;
+                        
+                        if (this.inTileBounds()) {
+                            if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                                console.log("i:"+i)
+                            return true;
+                        }
+                    }
+                }
+
+                // no anchors result in fit
+                return false;
+            }
+        }
+    }, {
         key: 'discard',
         value: function discard(bboxes) {
             var exclude = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
@@ -29547,19 +30300,37 @@ var LabelPoint = function (_Label) {
                 return false;
             }
 
-            if (_get(LabelPoint.prototype.__proto__ || Object.getPrototypeOf(LabelPoint.prototype), 'discard', this).call(this, bboxes, exclude)) {
+            if (_get(LabelPoint.prototype.__proto__ || Object.getPrototypeOf(LabelPoint.prototype), 'discard', this).call(this, bboxes, exclude))
+            {
                 // If more than one anchor specified, try them in order
+                // (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                //    console.log("anchor:"+JSON.stringify(this.layout.anchor));
                 if (Array.isArray(this.layout.anchor)) {
                     // Start on second anchor (first anchor was set on creation)
                     for (var i = this.start_anchor_index; i < this.layout.anchor.length; i++) {
                         this.anchor = this.layout.anchor[i];
                         this.update();
-
+                        if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                            console.log("ori anchor:"+this.start_anchor_index);
+                        if (this.layout.cull_from_tile && !this.inTileBounds()) {
+                            if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                                console.log("bounds anchor:"+this.anchor);
+                            continue;
+                        }
+                        if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                            console.log("result:"+_get(LabelPoint.prototype.__proto__ || Object.getPrototypeOf(LabelPoint.prototype), 'discard', this).call(this, bboxes, exclude));
                         if (!_get(LabelPoint.prototype.__proto__ || Object.getPrototypeOf(LabelPoint.prototype), 'discard', this).call(this, bboxes, exclude)) {
+                            if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                                console.log("discard anchor:"+this.anchor);
                             return false;
+                        } else {
+                            //if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                            //    console.log("true anchor:"+this.anchor);
                         }
                     }
                 }
+                if (this.layout.id.properties.name == "中岩CBI^科技产业园")
+                    console.log("all false");
                 return true;
             }
             return false;
@@ -29580,222 +30351,7 @@ LabelPoint.PLACEMENT = {
     CENTROID: 3 // place labels at center of polygons
 };
 
-},{"../geo":200,"../styles/style_parser":245,"../utils/obb":262,"./label":215,"./point_anchor":219}],218:[function(_dereq_,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.default = mainThreadLabelCollisionPass;
-
-var _label = _dereq_('./label');
-
-var _label2 = _interopRequireDefault(_label);
-
-var _label_point = _dereq_('./label_point');
-
-var _label_point2 = _interopRequireDefault(_label_point);
-
-var _label_line = _dereq_('./label_line');
-
-var _collision = _dereq_('./collision');
-
-var _collision2 = _interopRequireDefault(_collision);
-
-var _obb = _dereq_('../utils/obb');
-
-var _obb2 = _interopRequireDefault(_obb);
-
-var _geo = _dereq_('../geo');
-
-var _geo2 = _interopRequireDefault(_geo);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var visible = {}; // currently visible labels
-var prev_visible = {}; // previously visible labels (in last collision run)
-
-function mainThreadLabelCollisionPass(tiles, view_zoom) {
-    var hide_breach = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-
-    prev_visible = visible; // save last visible label set
-    visible = {}; // initialize new visible label set
-
-    var labels = {};
-    var containers = {};
-
-    // Collect labels from each tile and turn into new label instances
-    tiles.forEach(function (tile) {
-        var units_per_meter = _geo2.default.unitsPerMeter(tile.coords.z); // scale from tile units to mercator meters
-        var zoom_scale = Math.pow(2, view_zoom - tile.style_zoom); // adjust label size by view zoom
-        var size_scale = units_per_meter * zoom_scale; // scale from tile units to zoom-adjusted meters
-        var meters_per_pixel = _geo2.default.metersPerPixel(view_zoom);
-
-        // First pass: create label instances and centralize collision containers
-        for (var style in tile.meshes) {
-            var meshes = tile.meshes[style];
-            meshes.forEach(function (mesh) {
-                if (mesh.labels) {
-                    for (var label_id in mesh.labels) {
-                        if (!labels[label_id]) {
-                            var params = mesh.labels[label_id].container.label;
-                            var linked = mesh.labels[label_id].container.linked;
-                            var ranges = mesh.labels[label_id].ranges;
-                            var debug = Object.assign({}, mesh.labels[label_id].debug, { tile: tile, params: params, label_id: label_id });
-
-                            var label = labels[label_id] = {};
-                            label.discard = discard.bind(label);
-                            label.build_id = tile.build_id; // original order in which tiles were built
-
-                            Object.assign(label, params);
-                            label.layout = Object.assign({}, params.layout); // TODO: ideally remove need to copy props here
-                            label.layout.repeat_scale = 0.75; // looser second pass on repeat groups, to weed out repeats near tile edges
-                            label.layout.repeat_distance = label.layout.repeat_distance || 0;
-                            label.layout.repeat_distance /= size_scale; // TODO: where should this be scaled?
-
-                            label.position = [// don't overwrite referenced values
-                            label.position[0] / units_per_meter + tile.min.x, label.position[1] / units_per_meter + tile.min.y];
-                            label.unit_scale = meters_per_pixel;
-
-                            // if (params.obb) {
-                            if (label.type === 'point') {
-                                // TODO: move to integer constants to avoid excess string copies
-                                _label_point2.default.prototype.updateBBoxes.call(label);
-                            } else if (label.type === 'straight') {
-                                _label_line.LabelLineStraight.prototype.updateBBoxes.call(label, label.position, label.size, label.angle, label.angle, label.offset);
-                            } else if (params.obbs) {
-                                // NB: this is a very rough approximation of curved label collision at intermediate zooms,
-                                // becuase the position/scale of each collision box isn't correctly updated; however,
-                                // it's good enough to provide some additional label coverage, with less overhead
-                                var obbs = params.obbs.map(function (o) {
-                                    var x = o.x,
-                                        y = o.y,
-                                        a = o.a,
-                                        w = o.w,
-                                        h = o.h;
-
-                                    x = x / units_per_meter + tile.min.x;
-                                    y = y / units_per_meter + tile.min.y;
-                                    w /= size_scale;
-                                    h /= size_scale;
-                                    return new _obb2.default(x, y, a, w, h);
-                                });
-                                label.obbs = obbs;
-                                label.aabbs = obbs.map(function (o) {
-                                    return o.getExtent();
-                                });
-                            }
-
-                            containers[label_id] = {
-                                label: label,
-                                linked: linked,
-                                ranges: ranges,
-                                mesh: mesh,
-                                debug: debug
-                            };
-                        }
-                    }
-                }
-            });
-        }
-    });
-
-    // Resolve links between label containers
-    for (var c in containers) {
-        var container = containers[c];
-        if (container.linked) {
-            container.linked = containers[container.linked];
-        }
-        // NB: if linked label not found, it was discarded in initial tile collision pass
-    }
-
-    // Convert container map to array
-    containers = Object.keys(containers).map(function (k) {
-        return containers[k];
-    });
-
-    // Collide all labels in a single group
-    // TODO: maybe rename tile and style to group/subgroup?
-    _collision2.default.startTile('main', { apply_repeat_groups: true, return_hidden: true });
-    _collision2.default.addStyle('main', 'main');
-
-    return _collision2.default.collide(containers, 'main', 'main').then(function (labels) {
-        var meshes = [];
-        labels.forEach(function (container) {
-            // Hide breach labels (those that cross tile boundaries) while tiles are loading, unless they
-            // were previously visible (otherwise fully loaded/collided breach labels will flicker in and out
-            // when new tiles load, even if they aren't adjacent)
-            var show = 0;
-            if (container.show === true && (!hide_breach || !container.label.breach || prev_visible[container.label.id])) {
-                show = 1;
-            }
-
-            if (show) {
-                visible[container.label.id] = container; // track visible labels
-            }
-
-            var changed = true; // check if label visibility changed on this collision pass
-
-            container.ranges.forEach(function (r) {
-                if (!changed) {
-                    return; // skip rest of label if state hasn't changed
-                }
-
-                var mesh = container.mesh;
-                var off = mesh.vertex_layout.offset.a_shape; // byte offset (within each vertex) of attribute
-                var stride = mesh.vertex_layout.stride; // byte stride per vertex
-
-                for (var i = 0; i < r[1]; i++) {
-                    // NB: +6 is because attribute is a short int (2 bytes each), and we're skipping to 3rd element, 6=3*2
-                    if (mesh.vertex_data[r[0] + i * stride + off + 6] === show) {
-                        changed = false;
-                        return; // label hasn't changed states, skip further updates
-                    }
-                    mesh.vertex_data[r[0] + i * stride + off + 6] = show;
-                }
-
-                if (meshes.indexOf(mesh) === -1) {
-                    meshes.push(mesh);
-                }
-            });
-        });
-
-        meshes.forEach(function (mesh) {
-            return mesh.upload();
-        });
-        tiles.forEach(function (t) {
-            return t.swapPendingLabels();
-        });
-
-        return { labels: labels, containers: containers }; // currently returned for debugging
-    });
-}
-
-// Generic discard function for labels, does simple occlusion with one or more bounding boxes
-// (no additional logic to try alternate anchors or other layour options, etc.)
-function discard(bboxes) {
-    var exclude = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-
-    if (this.obb) {
-        // single collision box
-        return _label2.default.prototype.occluded.call(this, bboxes, exclude);
-    } else if (this.obbs) {
-        // mutliple collision boxes
-        for (var i = 0; i < this.obbs.length; i++) {
-            var aabb = this.aabbs[i];
-            var obb = this.obbs[i];
-            var obj = { aabb: aabb, obb: obb };
-
-            var should_discard = _label2.default.prototype.occluded.call(obj, bboxes, exclude);
-            if (should_discard) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-},{"../geo":200,"../utils/obb":262,"./collision":213,"./label":215,"./label_line":216,"./label_point":217}],219:[function(_dereq_,module,exports){
+},{"../geo":209,"../styles/style_parser":253,"../utils/obb":270,"./label":224,"./point_anchor":227}],227:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -29878,7 +30434,7 @@ exports.default = PointAnchor = {
 
 };
 
-},{}],220:[function(_dereq_,module,exports){
+},{}],228:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -29912,11 +30468,11 @@ function placePointsOnLine(line, size, options) {
                 return [];
             }
 
-            var positions = result.positions;
-            var angles = result.angles;
-            for (var i = 0; i < positions.length; i++) {
-                var position = positions[i];
-                var angle = angles[i];
+            var _positions = result.positions;
+            var _angles = result.angles;
+            for (var i = 0; i < _positions.length; i++) {
+                var position = _positions[i];
+                var angle = _angles[i];
                 if (options.tile_edges === true || !(0, _common.isCoordOutsideTile)(position)) {
                     var _label = new _label_point2.default(position, size, options);
                     _label.angle = angle;
@@ -29970,22 +30526,48 @@ function getPositionsAndAngles(line, min_length, options) {
         return false;
     }
 
-    var num_labels = Math.max(Math.floor(length / spacing), 1);
-    var remainder = length - (num_labels - 1) * spacing;
-    var positions = [];
-    var angles = [];
+    if (options.dash === null) {
+        var num_labels = Math.max(Math.floor(length / spacing), 1);
+        var remainder = length - (num_labels - 1) * spacing;
+        var _positions2 = [];
+        var _angles2 = [];
 
-    var distance = 0.5 * remainder;
-    for (var i = 0; i < num_labels; i++) {
-        var _interpolateLine = interpolateLine(line, distance, min_length, options),
-            position = _interpolateLine.position,
-            angle = _interpolateLine.angle;
+        var distance = 0.5 * remainder;
+        for (var i = 0; i < num_labels; i++) {
+            var _interpolateLine = interpolateLine(line, distance, min_length, options),
+                position = _interpolateLine.position,
+                angle = _interpolateLine.angle;
 
-        if (position != null && angle != null) {
-            positions.push(position);
-            angles.push(angle);
+            if (position != null && angle != null) {
+                _positions2.push(position);
+                _angles2.push(angle);
+            }
+            distance += spacing;
         }
-        distance += spacing;
+    } else {
+        var dash_len = options.dash.length;
+        var _distance = 0;
+        var _num_labels = 0;
+        while (_distance < length) {
+            var pos = _num_labels % dash_len;
+            var segment = options.dash[pos];
+            _distance += segment;
+            if (segment == 0 || pos % 2 == 1) {
+                _num_labels++;
+                continue;
+            }
+
+            var _interpolateLine2 = interpolateLine(line, _distance, min_length, options),
+                position = _interpolateLine2.position,
+                angle = _interpolateLine2.angle;
+
+            if (position != null && angle != null) {
+                positions.push(position);
+                angles.push(angle);
+            }
+
+            _num_labels++;
+        }
     }
 
     return { positions: positions, angles: angles };
@@ -30041,8 +30623,8 @@ function interpolateSegment(p, q, distance) {
     return [ratio * p[0] + (1 - ratio) * q[0], ratio * p[1] + (1 - ratio) * q[1]];
 }
 
-},{"../builders/common":195,"./label_point":217}],221:[function(_dereq_,module,exports){
-"use strict";
+},{"../builders/common":204,"./label_point":226}],229:[function(_dereq_,module,exports){
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -30050,15 +30632,23 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _geo = _dereq_('../geo');
+
+var _geo2 = _interopRequireDefault(_geo);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var RepeatGroup = function () {
-    function RepeatGroup(key, repeat_dist) {
+    function RepeatGroup(key, repeat_dist, max_repeat_dist) {
         _classCallCheck(this, RepeatGroup);
 
         this.key = key;
         this.repeat_dist = repeat_dist;
         this.repeat_dist_sq = this.repeat_dist * this.repeat_dist;
+        this.max_repeat_dist_sq = max_repeat_dist * max_repeat_dist;
+        this.one_per_group = this.repeat_dist_sq >= this.max_repeat_dist_sq ? true : false;
         this.positions = [];
     }
 
@@ -30066,8 +30656,22 @@ var RepeatGroup = function () {
 
 
     _createClass(RepeatGroup, [{
-        key: "check",
+        key: 'check',
         value: function check(obj) {
+            // If only one object allowed per group, shortcut distance logic
+            if (this.one_per_group) {
+                if (this.positions.length > 0) {
+                    // reported distance maxes out at threshold in this case
+                    // (not true dist value since we skipped calculating it)
+                    return {
+                        dist_sq: this.max_repeat_dist_sq,
+                        repeat_dist_sq: this.repeat_dist_sq,
+                        one_per_group: this.one_per_group
+                    };
+                }
+                return; // no object for this group yet
+            }
+
             // Check distance from new object to objects already in group
             var p1 = obj.position;
             for (var i = 0; i < this.positions.length; i++) {
@@ -30089,7 +30693,7 @@ var RepeatGroup = function () {
         // Add object to this group
 
     }, {
-        key: "add",
+        key: 'add',
         value: function add(obj) {
             // only store object's position, to save space / prevent unnecessary references
             if (obj && obj.position) {
@@ -30102,7 +30706,7 @@ var RepeatGroup = function () {
         // Reset all groups for this tile
 
     }], [{
-        key: "clear",
+        key: 'clear',
         value: function clear(tile) {
             this.groups[tile] = {};
         }
@@ -30110,7 +30714,7 @@ var RepeatGroup = function () {
         // Check an object to see if it's a repeat within its designated group
 
     }, {
-        key: "check",
+        key: 'check',
         value: function check(obj, layout, tile) {
             if (layout.repeat_distance && layout.repeat_group && this.groups[tile][layout.repeat_group]) {
                 return this.groups[tile][layout.repeat_group].check(obj);
@@ -30120,11 +30724,11 @@ var RepeatGroup = function () {
         // Add an object to its designated group
 
     }, {
-        key: "add",
+        key: 'add',
         value: function add(obj, layout, tile) {
             if (layout.repeat_distance && layout.repeat_group) {
                 if (this.groups[tile][layout.repeat_group] == null) {
-                    this.groups[tile][layout.repeat_group] = new RepeatGroup(layout.repeat_group, layout.repeat_distance * layout.repeat_scale);
+                    this.groups[tile][layout.repeat_group] = new RepeatGroup(layout.repeat_group, layout.repeat_distance, RepeatGroup.max_repeat_dist);
                 }
                 this.groups[tile][layout.repeat_group].add(obj);
             }
@@ -30140,7 +30744,11 @@ var RepeatGroup = function () {
 exports.default = RepeatGroup;
 RepeatGroup.groups = {};
 
-},{}],222:[function(_dereq_,module,exports){
+// Max repeat dist: for groups with a repeat dist beyond this threshold, only one label
+// will be allowed per group, e.g. set to tile size for one-label-per-tile
+RepeatGroup.max_repeat_dist = _geo2.default.tile_scale;
+
+},{"../geo":209}],230:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -30148,6 +30756,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.LeafletLayer = undefined;
 exports.leafletLayer = leafletLayer;
+
+var _utils = _dereq_('./utils/utils');
+
+var _utils2 = _interopRequireDefault(_utils);
 
 var _thread = _dereq_('./utils/thread');
 
@@ -30185,7 +30797,9 @@ function extendLeaflet(options) {
 
     // Leaflet layer functionality is only defined in main thread
     if (_thread2.default.is_main) {
-
+        var inertiaLinearity = 0.25;
+        var inertiaMaxSpeed = 180;
+        var inertiaDeceleration = 720;
         var L = options.leaflet || window.L;
 
         // Determine if we are extending the leaflet 0.7.x TileLayer class, or the newer
@@ -30193,7 +30807,8 @@ function extendLeaflet(options) {
         var layerBaseClass = L.GridLayer ? L.GridLayer : L.TileLayer;
         var leafletVersion = layerBaseClass === L.GridLayer ? '1.x' : '0.7.x';
         var layerClassConfig = {};
-        var setZoomAroundNoMoveEnd = void 0; // alternate zoom functions defined below
+        var setZoomAroundNoMoveEnd = void 0,
+            debounceMoveEnd = void 0; // alternate zoom functions defined below
 
         // If extending leaflet 0.7.x TileLayer, additional modifications are needed
         if (layerBaseClass === L.TileLayer) {
@@ -30211,6 +30826,8 @@ function extendLeaflet(options) {
         // Define custom layer methods
         Object.assign(layerClassConfig, {
             initialize: function initialize(options) {
+                var _this = this;
+
                 // Defaults
                 options.showDebug = !options.showDebug ? false : true;
 
@@ -30219,6 +30836,30 @@ function extendLeaflet(options) {
                 this.createScene();
                 this.hooks = {};
                 this._updating_tangram = false;
+                this._zoomAnimated = false; // turn leaflet zoom animations off for this layer
+
+                this._el = options.element || this.scene.canvas;
+                this._bearingSnap = options.bearingSnap || 0;
+                this._pitchWithRotate = options.pitchWithRotate !== false;
+                this._button = options.button || 'right';
+                this._pos = { x: 0, y: 0 };
+                this._rotate = options.rotate;
+
+                if (this._rotate) {
+                    _utils2.default.bindAll(['_onRotateDown', '_onRotateMove', '_onRotateUp', '_rotateCompassArrow'], this);
+
+                    this._compass = L.DomUtil.create('a', 'leaflet-control-compass', document.getElementsByClassName('leaflet-control-zoom')[0]);
+                    //this._compass.type = 'button';
+                    this._compass.setAttribute('aria-label', 'Reset North');
+                    this._compass.setAttribute('href', '#');
+                    this._compass.addEventListener('click', function () {
+                        return _this.resetNorth();
+                    });
+                    this._compassArrow = L.DomUtil.create('span', 'leaflet-control-compass-arrow', this._compass);
+                }
+            },
+            _rotateCompassArrow: function _rotateCompassArrow() {
+                if (this.scene.view.camera !== undefined) this._compassArrow.style.transform = 'rotate(' + this.scene.view.camera.getBearing() + 'deg)';else this._compassArrow.style.transform = 'rotate(0deg)';
             },
             createScene: function createScene() {
                 this.scene = _scene2.default.create(this.options.scene, {
@@ -30234,11 +30875,262 @@ function extendLeaflet(options) {
                     disableRenderLoop: this.options.disableRenderLoop // app must call scene.update() per frame
                 });
             },
+            mousePos: function mousePos(el, e) {
+                var rect = el.getBoundingClientRect();
+                e = e.touches ? e.touches[0] : e;
+                return {
+                    x: e.clientX - rect.left - el.clientLeft,
+                    y: e.clientY - rect.top - el.clientTop
+                };
+            },
+            _drainInertiaBuffer: function _drainInertiaBuffer() {
+                var inertia = this._inertia,
+                    now = Date.now(),
+                    cutoff = 160; //msec
+
+                while (inertia.length > 0 && now - inertia[0][0] > cutoff) {
+                    inertia.shift();
+                }
+            },
+            _normalizeBearing: function _normalizeBearing(bearing, currentBearing) {
+                bearing = _utils2.default.wrap(bearing, -180, 180);
+                var diff = Math.abs(bearing - currentBearing);
+                if (Math.abs(bearing - 360 - currentBearing) < diff) bearing -= 360;
+                if (Math.abs(bearing + 360 - currentBearing) < diff) bearing += 360;
+                return bearing;
+            },
+            _fireEvent: function _fireEvent(type, e) {
+                return this._map.fire(type, { originalEvent: e });
+            },
+            _onRotateMove: function _onRotateMove(e) {
+                if (!this._rotate_active) {
+                    this._rotate_active = true;
+                    this._map.moving = true;
+                    this._fireEvent('rotatestart', e);
+                    this._fireEvent('movestart', e);
+                    if (this._pitchWithRotate) {
+                        this._fireEvent('pitchstart', e);
+                    }
+                }
+
+                var map = this._map;
+                map.stop();
+
+                this._el = this.scene.canvas;
+                var p1 = this._pos,
+                    p2 = this.mousePos(this.scene.canvas, e),
+                    bearingDiff = (p1.x - p2.x) * 0.8,
+                    pitchDiff = (p1.y - p2.y) * -0.5,
+                    bearing = this.scene.view.camera.getBearing() - bearingDiff,
+                    pitch = this.scene.view.camera.getPitch() - pitchDiff,
+                    inertia = this._inertia,
+                    last = inertia[inertia.length - 1];
+
+                this._drainInertiaBuffer();
+                inertia.push([Date.now(), this._normalizeBearing(bearing, last[1])]);
+
+                //console.log("bearing:"+bearing)
+                if (Math.abs(bearing) <= 180) this.scene.view.camera.setBearing(bearing);
+                if (this._pitchWithRotate && Math.abs(pitch) <= 90) {
+                    this._fireEvent('pitch', e);
+                    //console.log("pitch:"+pitch)
+                    this.scene.view.camera.setPitch(pitch);
+                }
+
+                this._fireEvent('rotate', e);
+                this._fireEvent('move', e);
+
+                this._pos = p2;
+            },
+            _onRotateDown: function _onRotateDown(e) {
+                //if (this._map.boxZoom && this._map.boxZoom.isActive()) return;//拉框缩放
+                //if (this._map.dragPan && this._map.dragPan.isActive()) return;//平移
+                if (this._rotate_active) return;
+
+                if (this._button === 'right') {
+                    var button = e.ctrlKey ? 0 : 2; // ? ctrl+left button : right button
+                    var eventButton = e.button;
+                    if (typeof window.InstallTrigger !== 'undefined' && e.button === 2 && e.ctrlKey && window.navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
+                        // Fix for https://github.com/mapbox/mapbox-gl-js/issues/3131:
+                        // Firefox (detected by InstallTrigger) on Mac determines e.button = 2 when
+                        // using Control + left click
+                        eventButton = 0;
+                    }
+                    if (eventButton !== button) return;
+                } else {
+                    if (e.ctrlKey || e.button !== 0) return;
+                }
+
+                //DOM.disableDrag();
+
+                window.document.addEventListener('mousemove', this._onRotateMove, { capture: true });
+                window.document.addEventListener('mouseup', this._onRotateUp);
+                /* Deactivate DragRotate when the window looses focus. Otherwise if a mouseup occurs when the window isn't in focus, DragRotate will still be active even though the mouse is no longer pressed. */
+                window.addEventListener('blur', this._onRotateUp);
+
+                this._rotate_active = false;
+                this._inertia = [[Date.now(), this.scene.view.camera.getBearing()]];
+                this._startPos = this._pos = this.mousePos(this.scene.canvas, e);
+                //this._center = this._map.transform.centerPoint;  // Center of rotation
+
+                e.preventDefault();
+            },
+
+
+            /*easeTo (options, eventData) {
+                this.stop();
+                 options = util.extend({
+                    offset: [0, 0],
+                    duration: 500,
+                    easing: util.ease
+                }, options);
+                 if (options.animate === false) options.duration = 0;
+                 if (options.smoothEasing && options.duration !== 0) {
+                    options.easing = this._smoothOutEasing(options.duration);
+                }
+                 const tr = this.transform,
+                    startZoom = this.getZoom(),
+                    startBearing = this.getBearing(),
+                    startPitch = this.getPitch(),
+                     zoom = 'zoom' in options ? +options.zoom : startZoom,
+                    bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
+                    pitch = 'pitch' in options ? +options.pitch : startPitch;
+                 const pointAtOffset = tr.centerPoint.add(Point.convert(options.offset));
+                const locationAtOffset = tr.pointLocation(pointAtOffset);
+                const center = LngLat.convert(options.center || locationAtOffset);
+                this._normalizeCenter(center);
+                 const from = tr.project(locationAtOffset);
+                const delta = tr.project(center).sub(from);
+                const finalScale = tr.zoomScale(zoom - startZoom);
+                 let around, aroundPoint;
+                 if (options.around) {
+                    around = LngLat.convert(options.around);
+                    aroundPoint = tr.locationPoint(around);
+                }
+                 this.zooming = (zoom !== startZoom);
+                this.rotating = (startBearing !== bearing);
+                this.pitching = (pitch !== startPitch);
+                 this._prepareEase(eventData, options.noMoveStart);
+                 clearTimeout(this._onEaseEnd);
+                 this._ease(function (k) {
+                    if (this.zooming) {
+                        tr.zoom = interpolate(startZoom, zoom, k);
+                    }
+                    if (this.rotating) {
+                        tr.bearing = interpolate(startBearing, bearing, k);
+                    }
+                    if (this.pitching) {
+                        tr.pitch = interpolate(startPitch, pitch, k);
+                    }
+                     if (around) {
+                        tr.setLocationAtPoint(around, aroundPoint);
+                    } else {
+                        const scale = tr.zoomScale(tr.zoom - startZoom);
+                        const base = zoom > startZoom ?
+                            Math.min(2, finalScale) :
+                            Math.max(0.5, finalScale);
+                        const speedup = Math.pow(base, 1 - k);
+                        const newCenter = tr.unproject(from.add(delta.mult(k * speedup)).mult(scale));
+                        tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+                    }
+                     this._fireMoveEvents(eventData);
+                 }, () => {
+                    if (options.delayEndEvents) {
+                        this._onEaseEnd = setTimeout(() => this._easeToEnd(eventData), options.delayEndEvents);
+                    } else {
+                        this._easeToEnd(eventData);
+                    }
+                }, options);
+                 return this;
+            }
+            
+            rotateTo (bearing, options , eventData) {
+                return this.easeTo(util.extend({
+                    bearing: bearing
+                }, options), eventData);
+            },*/
+
+            resetNorth: function resetNorth(options, eventData) {
+                //this.rotateTo(0, util.extend({duration: 1000}, options), eventData);
+                this.scene.view.camera.setBearing(0);
+                this.scene.dirty = true;
+                this.scene.update();
+                this._rotateCompassArrow();
+                return this;
+            },
+            _onRotateUp: function _onRotateUp(e) {
+                var _this2 = this;
+
+                window.document.removeEventListener('mousemove', this._onRotateMove, { capture: true });
+                window.document.removeEventListener('mouseup', this._onRotateUp);
+                window.removeEventListener('blur', this._onRotateUp);
+
+                //DOM.enableDrag();
+
+                if (!this._rotate_active) return;
+
+                this._rotate_active = false;
+                this._fireEvent('rotateend', e);
+                this._drainInertiaBuffer();
+
+                var map = this._map,
+                    mapBearing = this.scene.view.camera.getBearing(),
+                    inertia = this._inertia;
+
+                var finish = function finish() {
+                    if (Math.abs(mapBearing) < _this2._bearingSnap) {
+                        _this2.resetNorth({ noMoveStart: true }, { originalEvent: e });
+                    } else {
+                        _this2._map.moving = false;
+                        _this2._fireEvent('moveend', e);
+                    }
+                    if (_this2._pitchWithRotate) _this2._fireEvent('pitchend', e);
+                };
+
+                if (inertia.length < 2) {
+                    finish();
+                    return;
+                }
+
+                var first = inertia[0],
+                    last = inertia[inertia.length - 1],
+                    previous = inertia[inertia.length - 2];
+                var bearing = this._normalizeBearing(mapBearing, previous[1]);
+                var flingDiff = last[1] - first[1],
+                    sign = flingDiff < 0 ? -1 : 1,
+                    flingDuration = (last[0] - first[0]) / 1000;
+
+                if (flingDiff === 0 || flingDuration === 0) {
+                    finish();
+                    return;
+                }
+
+                var speed = Math.abs(flingDiff * (inertiaLinearity / flingDuration)); // deg/s
+                if (speed > inertiaMaxSpeed) {
+                    speed = inertiaMaxSpeed;
+                }
+
+                var duration = speed / (inertiaDeceleration * inertiaLinearity),
+                    offset = sign * speed * (duration / 2);
+
+                bearing += offset;
+
+                if (Math.abs(this._normalizeBearing(bearing, 0)) < this._bearingSnap) {
+                    bearing = this._normalizeBearing(0, bearing);
+                }
+
+                this.scene.view.camera.setBearing(bearing);
+                /*map.rotateTo(bearing, {
+                    duration: duration * 1000,
+                    easing: inertiaEasing,
+                    noMoveStart: true
+                }, { originalEvent: e });*/
+            },
 
 
             // Finish initializing scene and setup events when layer is added to map
             onAdd: function onAdd(map) {
-                var _this = this;
+                var _this3 = this;
 
                 if (!this.scene) {
                     this.createScene();
@@ -30247,56 +31139,52 @@ function extendLeaflet(options) {
                 layerBaseClass.prototype.onAdd.apply(this, arguments);
 
                 this.hooks.resize = function () {
-                    _this._updating_tangram = true;
-                    _this.updateSize();
-                    _this._updating_tangram = false;
+                    _this3._updating_tangram = true;
+                    _this3.updateSize();
+                    _this3._updating_tangram = false;
                 };
                 map.on('resize', this.hooks.resize);
 
                 this.hooks.move = function () {
-                    if (_this._updating_tangram) {
+                    if (_this3._updating_tangram) {
                         return;
                     }
-                    _this._updating_tangram = true;
+                    _this3._updating_tangram = true;
 
-                    _this.scene.view.setPanning(true);
+                    _this3.scene.view.setPanning(true);
                     var view = map.getCenter();
                     view.zoom = Math.max(Math.min(map.getZoom(), map.getMaxZoom() || _geo2.default.default_view_max_zoom), map.getMinZoom());
 
-                    _this.scene.view.setView(view);
-                    if (_this._mapLayerCount > 1) {
+                    _this3.scene.view.setView(view);
+                    if (_this3._mapLayerCount > 1) {
                         // if there are other map pane layers active, redraw immediately to stay in better visual sync
                         // otherwise, wait until next regular animation loop iteration
-                        _this.scene.immediateRedraw();
+                        _this3.scene.immediateRedraw();
                     }
+                    _this3.reverseTransform();
 
-                    _this._updating_tangram = false;
+                    _this3._updating_tangram = false;
                 };
                 map.on('move', this.hooks.move);
 
                 this.hooks.moveend = function () {
-                    _this.scene.view.setPanning(false);
-                    _this.scene.requestRedraw();
+                    _this3.scene.view.setPanning(false);
+                    _this3.scene.requestRedraw();
                 };
                 map.on('moveend', this.hooks.moveend);
 
                 this.hooks.drag = function () {
-                    _this.scene.view.markUserInput();
+                    _this3.scene.view.markUserInput();
                 };
                 map.on('drag', this.hooks.drag);
 
-                // keep Tangram layer in sync with view via mutation observer
-                this._map_pane_observer = new MutationObserver(function (mutations) {
-                    mutations.forEach(function (mutation) {
-                        return _this.reverseTransform();
-                    });
-                });
-                this._map_pane_observer.observe(map.getPanes().mapPane, { attributes: true });
-
                 // Modify default Leaflet behaviors
                 this.modifyScrollWheelBehavior(map);
-                this.modifyZoomBehavior(map);
-
+                this.modifyDoubleClickZoom(map);
+                debounceMoveEnd = (0, _debounce2.default)(function (map) {
+                    map._moveEnd(true);
+                    map.fire('viewreset'); // keep other leaflet layers in sync
+                }, map.options.wheelDebounceTime * 2);
                 this.trackMapLayerCounts(map);
 
                 // Setup feature selection
@@ -30323,18 +31211,24 @@ function extendLeaflet(options) {
                     blocking: false
                 }).then(function () {
 
-                    _this._updating_tangram = true;
+                    _this3._updating_tangram = true;
 
-                    _this.updateSize();
-                    _this.updateView();
-                    // this.reverseTransform();
+                    _this3.updateSize();
+                    _this3.updateView();
+                    _this3.reverseTransform();
 
-                    _this._updating_tangram = false;
+                    _this3._updating_tangram = false;
 
-                    _this.fire('init');
+                    _this3.fire('init');
                 }).catch(function (error) {
-                    _this.fire('error', error);
+                    _this3.fire('error', error);
                 });
+
+                if (this._rotate) {
+                    this._map.on('rotate', this._rotateCompassArrow);
+                    this._rotateCompassArrow();
+                    this.scene.canvas.addEventListener('mousedown', this._onRotateDown);
+                }
             },
             onRemove: function onRemove(map) {
                 layerBaseClass.prototype.onRemove.apply(this, arguments);
@@ -30350,12 +31244,12 @@ function extendLeaflet(options) {
                 document.removeEventListener('visibilitychange', this.hooks.visibilitychange);
                 this.hooks = {};
 
-                this._map_pane_observer.disconnect();
-
                 if (this.scene) {
                     this.scene.destroy();
                     this.scene = null;
                 }
+
+                if (this._rotate) map.off('rotate', this._rotateCompassArrow);
             },
             createTile: function createTile(coords) {
                 var key = coords.x + '/' + coords.y + '/' + coords.z;
@@ -30409,11 +31303,6 @@ function extendLeaflet(options) {
                         map.options.wheelDebounceTime = 20; // better default for FF and Edge/IE
                     }
 
-                    var debounceMoveEnd = (0, _debounce2.default)(function (map) {
-                        map._moveEnd(true);
-                        map.fire('viewreset'); // keep other leaflet layers in sync
-                    }, map.options.wheelDebounceTime * 2);
-
                     var layer = this;
                     map.scrollWheelZoom._performZoom = function () {
                         var map = this._map,
@@ -30449,13 +31338,17 @@ function extendLeaflet(options) {
             },
 
 
-            // Modify leaflet's default double-click and zoom in/out behavior, to better keep Tangram layer in sync with marker/SVG layers
-            modifyZoomBehavior: function modifyZoomBehavior(map) {
-                if (this.scene.view.continuous_zoom && this.options.modifyZoomBehavior !== false) {
-                    var layer = this;
+            // Modify leaflet's default double-click zoom behavior, to match typical vector basemap products
+            modifyDoubleClickZoom: function modifyDoubleClickZoom(map) {
+                if (this.scene.view.continuous_zoom && map.doubleClickZoom && this.options.modifyDoubleClickZoom !== false) {
 
                     // Simplified version of Leaflet's flyTo, for short animations zooming around a point
-                    var flyAround = function flyAround(layer, targetCenter, targetZoom) {
+                    var flyAround = function flyAround(layer, targetCenter, targetZoom, options) {
+                        options = options || {};
+                        if (options.animate === false || !L.Browser.any3d) {
+                            return map.setView(targetCenter, targetZoom, options);
+                        }
+
                         map._stop();
 
                         var startZoom = map._zoom;
@@ -30468,7 +31361,7 @@ function extendLeaflet(options) {
                             to = map.project(targetCenter, startZoom);
 
                         var start = Date.now(),
-                            duration = 75;
+                            duration = options.duration ? 1000 * options.duration : 75;
 
                         function frame() {
                             var t = (Date.now() - start) / duration;
@@ -30493,49 +31386,25 @@ function extendLeaflet(options) {
                     };
 
                     // Modify the double-click zoom handler to do a short zoom animation
-                    // See original: https://github.com/Leaflet/Leaflet/blob/cf518ff1a5e0e54a2f63faa144aeaa50888e0bc6/src/map/handler/Map.DoubleClickZoom.js#L29
-                    if (map.doubleClickZoom) {
-                        var enabled = map.doubleClickZoom.enabled();
-                        map.doubleClickZoom.disable();
+                    var enabled = map.doubleClickZoom.enabled();
+                    map.doubleClickZoom.disable();
 
-                        map.doubleClickZoom._onDoubleClick = function (e) {
-                            var map = this._map,
-                                oldZoom = map.getZoom(),
-                                delta = map.options.zoomDelta,
-                                zoom = e.originalEvent.shiftKey ? oldZoom - delta : oldZoom + delta;
+                    var layer = this;
+                    map.doubleClickZoom._onDoubleClick = function (e) {
+                        var map = this._map,
+                            oldZoom = map.getZoom(),
+                            delta = map.options.zoomDelta,
+                            zoom = e.originalEvent.shiftKey ? oldZoom - delta : oldZoom + delta;
 
-                            if (map.options.doubleClickZoom === 'center') {
-                                flyAround(layer, map.getCenter(), zoom);
-                            } else {
-                                flyAround(layer, map.containerPointToLatLng(e.containerPoint), zoom);
-                            }
-                        };
-
-                        if (enabled) {
-                            map.doubleClickZoom.enable();
+                        if (map.options.doubleClickZoom === 'center') {
+                            flyAround(layer, map.getCenter(), zoom);
+                        } else {
+                            flyAround(layer, map.containerPointToLatLng(e.containerPoint), zoom);
                         }
-                    }
+                    };
 
-                    // Modify the zoom in/out behavior
-                    // NOTE: this will NOT fire the 'zoomanim' event, so this modification should be disabled for apps that depend on it
-                    // See original: https://github.com/Leaflet/Leaflet/blob/cf518ff1a5e0e54a2f63faa144aeaa50888e0bc6/src/map/Map.js#L1610
-                    if (map._zoomAnimated) {
-                        map._animateZoom = function (center, zoom, startAnim, noUpdate) {
-                            if (startAnim) {
-                                this._animatingZoom = true;
-
-                                // remember what center/zoom to set after animation
-                                this._animateToCenter = center;
-                                this._animateToZoom = zoom;
-
-                                // replace leaflet CSS animation with Tangram animation to keep markers/SVG in sync
-                                // (this is a workaround from not being able to easily track/sync to on-going CSS animations in JS)
-                                flyAround(layer, center, zoom);
-                            }
-
-                            // Work around webkit not firing 'transitionend', see https://github.com/Leaflet/Leaflet/issues/3689, 2693
-                            setTimeout(L.Util.bind(this._onZoomTransitionEnd, this), 250);
-                        };
+                    if (enabled) {
+                        map.doubleClickZoom.enable();
                     }
                 }
             },
@@ -30549,13 +31418,13 @@ function extendLeaflet(options) {
                 this.scene.resizeMap(size.x, size.y);
             },
             resizeOnFirstVisible: function resizeOnFirstVisible() {
-                var _this2 = this;
+                var _this4 = this;
 
                 var first_visibility = true;
                 this.hooks.visibilitychange = function () {
                     if (first_visibility) {
                         first_visibility = false;
-                        _this2.updateSize();
+                        _this4.updateSize();
                     }
                 };
 
@@ -30575,6 +31444,7 @@ function extendLeaflet(options) {
 
                 this._updating_tangram = true;
                 this._map.setView([this.scene.view.center.lat, this.scene.view.center.lng], this.scene.view.zoom, { animate: false });
+                this.reverseTransform();
                 this._updating_tangram = false;
             },
             render: function render() {
@@ -30597,28 +31467,53 @@ function extendLeaflet(options) {
             },
 
 
+            onDiv: function onDiv(pixel, div) {
+                var divs = document.getElementsByClassName(div);
+                for (var i in divs) {
+                    div = divs[i];
+
+                    var x = pixel.x;
+                    var y = pixel.y;
+                    var x1 = div.offsetLeft;
+                    var y1 = div.offsetTop;
+                    var x2 = div.offsetLeft + div.offsetWidth;
+                    var y2 = div.offsetTop + div.offsetHeight;
+                    if (x >= x1 && x <= x2 && y >= y1 && y <= y2) return true;
+                }
+
+                return false;
+            },
+
             // Tie Leaflet event handlers to Tangram feature selection
             setupSelectionEventHandlers: function setupSelectionEventHandlers(map) {
-                var _this3 = this;
+                var _this5 = this;
 
                 this._selection_events = {};
                 this._selection_radius = null; // optional radius
 
                 this.hooks.click = function (event) {
-                    if (typeof _this3._selection_events.click === 'function') {
-                        _this3.scene.getFeatureAt(event.containerPoint, { radius: _this3._selection_radius }).then(function (selection) {
+                    if (_this5.onDiv(event.containerPoint, "leaflet-control")) {
+                        _this5._selection_events.hover(Object.assign({}, null, { leaflet_event: event }));
+                        return;
+                    }
+                    if (typeof _this5._selection_events.click === 'function') {
+                        _this5.scene.getFeatureAt(event.containerPoint, { radius: _this5._selection_radius }).then(function (selection) {
                             var results = Object.assign({}, selection, { leaflet_event: event });
-                            _this3._selection_events.click(results);
+                            _this5._selection_events.click(results);
                         });
                     }
                 };
                 map.on('click', this.hooks.click);
 
                 this.hooks.mousemove = function (event) {
-                    if (typeof _this3._selection_events.hover === 'function') {
-                        _this3.scene.getFeatureAt(event.containerPoint, { radius: _this3._selection_radius }).then(function (selection) {
+                    if (_this5.onDiv(event.containerPoint, "leaflet-control")) {
+                        _this5._selection_events.hover(Object.assign({}, null, { leaflet_event: event }));
+                        return;
+                    }
+                    if (typeof _this5._selection_events.hover === 'function') {
+                        _this5.scene.getFeatureAt(event.containerPoint, { radius: _this5._selection_radius }).then(function (selection) {
                             var results = Object.assign({}, selection, { leaflet_event: event });
-                            _this3._selection_events.hover(results);
+                            _this5._selection_events.hover(results);
                         });
                     }
                 };
@@ -30626,8 +31521,8 @@ function extendLeaflet(options) {
 
                 this.hooks.mouseout = function (event) {
                     // When mouse leaves map, send an additional selection event to indicate no feature is selected
-                    if (typeof _this3._selection_events.hover === 'function') {
-                        _this3._selection_events.hover({ changed: true, leaflet_event: event });
+                    if (typeof _this5._selection_events.hover === 'function') {
+                        _this5._selection_events.hover({ changed: true, leaflet_event: event });
                     }
                 };
                 map.on('mouseout', this.hooks.mouseout);
@@ -30649,13 +31544,13 @@ function extendLeaflet(options) {
             // Track the # of layers in the map pane
             // Used to optimize Tangram redraw sensitivity (redraw more frequently when needing to sync w/other layers)
             trackMapLayerCounts: function trackMapLayerCounts(map) {
-                var _this4 = this;
+                var _this6 = this;
 
                 this._updateMapLayerCount = function () {
                     var nodes = map.getPanes().mapPane.childNodes;
-                    _this4._mapLayerCount = 0;
+                    _this6._mapLayerCount = 0;
                     for (var i = 0; i < nodes.length; i++) {
-                        _this4._mapLayerCount += nodes[i].childNodes.length;
+                        _this6._mapLayerCount += nodes[i].childNodes.length;
                     }
                 };
 
@@ -30703,7 +31598,7 @@ function extendLeaflet(options) {
     }
 }
 
-},{"./geo":200,"./scene":226,"./utils/debounce":254,"./utils/debug_settings":255,"./utils/thread":267}],223:[function(_dereq_,module,exports){
+},{"./geo":209,"./scene":234,"./utils/debounce":262,"./utils/debug_settings":263,"./utils/thread":275,"./utils/utils":277}],231:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -30734,8 +31629,6 @@ var _vector2 = _interopRequireDefault(_vector);
 
 var _style_parser = _dereq_('./styles/style_parser');
 
-var _style_parser2 = _interopRequireDefault(_style_parser);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -30763,19 +31656,19 @@ var Light = function () {
         if (config.ambient == null || typeof config.ambient === 'number') {
             this.ambient = _glsl2.default.expandVec3(config.ambient || 0);
         } else {
-            this.ambient = _style_parser2.default.parseColor(config.ambient).slice(0, 3);
+            this.ambient = _style_parser.StyleParser.parseColor(config.ambient).slice(0, 3);
         }
 
         if (config.diffuse == null || typeof config.diffuse === 'number') {
             this.diffuse = _glsl2.default.expandVec3(config.diffuse != null ? config.diffuse : 1);
         } else {
-            this.diffuse = _style_parser2.default.parseColor(config.diffuse).slice(0, 3);
+            this.diffuse = _style_parser.StyleParser.parseColor(config.diffuse).slice(0, 3);
         }
 
         if (config.specular == null || typeof config.specular === 'number') {
             this.specular = _glsl2.default.expandVec3(config.specular || 0);
         } else {
-            this.specular = _style_parser2.default.parseColor(config.specular).slice(0, 3);
+            this.specular = _style_parser.StyleParser.parseColor(config.specular).slice(0, 3);
         }
     }
 
@@ -31043,13 +31936,13 @@ var PointLight = function (_Light3) {
                 this.position_eye[0] = x - this.view.camera.position_meters[0];
                 this.position_eye[1] = y - this.view.camera.position_meters[1];
 
-                this.position_eye[2] = _style_parser2.default.convertUnits(this.position[2], { zoom: this.view.zoom, meters_per_pixel: _geo2.default.metersPerPixel(this.view.zoom) });
+                this.position_eye[2] = _style_parser.StyleParser.convertUnits(this.position[2], { zoom: this.view.zoom, meters_per_pixel: _geo2.default.metersPerPixel(this.view.zoom) });
                 this.position_eye[2] = this.position_eye[2] - this.view.camera.position_meters[2];
             } else if (this.origin === 'ground' || this.origin === 'camera') {
                 // For camera or ground origin, format is: [x, y, z] in meters (default) or pixels w/px units
 
                 // Light is in camera space by default
-                this.position_eye = _style_parser2.default.convertUnits(this.position, { zoom: this.view.zoom, meters_per_pixel: _geo2.default.metersPerPixel(this.view.zoom) });
+                this.position_eye = _style_parser.StyleParser.convertUnits(this.position, { zoom: this.view.zoom, meters_per_pixel: _geo2.default.metersPerPixel(this.view.zoom) });
 
                 if (this.origin === 'ground') {
                     // Leave light's xy in camera space, but z needs to be moved relative to ground plane
@@ -31070,11 +31963,11 @@ var PointLight = function (_Light3) {
             }
 
             if (_shader_program2.default.defines['TANGRAM_POINTLIGHT_ATTENUATION_INNER_RADIUS']) {
-                _program.uniform('1f', 'u_' + this.name + '.innerRadius', _style_parser2.default.convertUnits(this.radius[0], { zoom: this.view.zoom, meters_per_pixel: _geo2.default.metersPerPixel(this.view.zoom) }));
+                _program.uniform('1f', 'u_' + this.name + '.innerRadius', _style_parser.StyleParser.convertUnits(this.radius[0], { zoom: this.view.zoom, meters_per_pixel: _geo2.default.metersPerPixel(this.view.zoom) }));
             }
 
             if (_shader_program2.default.defines['TANGRAM_POINTLIGHT_ATTENUATION_OUTER_RADIUS']) {
-                _program.uniform('1f', 'u_' + this.name + '.outerRadius', _style_parser2.default.convertUnits(this.radius[1], { zoom: this.view.zoom, meters_per_pixel: _geo2.default.metersPerPixel(this.view.zoom) }));
+                _program.uniform('1f', 'u_' + this.name + '.outerRadius', _style_parser.StyleParser.convertUnits(this.radius[1], { zoom: this.view.zoom, meters_per_pixel: _geo2.default.metersPerPixel(this.view.zoom) }));
             }
         }
     }], [{
@@ -31138,7 +32031,7 @@ var SpotLight = function (_PointLight) {
 
 Light.types['spotlight'] = SpotLight;
 
-},{"./geo":200,"./gl/glsl":204,"./gl/shader_program":206,"./styles/style_parser":245,"./vector":272}],224:[function(_dereq_,module,exports){
+},{"./geo":209,"./gl/glsl":213,"./gl/shader_program":215,"./styles/style_parser":253,"./vector":280}],232:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -31152,8 +32045,6 @@ var _glsl = _dereq_('./gl/glsl');
 var _glsl2 = _interopRequireDefault(_glsl);
 
 var _style_parser = _dereq_('./styles/style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -31186,7 +32077,7 @@ var Material = function () {
                 } else if (typeof value === 'number' || Array.isArray(value)) {
                     _this[prop] = { amount: _glsl2.default.expandVec4(value) };
                 } else if (typeof value === 'string') {
-                    _this[prop] = { amount: _style_parser2.default.parseColor(value) };
+                    _this[prop] = { amount: _style_parser.StyleParser.parseColor(value) };
                 } else {
                     _this[prop] = value;
                 }
@@ -31301,7 +32192,7 @@ exports.default = Material;
 
 Material.block = 'material';
 
-},{"./gl/glsl":204,"./styles/style_parser":245}],225:[function(_dereq_,module,exports){
+},{"./gl/glsl":213,"./styles/style_parser":253}],233:[function(_dereq_,module,exports){
 'use strict';
 
 _dereq_('./utils/polyfills');
@@ -31384,8 +32275,6 @@ var _style_manager = _dereq_('./styles/style_manager');
 
 var _style_parser = _dereq_('./styles/style_parser');
 
-var _style_parser2 = _interopRequireDefault(_style_parser);
-
 var _collision = _dereq_('./labels/collision');
 
 var _collision2 = _interopRequireDefault(_collision);
@@ -31435,7 +32324,7 @@ var debug = {
     WorkerBroker: _worker_broker2.default,
     layerCache: _layer.layerCache,
     StyleManager: _style_manager.StyleManager,
-    StyleParser: _style_parser2.default,
+    StyleParser: _style_parser.StyleParser,
     Collision: _collision2.default,
     FeatureSelection: _selection2.default,
     CanvasText: _canvas_text2.default,
@@ -31465,7 +32354,7 @@ module.exports = {
     version: _version2.default
 };
 
-},{"./geo":200,"./gl/glsl":204,"./gl/shader_program":206,"./gl/texture":207,"./gl/vertex_data":210,"./labels/collision":213,"./leaflet_layer":222,"./light":223,"./material":224,"./scene":226,"./scene_worker":229,"./selection":230,"./sources/data_source":231,"./sources/geojson":232,"./sources/mvt":233,"./sources/raster":234,"./sources/topojson":235,"./styles/layer":237,"./styles/style_manager":244,"./styles/style_parser":245,"./styles/text/canvas_text":246,"./utils/debug_settings":255,"./utils/log":259,"./utils/polyfills":263,"./utils/thread":267,"./utils/utils":269,"./utils/version":270,"./utils/worker_broker":271,"./vector":272,"js-yaml":102,"jszip":138}],226:[function(_dereq_,module,exports){
+},{"./geo":209,"./gl/glsl":213,"./gl/shader_program":215,"./gl/texture":216,"./gl/vertex_data":219,"./labels/collision":222,"./leaflet_layer":230,"./light":231,"./material":232,"./scene":234,"./scene_worker":237,"./selection":238,"./sources/data_source":239,"./sources/geojson":240,"./sources/mvt":241,"./sources/raster":242,"./sources/topojson":243,"./styles/layer":245,"./styles/style_manager":252,"./styles/style_parser":253,"./styles/text/canvas_text":254,"./utils/debug_settings":263,"./utils/log":267,"./utils/polyfills":271,"./utils/thread":275,"./utils/utils":277,"./utils/version":278,"./utils/worker_broker":279,"./vector":280,"js-yaml":103,"jszip":139}],234:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -31526,11 +32415,9 @@ var _vao2 = _interopRequireDefault(_vao);
 
 var _style_manager = _dereq_('./styles/style_manager');
 
-var _style = _dereq_('./styles/style');
+var _style2 = _dereq_('./styles/style');
 
 var _style_parser = _dereq_('./styles/style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 var _scene_loader = _dereq_('./scene_loader');
 
@@ -31843,39 +32730,24 @@ var Scene = function () {
             return worker_url;
         }
 
-        // Update list of any custom scripts (either at scene-level or data-source-level)
+        // Update list of any custom data source scripts (if any)
 
     }, {
-        key: 'updateExternalScripts',
-        value: function updateExternalScripts() {
-            var prev_scripts = [].concat(_toConsumableArray(this.external_scripts || [])); // save list of previously loaded scripts
-            var scripts = [];
+        key: 'updateDataSourceScripts',
+        value: function updateDataSourceScripts() {
+            var _this2 = this,
+                _ref;
 
-            // scene-level scripts
-            if (this.config.scene.scripts) {
-                for (var f in this.config.scene.scripts) {
-                    if (scripts.indexOf(this.config.scene.scripts[f]) === -1) {
-                        scripts.push(this.config.scene.scripts[f]);
-                    }
-                }
-            }
-
-            // data-source-level scripts
-            for (var s in this.config.sources) {
-                var source = this.config.sources[s];
-                if (source.scripts) {
-                    for (var _f in source.scripts) {
-                        if (scripts.indexOf(source.scripts[_f]) === -1) {
-                            scripts.push(source.scripts[_f]);
-                        }
-                    }
-                }
-            }
-
-            this.external_scripts = scripts;
+            var prev_scripts = [].concat(_toConsumableArray(this.data_source_scripts || [])); // save list of previously loaded scripts
+            var scripts = Object.keys(this.config.sources).map(function (s) {
+                return _this2.config.sources[s].scripts;
+            }).filter(function (x) {
+                return x;
+            });
+            this.data_source_scripts = (_ref = []).concat.apply(_ref, _toConsumableArray(scripts)).sort();
 
             // Scripts changed?
-            return !(this.external_scripts.length === prev_scripts.length && this.external_scripts.every(function (v, i) {
+            return !(this.data_source_scripts.length === prev_scripts.length && this.data_source_scripts.every(function (v, i) {
                 return v === prev_scripts[i];
             }));
         }
@@ -31886,7 +32758,7 @@ var Scene = function () {
         key: 'createWorkers',
         value: function createWorkers() {
             // Reset old workers (if any) if we need to re-instantiate with new external scripts
-            if (this.updateExternalScripts()) {
+            if (this.updateDataSourceScripts()) {
                 this.destroyWorkers();
             }
 
@@ -31901,7 +32773,7 @@ var Scene = function () {
     }, {
         key: 'makeWorkers',
         value: function makeWorkers(url) {
-            var _this2 = this;
+            var _this3 = this;
 
             // Let VertexElements know if 32 bit indices for element arrays are available
             var has_element_index_uint = this.gl.getExtension("OES_element_index_uint") ? true : false;
@@ -31911,13 +32783,13 @@ var Scene = function () {
 
             var _loop = function _loop(id) {
                 var worker = new Worker(url);
-                _this2.workers[id] = worker;
+                _this3.workers[id] = worker;
 
                 _worker_broker2.default.addWorker(worker);
 
                 (0, _log2.default)('debug', 'Scene.makeWorkers: initializing worker ' + id);
                 var _id = id;
-                queue.push(_worker_broker2.default.postMessage(worker, 'self.init', _this2.id, id, _this2.num_workers, _this2.log_level, _utils2.default.device_pixel_ratio, has_element_index_uint, _this2.external_scripts).then(function (id) {
+                queue.push(_worker_broker2.default.postMessage(worker, 'self.init', _this3.id, id, _this3.num_workers, _this3.log_level, _utils2.default.device_pixel_ratio, has_element_index_uint, _this3.data_source_scripts).then(function (id) {
                     (0, _log2.default)('debug', 'Scene.makeWorkers: initialized worker ' + id);
                     return id;
                 }, function (error) {
@@ -31932,7 +32804,7 @@ var Scene = function () {
 
             this.next_worker = 0;
             return Promise.all(queue).then(function () {
-                _log2.default.setWorkers(_this2.workers);
+                _log2.default.setWorkers(_this3.workers);
 
                 // Free memory after worker initialization
                 URLs.revokeObjectURL(url);
@@ -31941,7 +32813,6 @@ var Scene = function () {
     }, {
         key: 'destroyWorkers',
         value: function destroyWorkers() {
-            this.selection = null; // selection needs to be re-initialized when workers are
             if (Array.isArray(this.workers)) {
                 _log2.default.setWorkers(null);
                 this.workers.forEach(function (worker) {
@@ -31967,13 +32838,13 @@ var Scene = function () {
     }, {
         key: 'updateDevicePixelRatio',
         value: function updateDevicePixelRatio() {
-            var _this3 = this;
+            var _this4 = this;
 
             if (_utils2.default.updateDevicePixelRatio()) {
                 _worker_broker2.default.postMessage(this.workers, 'self.updateDevicePixelRatio', _utils2.default.device_pixel_ratio).then(function () {
-                    return _this3.rebuild();
+                    return _this4.rebuild();
                 }).then(function () {
-                    return _this3.resizeMap(_this3.view.size.css.width, _this3.view.size.css.height);
+                    return _this4.resizeMap(_this4.view.size.css.width, _this4.view.size.css.height);
                 });
             }
         }
@@ -32037,11 +32908,11 @@ var Scene = function () {
     }, {
         key: 'setupRenderLoop',
         value: function setupRenderLoop() {
-            var _this4 = this;
+            var _this5 = this;
 
             if (!this.render_loop_active) {
                 setTimeout(function () {
-                    _this4.renderLoop();
+                    _this5.renderLoop();
                 }, 0); // delay start by one tick
             }
         }
@@ -32088,17 +32959,17 @@ var Scene = function () {
 
     }, {
         key: 'render',
-        value: function render(_ref) {
-            var _this5 = this;
+        value: function render(_ref2) {
+            var _this6 = this;
 
-            var main = _ref.main,
-                selection = _ref.selection;
+            var main = _ref2.main,
+                selection = _ref2.selection;
 
             var gl = this.gl;
 
             // Update styles, camera, lights
             Object.keys(this.lights).forEach(function (i) {
-                return _this5.lights[i].update();
+                return _this6.lights[i].update();
             });
 
             // Render main pass
@@ -32138,7 +33009,7 @@ var Scene = function () {
                 this.getFeatureSelectionMapSize().then(function (size) {
                     if (size) {
                         // returns undefined if previous request pending
-                        (0, _log2.default)('info', 'Scene: rendered ' + _this5.render_count + ' primitives (' + size + ' features in selection map)');
+                        (0, _log2.default)('info', 'Scene: rendered ' + _this6.render_count + ' primitives (' + size + ' features in selection map)');
                     }
                 });
             }
@@ -32153,12 +33024,12 @@ var Scene = function () {
     }, {
         key: 'renderPass',
         value: function renderPass() {
-            var _this6 = this;
+            var _this7 = this;
 
             var program_key = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'program';
 
-            var _ref2 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-                allow_blend = _ref2.allow_blend;
+            var _ref3 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+                allow_blend = _ref3.allow_blend;
 
             // optionally force alpha off (e.g. for selection pass)
             allow_blend = allow_blend == null ? true : allow_blend;
@@ -32167,11 +33038,11 @@ var Scene = function () {
 
             // Sort styles by blend order
             var styles = this.tile_manager.getActiveStyles().map(function (s) {
-                return _this6.styles[s];
+                return _this7.styles[s];
             }).filter(function (s) {
                 return s;
             }). // guard against missing styles, such as while loading a new scene
-            sort(_style.Style.blendOrderSort);
+            sort(_style2.Style.blendOrderSort);
 
             // Render styles
             var count = 0; // how many primitives were rendered
@@ -32181,7 +33052,7 @@ var Scene = function () {
 
                 // Only update render state when blend mode changes
                 if (style.blend !== last_blend) {
-                    var state = Object.assign({}, _style.Style.render_states[style.blend], // render state for blend mode
+                    var state = Object.assign({}, _style2.Style.render_states[style.blend], // render state for blend mode
                     { blend: allow_blend && style.blend // enable/disable blending (e.g. no blend for selection)
                     });
                     this.setRenderState(state);
@@ -32220,7 +33091,7 @@ var Scene = function () {
     }, {
         key: 'renderStyle',
         value: function renderStyle(style_name, program_key) {
-            var _this7 = this;
+            var _this8 = this;
 
             var style = this.styles[style_name];
             var first_for_style = true;
@@ -32229,65 +33100,40 @@ var Scene = function () {
 
             // Render tile GL geometries
             var renderable_tiles = this.tile_manager.getRenderableTiles();
+            for (var t = 0; t < renderable_tiles.length; t++) {
+                var tile = renderable_tiles[t];
 
-            // Mesh variants must be rendered in requested order across tiles, to prevent labels that cross
-            // tile boundaries from rendering over adjacent tile features meant to be underneath
-            var max_mesh_variant_order = Math.max.apply(Math, _toConsumableArray(renderable_tiles.map(function (t) {
-                return t.meshes[style_name] ? Math.max.apply(Math, _toConsumableArray(t.meshes[style_name].map(function (m) {
-                    return m.variant.order;
-                }))) : -1;
-            })));
+                if (tile.meshes[style_name] == null) {
+                    continue;
+                }
 
-            // One pass per mesh variant order (loop goes to max value +1 because 0 is a valid order value)
-
-            var _loop2 = function _loop2(mo) {
-                for (var t = 0; t < renderable_tiles.length; t++) {
-                    var tile = renderable_tiles[t];
-
-                    if (tile.meshes[style_name] == null) {
-                        continue;
-                    }
-
-                    // Skip proxy tiles if new tiles have finished loading this style
-                    if (!tile.shouldProxyForStyle(style_name)) {
-                        // log('trace', `Scene.renderStyle(): Skip proxy tile for style '${style_name}' `, tile, tile.proxy_for);
-                        continue;
-                    }
-
-                    // Render current mesh variant for current style for current tile
-                    var mesh = tile.meshes[style_name].filter(function (m) {
-                        return m.variant.order === mo;
-                    })[0]; // find mesh by variant order
-                    if (mesh) {
-                        // Style-specific state
-                        // Only setup style if rendering for first time this frame
-                        // (lazy init, not all styles will be used in all screen views; some styles might be defined but never used)
-                        if (first_for_style === true) {
-                            first_for_style = false;
-                            program = _this7.setupStyle(style, program_key);
-                            if (!program) {
-                                return {
-                                    v: 0
-                                };
-                            }
-                        }
-
-                        // Tile-specific state
-                        _this7.view.setupTile(tile, program);
-
-                        // Render this mesh variant
-                        if (style.render(mesh)) {
-                            _this7.requestRedraw();
-                        }
-                        render_count += mesh.geometry_count;
+                // Style-specific state
+                // Only setup style if rendering for first time this frame
+                // (lazy init, not all styles will be used in all screen views; some styles might be defined but never used)
+                if (first_for_style === true) {
+                    first_for_style = false;
+                    program = this.setupStyle(style, program_key);
+                    if (!program) {
+                        return 0;
                     }
                 }
-            };
 
-            for (var mo = 0; mo < max_mesh_variant_order + 1; mo++) {
-                var _ret2 = _loop2(mo);
+                // Skip proxy tiles if new tiles have finished loading this style
+                if (!tile.shouldProxyForStyle(style_name)) {
+                    // log('trace', `Scene.renderStyle(): Skip proxy tile for style '${style_name}' `, tile, tile.proxy_for);
+                    continue;
+                }
 
-                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+                // Tile-specific state
+                this.view.setupTile(tile, program);
+
+                // Render tile
+                tile.meshes[style_name].forEach(function (mesh) {
+                    if (style.render(mesh)) {
+                        _this8.requestRedraw();
+                    }
+                    render_count += mesh.geometry_count;
+                });
             }
 
             return render_count;
@@ -32335,11 +33181,11 @@ var Scene = function () {
     }, {
         key: 'setRenderState',
         value: function setRenderState() {
-            var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-                depth_test = _ref3.depth_test,
-                depth_write = _ref3.depth_write,
-                cull_face = _ref3.cull_face,
-                blend = _ref3.blend;
+            var _ref4 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+                depth_test = _ref4.depth_test,
+                depth_write = _ref4.depth_write,
+                cull_face = _ref4.cull_face,
+                blend = _ref4.blend;
 
             if (!this.initialized) {
                 return;
@@ -32396,14 +33242,50 @@ var Scene = function () {
                 render_states.blending.set({ blend: false });
             }
         }
+    }, {
+        key: 'getFeaturesAt',
+        value: function getFeaturesAt(point) {
+            var _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+                scale = _ref5.scale,
+                radius = _ref5.radius;
+
+            var find_features = [];
+            //��������buffer
+            var EXTENT = 8192;
+            var tileSize = 256;
+            var pixelsToTileUnits = EXTENT / tileSize / scale;
+            var additionalRadius = radius * pixelsToTileUnits / 111000;
+            //����������tile
+            scale = Math.floor(scale);
+            var tilex = parseInt(Math.floor((point.lng + 180.0) / 360.0 * Math.pow(2.0, scale) + 0.1));
+            var tiley = parseInt(Math.floor((1.0 - Math.log(Math.tan(point.lat * Math.PI / 180.0) + 1.0 / Math.cos(point.lat * Math.PI / 180.0)) / Math.PI) / 2.0 * Math.pow(2.0, scale)));
+            var max_zoom = this.config.sources.mapzen.max_zoom || 20;
+
+            for (var key in this.tile_manager.tiles) {
+                var tile = this.tile_manager.tiles[key];
+                if (scale <= max_zoom && (Math.abs(tile.coords.x - tilex) > 1 || Math.abs(tile.coords.y - tiley) > 1 || Math.abs(tile.coords.z - scale) >= 1)) {
+                    //����tile����̫Զ��������
+                    //if (point.lng < tile.lnglat.sw.x || point.lng > tile.lnglat.ne.x || point.lat < tile.lnglat.ne.y || point.lat > tile.lnglat.sw.y) {
+                    continue;
+                }
+                //rtree����
+                var result = tile.tree.search({ minX: point.lng - additionalRadius, minY: point.lat - additionalRadius, maxX: point.lng + additionalRadius, maxY: point.lat + additionalRadius });
+                for (var idx in result) {
+                    var feature = tile.features[result[idx].id];
+                    //console.log("find feature[" + idx + "]:" + JSON.stringify(feature))
+                    find_features.push(feature);
+                }
+            }
+            return find_features;
+        }
 
         // Request feature selection at given pixel. Runs async and returns results via a promise.
 
     }, {
         key: 'getFeatureAt',
         value: function getFeatureAt(pixel) {
-            var _ref4 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-                radius = _ref4.radius;
+            var _ref6 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+                radius = _ref6.radius;
 
             if (!this.initialized) {
                 (0, _log2.default)('debug', "Scene.getFeatureAt() called before scene was initialized");
@@ -32437,16 +33319,16 @@ var Scene = function () {
     }, {
         key: 'queryFeatures',
         value: function queryFeatures() {
-            var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-                filter = _ref5.filter,
-                _ref5$unique = _ref5.unique,
-                unique = _ref5$unique === undefined ? true : _ref5$unique,
-                _ref5$group_by = _ref5.group_by,
-                group_by = _ref5$group_by === undefined ? null : _ref5$group_by,
-                _ref5$visible = _ref5.visible,
-                visible = _ref5$visible === undefined ? null : _ref5$visible,
-                _ref5$geometry = _ref5.geometry,
-                geometry = _ref5$geometry === undefined ? false : _ref5$geometry;
+            var _ref7 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+                filter = _ref7.filter,
+                _ref7$unique = _ref7.unique,
+                unique = _ref7$unique === undefined ? true : _ref7$unique,
+                _ref7$group_by = _ref7.group_by,
+                group_by = _ref7$group_by === undefined ? null : _ref7$group_by,
+                _ref7$visible = _ref7.visible,
+                visible = _ref7$visible === undefined ? null : _ref7$visible,
+                _ref7$geometry = _ref7.geometry,
+                geometry = _ref7$geometry === undefined ? false : _ref7$geometry;
 
             filter = _utils2.default.serializeWithFunctions(filter);
             var tile_keys = this.tile_manager.getRenderableTiles().map(function (t) {
@@ -32501,73 +33383,71 @@ var Scene = function () {
     }, {
         key: 'rebuild',
         value: function rebuild() {
-            var _this8 = this;
+            var _this9 = this;
 
-            var _ref6 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-                _ref6$initial = _ref6.initial,
-                initial = _ref6$initial === undefined ? false : _ref6$initial,
-                _ref6$new_generation = _ref6.new_generation,
-                new_generation = _ref6$new_generation === undefined ? true : _ref6$new_generation,
-                _ref6$sources = _ref6.sources,
-                sources = _ref6$sources === undefined ? null : _ref6$sources,
-                serialize_funcs = _ref6.serialize_funcs,
-                _ref6$profile = _ref6.profile,
-                profile = _ref6$profile === undefined ? false : _ref6$profile,
-                _ref6$fade_in = _ref6.fade_in,
-                fade_in = _ref6$fade_in === undefined ? false : _ref6$fade_in;
+            var _ref8 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+                _ref8$new_generation = _ref8.new_generation,
+                new_generation = _ref8$new_generation === undefined ? true : _ref8$new_generation,
+                _ref8$sources = _ref8.sources,
+                sources = _ref8$sources === undefined ? null : _ref8$sources,
+                serialize_funcs = _ref8.serialize_funcs,
+                _ref8$profile = _ref8.profile,
+                profile = _ref8$profile === undefined ? false : _ref8$profile,
+                _ref8$fade_in = _ref8.fade_in,
+                fade_in = _ref8$fade_in === undefined ? false : _ref8$fade_in;
 
             return new Promise(function (resolve, reject) {
                 // Skip rebuild if already in progress
-                if (_this8.building) {
+                if (_this9.building) {
                     // Queue up to one rebuild call at a time, only save last request
-                    if (_this8.building.queued && _this8.building.queued.reject) {
+                    if (_this9.building.queued && _this9.building.queued.reject) {
                         // notify previous request that it did not complete
                         (0, _log2.default)('debug', 'Scene.rebuild: request superceded by a newer call');
-                        _this8.building.queued.resolve(false); // false flag indicates rebuild request was superceded
+                        _this9.building.queued.resolve(false); // false flag indicates rebuild request was superceded
                     }
 
                     // Save queued request
-                    var options = { initial: initial, new_generation: new_generation, sources: sources, serialize_funcs: serialize_funcs, profile: profile, fade_in: fade_in };
-                    _this8.building.queued = { resolve: resolve, reject: reject, options: options };
+                    var options = { new_generation: new_generation, sources: sources, serialize_funcs: serialize_funcs, profile: profile, fade_in: fade_in };
+                    _this9.building.queued = { resolve: resolve, reject: reject, options: options };
                     (0, _log2.default)('trace', 'Scene.rebuild(): queuing request');
                     return;
                 }
 
                 // Track tile build state
-                _this8.building = { resolve: resolve, reject: reject, initial: initial };
+                _this9.building = { resolve: resolve, reject: reject };
 
                 // Profiling
                 if (profile) {
-                    _this8._profile('Scene.rebuild');
+                    _this9._profile('Scene.rebuild');
                 }
 
                 // Increment generation to ensure style/tile building stay in sync
                 // (skipped if calling function already incremented)
                 if (new_generation) {
-                    _this8.generation = ++Scene.generation;
-                    for (var style in _this8.styles) {
-                        _this8.styles[style].setGeneration(_this8.generation);
+                    _this9.generation = ++Scene.generation;
+                    for (var style in _this9.styles) {
+                        _this9.styles[style].setGeneration(_this9.generation);
                     }
                 }
 
                 // Update config (in case JS objects were manipulated directly)
-                _this8.syncConfigToWorker({ serialize_funcs: serialize_funcs });
-                _this8.resetFeatureSelection(sources);
-                _this8.resetTime();
+                _this9.syncConfigToWorker({ serialize_funcs: serialize_funcs });
+                _this9.resetFeatureSelection(sources);
+                _this9.resetTime();
 
                 // Rebuild visible tiles
-                _this8.tile_manager.pruneToVisibleTiles();
-                _this8.tile_manager.forEachTile(function (tile) {
+                _this9.tile_manager.pruneToVisibleTiles();
+                _this9.tile_manager.forEachTile(function (tile) {
                     if (!sources || sources.indexOf(tile.source.name) > -1) {
-                        _this8.tile_manager.buildTile(tile, { fade_in: fade_in });
+                        _this9.tile_manager.buildTile(tile, { fade_in: fade_in });
                     }
                 });
-                _this8.tile_manager.updateTilesForView(); // picks up additional tiles for any new/changed data sources
-                _this8.tile_manager.checkBuildQueue(); // resolve immediately if no tiles to build
+                _this9.tile_manager.updateTilesForView(); // picks up additional tiles for any new/changed data sources
+                _this9.tile_manager.checkBuildQueue(); // resolve immediately if no tiles to build
             }).then(function () {
                 // Profiling
                 if (profile) {
-                    _this8._profileEnd('Scene.rebuild');
+                    _this9._profileEnd('Scene.rebuild');
                 }
             });
         }
@@ -32596,8 +33476,6 @@ var Scene = function () {
                 if (queued) {
                     (0, _log2.default)('debug', 'Scene: starting queued rebuild() request');
                     this.rebuild(queued.options).then(queued.resolve, queued.reject);
-                } else {
-                    this.tile_manager.updateLabels(); // refresh label if nothing to rebuild
                 }
             }
         }
@@ -32610,13 +33488,13 @@ var Scene = function () {
     }, {
         key: 'loadScene',
         value: function loadScene() {
-            var _this9 = this;
+            var _this10 = this;
 
             var config_source = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
-            var _ref7 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-                base_path = _ref7.base_path,
-                file_type = _ref7.file_type;
+            var _ref9 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+                base_path = _ref9.base_path,
+                file_type = _ref9.file_type;
 
             this.config_source = config_source || this.config_source;
             this.config_globals_applied = [];
@@ -32631,13 +33509,13 @@ var Scene = function () {
             // TODO: schedule for deprecation
             this.config_path = this.base_path;
 
-            return _scene_loader2.default.loadScene(this.config_source, { path: this.base_path, type: file_type }).then(function (_ref8) {
-                var config = _ref8.config,
-                    bundle = _ref8.bundle;
+            return _scene_loader2.default.loadScene(this.config_source, { path: this.base_path, type: file_type }).then(function (_ref10) {
+                var config = _ref10.config,
+                    bundle = _ref10.bundle;
 
-                _this9.config = config;
-                _this9.config_bundle = bundle;
-                return _this9.config;
+                _this10.config = config;
+                _this10.config_bundle = bundle;
+                return _this10.config;
             });
         }
 
@@ -32681,7 +33559,7 @@ var Scene = function () {
     }, {
         key: 'createDataSources',
         value: function createDataSources() {
-            var _this10 = this;
+            var _this11 = this;
 
             var reset = []; // sources to reset
             var prev_source_names = Object.keys(this.sources);
@@ -32712,8 +33590,8 @@ var Scene = function () {
 
             // Sources that were removed
             prev_source_names.forEach(function (s) {
-                if (!_this10.config.sources[s]) {
-                    delete _this10.sources[s]; // TODO: remove from workers too?
+                if (!_this11.config.sources[s]) {
+                    delete _this11.sources[s]; // TODO: remove from workers too?
                     reset.push(s);
                 }
             });
@@ -32740,10 +33618,10 @@ var Scene = function () {
     }, {
         key: 'loadTextures',
         value: function loadTextures() {
-            var _this11 = this;
+            var _this12 = this;
 
             return _texture2.default.createFromObject(this.gl, this.config.textures).then(function () {
-                return _texture2.default.createDefault(_this11.gl);
+                return _texture2.default.createDefault(_this12.gl);
             }); // create a 'default' texture for placeholders
         }
 
@@ -32771,10 +33649,233 @@ var Scene = function () {
         // Is scene currently animating?
 
     }, {
-        key: 'getActiveCamera',
+        key: 'getActiveStyles',
 
+
+        // Get active style - for public API
+        //daibin:��ȡ��ǰfeatureʹ�õ�style������style���渲��ǰ����ȡֵ
+        value: function getActiveStyles(feature, selection) {
+            //��obj2�����obj1��������ʽ����
+            var deepMerge = function deepMerge(obj1, obj2) {
+                for (var key in obj2) {
+                    // ����target(Ҳ����obj1[key])���ڣ����Ƕ����Ļ���ȥ����deepMerge����������obj1[key]����û������������Ҫ��obj2[key]�ϲ�
+                    obj1[key] = obj1[key] && obj1[key].toString() === "[object Object]" ? deepMerge(obj1[key], obj2[key]) : obj1[key] = obj2[key];
+                }
+                return obj1;
+            };
+
+            var scene = this;
+            //FizzyData��һ������������dat.guiչʾ
+            //pre��ǰ׺������չʾ�������飨���ֵ�ÿ���ַ�����
+            var FizzyData = function FizzyData(style, pre) {
+                var data = {};
+                for (var s in style) {
+                    var pres = pre + s;
+                    if (style[s].toString() === "[object Object]") {
+                        //�����Ƕ������½�һ������
+                        var obj = new FizzyData(style[s], pre === "" ? s + ":" : pres + ":");
+                        for (var o in obj) {
+                            data[o] = obj[o];
+                        }
+                    } else if (Array.isArray(style[s])) {
+                        //����������
+                        if (s === 'color' || s === 'fill') {
+                            var precolor = pres;
+                            if (Array.isArray(style[s][0])) {
+                                //�ǰ�������color
+                                for (var i in style[s]) {
+                                    precolor = pres + "_" + style[s][i][0];
+                                    data[precolor] = _style_parser.StyleParser.parseColor(style[s][i][1].slice(0));
+                                    //dat.gui��Χ��0~255��������0~1����Ҫ����
+                                    for (var _j = 0; _j < 3; _j++) {
+                                        data[precolor][_j] *= 255;
+                                    }
+                                }
+                            } else {
+                                data[precolor] = _style_parser.StyleParser.parseColor(style[s].slice(0));
+                                for (var _j2 = 0; _j2 < 3; _j2++) {
+                                    data[precolor][_j2] *= 255;
+                                }
+                            }
+                        } else //�������飬��һ�±�׼��
+                            data[pres] = JSON.stringify(style[s]);
+                    } else {
+                        //��ɫ��Ҫ���⴦�����������ַ�����global��tangram�ڶ��壩��16���ơ�rgb��rgba
+                        if (s === 'color' || s === 'fill') {
+                            data[pres] = _style_parser.StyleParser.parseColor(style[s]);
+                            for (var j = 0; j < 3; j++) {
+                                data[pres][j] *= 255;
+                            }
+                        } else data[pres] = style[s];
+                    }
+                }
+
+                return data;
+            };
+
+            var list = []; //��������style�б�
+            var styles = {}; //�ϲ�����style
+            var ustyles = {}; //���ڸ���style
+            //���ɸ�����ʽ������ֻ��¼��Ӧ��ϵ����
+            var MakeUpdate = function MakeUpdate(ustyles, style, pre) {
+                for (var s in style) {
+                    var pres = pre + s;
+                    if (style[s].toString() === "[object Object]") {
+                        //��������
+                        MakeUpdate(ustyles, style[s], pre === "" ? s + ":" : pres + ":");
+                    } else if (Array.isArray(style[s])) {
+                        if (s === 'color' || s === 'fill') {
+                            var precolor = pres;
+                            if (Array.isArray(style[s][0])) {
+                                for (var i in style[s]) {
+                                    //�ǰ�������color
+                                    precolor = pres + "_" + style[s][i][0];
+                                    ustyles[precolor] = style;
+                                }
+                            } else ustyles[precolor] = style;
+                        } else ustyles[pres] = style;
+                    } else ustyles[pres] = style;
+                }
+            };
+
+            var rootname = null; //��ʽ��ͼ����Ŀ¼
+            for (var i in feature.layers) {
+                var seps = feature.layers[i].split(':');
+                var sublayer = this.config.layers; //ͼ����Ŀ¼
+                for (var j in seps) {
+                    sublayer = sublayer[seps[j]];
+                    if (i == 0 && j == 0) rootname = seps[j];
+                    if (i > 0 && j == 0 && rootname === seps[j]) //������ʽ��Ӧ��Ŀ¼һ������ͬ��
+                        continue;
+                    var draw = sublayer.draw; //draw����
+                    var type = null; //�������ͣ���������ע���������Զ���styleid
+                    var style = null; //
+                    for (var _j3 in draw) {
+                        if (_typeof(draw[_j3]) !== 'object') //style�ض�Ҫ�Ƕ���
+                            continue;
+                        style = draw[_j3];
+                        if (!style.hasOwnProperty('visible')) style['visible'] = true;
+                        type = _j3;
+                        if (typeof this.config.styles[_j3] !== "undefined") {
+                            //���Զ���styleid
+                            if (this.config.styles[_j3].hasOwnProperty('base')) //���ǻ�������
+                                type = type + ":" + this.config.styles[_j3]['base'];else console.log("this.config.styles[j]:" + _j3);
+                        }
+                        //ͬ���͵���ʽ�����и��Ǻϲ�
+                        if (styles.hasOwnProperty(type)) {
+                            var obj = {};
+                            deepMerge(obj, styles[type]);
+                            deepMerge(obj, style);
+                            styles[type] = obj;
+                        } else styles[type] = style;
+                        //�ڸ���ʱֻ��Ҫ�޸�������ʽ���ɣ�����������¼����������ʽ
+                        if (!ustyles.hasOwnProperty(type)) ustyles[type] = {};
+                        //���ɸ�����ʽ����
+                        MakeUpdate(ustyles[type], style, "");
+                    }
+                }
+            }
+
+            //console.log("ustyles[type]:"+JSON.stringify(ustyles))
+            //�Ժϲ�����ʽ����dat.gui    
+            for (var _type in styles) {
+                var _style = styles[_type];
+                //��ÿ�����ͣ�������Ŀ¼
+                var subselection = selection.addFolder(_type);
+                var text = new FizzyData(_style, "");
+                for (var att in text) {
+                    var _obj = null;
+                    if (att.indexOf('color') !== -1 || att.indexOf('fill') !== -1) _obj = subselection.addColor(text, att);else _obj = subselection.add(text, att);
+                    //��Ӧ�޸�
+                    _obj.onChange(function (value) {
+                        var att = this.property; //��ʽ����
+                        var type = this.domElement.parentNode.parentNode.parentNode.children[0].innerText; //��������
+                        if (typeof value === 'string') {
+                            //ת�ɶ���
+                            try {
+                                value = JSON.parse(value);
+                            } catch (e) {}
+                        }
+
+                        if (typeof value === 'string' && value.substr(0, 1) === "#") {
+                            //ת��16�����ַ���
+                            var _new_value = [parseInt(value.substr(1, 2), 16), parseInt(value.substr(3, 2), 16), parseInt(value.substr(5, 2), 16)];
+                            value = _new_value;
+                        } else if (typeof value === 'string' && value.indexOf('rgb(') === 0) {
+                            //ת��rgb�ַ���
+                            var new_value = value.substr(4, value.length - 5).split(',');
+                            for (var j = 0; j < 3; j++) {
+                                new_value[j] = parseInt(new_value[j]);
+                            }value = new_value;
+                        } else if (typeof value === 'string' && value.indexOf('rgba(') === 0) {
+                            //ת��rgba�ַ���
+                            var new_value = value.substr(5, value.length - 6).split(',');
+                            for (var j = 0; j < 3; j++) {
+                                new_value[j] = parseInt(new_value[j]);
+                            }new_value[3] = parseFloat(new_value[3]);
+                            value = new_value;
+                        }
+
+                        var seps = att.split(':');
+                        var len = seps.length;
+                        var key = seps[len - 1]; //����һ������������ʽ����
+                        var zoom = null;
+                        if (key.indexOf('_') !== -1) {
+                            //һ���Ǵ�����
+                            var keys = key.split('_');
+                            key = keys[0];
+                            zoom = parseInt(keys[1]);
+                        }
+                        //console.log("type:"+type)
+                        //console.log("att:"+att)
+                        //console.log("value:"+JSON.stringify(value))
+                        //console.log("ustyles[type][att][att]:"+ustyles[type][att][att])
+                        //console.log("ustyles[type][att][att]:"+JSON.stringify(scene.config.layers.landuse.draw.dots))
+                        if (key === 'color' || key === 'fill') {
+                            //������ɫ
+                            if (zoom !== null) {
+                                //console.log("ustyles[type][att][key]:"+JSON.stringify(ustyles[type][att][key]))
+                                for (var _i in ustyles[type][att][key]) {
+                                    if (ustyles[type][att][key][_i][0] === zoom) {
+                                        //���ڿռ�ȡֵͳһתΪ���飬����Ҳ��Ϊ���飬����ԭʼ���ַ�����������
+                                        ustyles[type][att][key][_i][1] = [];
+                                        for (var _j4 = 0; _j4 < 3; _j4++) {
+                                            ustyles[type][att][key][_i][1][_j4] = value[_j4] / 255.0;
+                                        }if (value.length > 3) //������rgab
+                                            ustyles[type][att][key][_i][1][3] = value[3];
+                                    }
+                                }
+                            } else {
+                                ustyles[type][att][key] = [];
+                                for (var _j5 = 0; _j5 < 3; _j5++) {
+                                    ustyles[type][att][key][_j5] = value[_j5] / 255.0;
+                                }if (value.length > 3) ustyles[type][att][key][3] = value[3];
+                            }
+                        } else {
+                            //����������������ɫ������ֱ���ÿؼ�ȡֵ�滻
+                            ustyles[type][att][key] = value;
+                        }
+                        //ʵʱ����scene
+                        scene.rebuild();
+                        //console.log("ustyles[type]:"+JSON.stringify(ustyles['dots:polygons']['visible']))
+                        //console.log("ustyles[type]:"+JSON.stringify(scene.config.layers.landuse.pedestrian.draw.dots))
+                        //console.log("ustyles[type]:"+JSON.stringify(scene.config.layers.landuse.draw.dots))
+                    });
+                }
+                //����dat.gui
+                subselection.open();
+                selection.open();
+
+                list.push(_style);
+            }
+
+            return list;
+        }
 
         // Get active camera - for public API
+
+    }, {
+        key: 'getActiveCamera',
         value: function getActiveCamera() {
             return this.view.getActiveCamera();
         }
@@ -32817,7 +33918,7 @@ var Scene = function () {
             var bg = this.config.scene.background;
             this.background = {};
             if (bg && bg.color) {
-                this.background.color = _style_parser2.default.parseColor(bg.color);
+                this.background.color = _style_parser.StyleParser.parseColor(bg.color);
             }
             if (!this.background.color) {
                 this.background.color = [0, 0, 0, 0]; // default background TODO: vary w/scene alpha
@@ -32840,13 +33941,13 @@ var Scene = function () {
     }, {
         key: 'setIntrospection',
         value: function setIntrospection(val) {
-            var _this12 = this;
+            var _this13 = this;
 
             if (val !== this.introspection) {
                 this.introspection = val || false;
                 this.updating++;
                 return this.updateConfig({ normalize: false }).then(function () {
-                    return _this12.updating--;
+                    return _this13.updating--;
                 });
             }
             return Promise.resolve();
@@ -32858,16 +33959,16 @@ var Scene = function () {
     }, {
         key: 'updateConfig',
         value: function updateConfig() {
-            var _ref9 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-                _ref9$load_event = _ref9.load_event,
-                load_event = _ref9$load_event === undefined ? false : _ref9$load_event,
-                _ref9$rebuild = _ref9.rebuild,
-                rebuild = _ref9$rebuild === undefined ? true : _ref9$rebuild,
-                serialize_funcs = _ref9.serialize_funcs,
-                _ref9$normalize = _ref9.normalize,
-                normalize = _ref9$normalize === undefined ? true : _ref9$normalize,
-                _ref9$fade_in = _ref9.fade_in,
-                fade_in = _ref9$fade_in === undefined ? false : _ref9$fade_in;
+            var _ref11 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+                _ref11$load_event = _ref11.load_event,
+                load_event = _ref11$load_event === undefined ? false : _ref11$load_event,
+                _ref11$rebuild = _ref11.rebuild,
+                rebuild = _ref11$rebuild === undefined ? true : _ref11$rebuild,
+                serialize_funcs = _ref11.serialize_funcs,
+                _ref11$normalize = _ref11.normalize,
+                normalize = _ref11$normalize === undefined ? true : _ref11$normalize,
+                _ref11$fade_in = _ref11.fade_in,
+                fade_in = _ref11$fade_in === undefined ? false : _ref11$fade_in;
 
             this.generation = ++Scene.generation;
             this.updating++;
@@ -32897,7 +33998,7 @@ var Scene = function () {
             this.updateStyles();
 
             // Optionally rebuild geometry
-            var done = rebuild ? this.rebuild(Object.assign({ initial: load_event, new_generation: false, serialize_funcs: serialize_funcs, fade_in: fade_in }, (typeof rebuild === 'undefined' ? 'undefined' : _typeof(rebuild)) === 'object' && rebuild)) : this.syncConfigToWorker({ serialize_funcs: serialize_funcs }); // rebuild() also syncs config
+            var done = rebuild ? this.rebuild(Object.assign({ new_generation: false, serialize_funcs: serialize_funcs, fade_in: fade_in }, (typeof rebuild === 'undefined' ? 'undefined' : _typeof(rebuild)) === 'object' && rebuild)) : this.syncConfigToWorker({ serialize_funcs: serialize_funcs }); // rebuild() also syncs config
 
             // Finish by updating bounds and re-rendering
             this.updating--;
@@ -32912,9 +34013,9 @@ var Scene = function () {
     }, {
         key: 'syncConfigToWorker',
         value: function syncConfigToWorker() {
-            var _ref10 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-                _ref10$serialize_func = _ref10.serialize_funcs,
-                serialize_funcs = _ref10$serialize_func === undefined ? true : _ref10$serialize_func;
+            var _ref12 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+                _ref12$serialize_func = _ref12.serialize_funcs,
+                serialize_funcs = _ref12$serialize_func === undefined ? true : _ref12$serialize_func;
 
             // Tell workers we're about to rebuild (so they can update styles, etc.)
             var config_serialized = serialize_funcs ? _utils2.default.serializeWithFunctions(this.config) : JSON.stringify(this.config);
@@ -32930,30 +34031,30 @@ var Scene = function () {
     }, {
         key: 'createListeners',
         value: function createListeners() {
-            var _this13 = this;
+            var _this14 = this;
 
             this.listeners = {};
 
             this.listeners.view = {
                 move: function move() {
-                    return _this13.trigger('move');
+                    return _this14.trigger('move');
                 }
             };
             this.view.subscribe(this.listeners.view);
 
             this.listeners.texture = {
                 update: function update() {
-                    return _this13.dirty = true;
+                    return _this14.dirty = true;
                 },
                 warning: function warning(data) {
-                    return _this13.trigger('warning', Object.assign({ type: 'textures' }, data));
+                    return _this14.trigger('warning', Object.assign({ type: 'textures' }, data));
                 }
             };
             _texture2.default.subscribe(this.listeners.texture);
 
             this.listeners.scene_loader = {
                 error: function error(data) {
-                    return _this13.trigger('error', Object.assign({ type: 'scene' }, data));
+                    return _this14.trigger('error', Object.assign({ type: 'scene' }, data));
                 }
             };
             _scene_loader2.default.subscribe(this.listeners.scene_loader);
@@ -32970,13 +34071,13 @@ var Scene = function () {
     }, {
         key: 'resetFeatureSelection',
         value: function resetFeatureSelection() {
-            var _this14 = this;
+            var _this15 = this;
 
             var sources = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
             if (!this.selection) {
                 this.selection = new _selection2.default(this.gl, this.workers, function () {
-                    return _this14.building;
+                    return _this15.building;
                 });
             } else if (this.workers) {
                 _worker_broker2.default.postMessage(this.workers, 'self.resetFeatureSelection', sources);
@@ -32988,7 +34089,7 @@ var Scene = function () {
     }, {
         key: 'getFeatureSelectionMapSize',
         value: function getFeatureSelectionMapSize() {
-            var _this15 = this;
+            var _this16 = this;
 
             if (this.fetching_selection_map) {
                 return Promise.resolve(); // return undefined if already pending
@@ -32996,7 +34097,7 @@ var Scene = function () {
             this.fetching_selection_map = true;
 
             return _worker_broker2.default.postMessage(this.workers, 'self.getFeatureSelectionMapSize').then(function (sizes) {
-                _this15.fetching_selection_map = false;
+                _this16.fetching_selection_map = false;
                 return sizes.reduce(function (a, b) {
                     return a + b;
                 });
@@ -33016,8 +34117,7 @@ var Scene = function () {
     }, {
         key: 'updateViewComplete',
         value: function updateViewComplete() {
-            if ((this.render_count_changed || this.generation !== this.last_complete_generation) && !this.tile_manager.isLoadingVisibleTiles() && this.tile_manager.allVisibleTilesLabeled()) {
-                this.tile_manager.updateLabels();
+            if ((this.render_count_changed || this.generation !== this.last_complete_generation) && !this.tile_manager.isLoadingVisibleTiles()) {
                 this.last_complete_generation = this.generation;
                 this.trigger('view_complete');
             }
@@ -33035,9 +34135,9 @@ var Scene = function () {
     }, {
         key: 'screenshot',
         value: function screenshot() {
-            var _ref11 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-                _ref11$background = _ref11.background,
-                background = _ref11$background === undefined ? 'white' : _ref11$background;
+            var _ref13 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+                _ref13$background = _ref13.background,
+                background = _ref13$background === undefined ? 'white' : _ref13$background;
 
             this.requestRedraw();
             return this.media_capture.screenshot({ background: background });
@@ -33107,7 +34207,7 @@ var Scene = function () {
                 geometryCountByStyle: function geometryCountByStyle() {
                     var counts = {};
                     scene.tile_manager.getRenderableTiles().forEach(function (tile) {
-                        var _loop3 = function _loop3(style) {
+                        var _loop2 = function _loop2(style) {
                             counts[style] = counts[style] || 0;
                             tile.meshes[style].forEach(function (mesh) {
                                 counts[style] += mesh.geometry_count;
@@ -33115,7 +34215,7 @@ var Scene = function () {
                         };
 
                         for (var style in tile.meshes) {
-                            _loop3(style);
+                            _loop2(style);
                         }
                     });
                     return counts;
@@ -33133,7 +34233,7 @@ var Scene = function () {
                 geometrySizeByStyle: function geometrySizeByStyle() {
                     var sizes = {};
                     scene.tile_manager.getRenderableTiles().forEach(function (tile) {
-                        var _loop4 = function _loop4(style) {
+                        var _loop3 = function _loop3(style) {
                             sizes[style] = sizes[style] || 0;
                             tile.meshes[style].forEach(function (mesh) {
                                 sizes[style] += mesh.buffer_size;
@@ -33141,7 +34241,7 @@ var Scene = function () {
                         };
 
                         for (var style in tile.meshes) {
-                            _loop4(style);
+                            _loop3(style);
                         }
                     });
                     return sizes;
@@ -33172,11 +34272,11 @@ var Scene = function () {
     }, {
         key: 'animated',
         get: function get() {
-            var _this16 = this;
+            var _this17 = this;
 
             // Use explicitly set scene animation flag if defined, otherwise enabled animation if any animated styles are in view
             return this.config.scene.animated !== undefined ? this.config.scene.animated : this.tile_manager.getActiveStyles().some(function (s) {
-                return _this16.styles[s].animated;
+                return _this17.styles[s].animated;
             });
         }
     }], [{
@@ -33197,7 +34297,7 @@ exports.default = Scene;
 Scene.id = 0; // unique id for a scene instance
 Scene.generation = 0; // id that is incremented each time a scene config is re-parsed
 
-},{"./gl/context":202,"./gl/render_state":205,"./gl/shader_program":206,"./gl/texture":207,"./gl/vao":208,"./light":223,"./scene_loader":228,"./selection":230,"./sources/data_source":231,"./styles/style":243,"./styles/style_manager":244,"./styles/style_parser":245,"./styles/text/canvas_text":246,"./styles/text/font_manager":247,"./tile":251,"./tile_manager":252,"./utils/debug_settings":255,"./utils/log":259,"./utils/media_capture":260,"./utils/slice":264,"./utils/subscribe":265,"./utils/task":266,"./utils/urls":268,"./utils/utils":269,"./utils/worker_broker":271,"./view":273}],227:[function(_dereq_,module,exports){
+},{"./gl/context":211,"./gl/render_state":214,"./gl/shader_program":215,"./gl/texture":216,"./gl/vao":217,"./light":231,"./scene_loader":236,"./selection":238,"./sources/data_source":239,"./styles/style":251,"./styles/style_manager":252,"./styles/style_parser":253,"./styles/text/canvas_text":254,"./styles/text/font_manager":255,"./tile":259,"./tile_manager":260,"./utils/debug_settings":263,"./utils/log":267,"./utils/media_capture":268,"./utils/slice":272,"./utils/subscribe":273,"./utils/task":274,"./utils/urls":276,"./utils/utils":277,"./utils/worker_broker":279,"./view":281}],235:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -33521,7 +34621,7 @@ function loadResource(source) {
     });
 }
 
-},{"./utils/urls":268,"./utils/utils":269,"js-yaml":102,"jszip":138}],228:[function(_dereq_,module,exports){
+},{"./utils/urls":276,"./utils/utils":277,"js-yaml":103,"jszip":139}],236:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -33682,18 +34782,10 @@ exports.default = SceneLoader = {
     normalizeDataSource: function normalizeDataSource(source, bundle) {
         source.url = bundle.urlFor(source.url);
 
-        if (source.scripts) {
-            // convert legacy array-style scripts to object format (script URL is used as both key and value)
-            if (Array.isArray(source.scripts)) {
-                source.scripts = source.scripts.reduce(function (val, cur) {
-                    val[cur] = cur;return val;
-                }, {});
-            }
-
-            // resolve URLs for external scripts
-            for (var s in source.scripts) {
-                source.scripts[s] = bundle.urlFor(source.scripts[s]);
-            }
+        if (Array.isArray(source.scripts)) {
+            source.scripts = source.scripts.map(function (url) {
+                return bundle.urlFor(url);
+            });
         }
 
         return source;
@@ -34002,7 +35094,7 @@ function flattenProperties(obj) {
 
 (0, _subscribe2.default)(SceneLoader);
 
-},{"./gl/glsl":204,"./scene_bundle":227,"./styles/layer":237,"./utils/log":259,"./utils/merge":261,"./utils/subscribe":265,"./utils/urls":268}],229:[function(_dereq_,module,exports){
+},{"./gl/glsl":213,"./scene_bundle":235,"./styles/layer":245,"./utils/log":267,"./utils/merge":269,"./utils/subscribe":273,"./utils/urls":276}],237:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34046,8 +35138,6 @@ var _selection2 = _interopRequireDefault(_selection);
 
 var _style_parser = _dereq_('./styles/style_parser');
 
-var _style_parser2 = _interopRequireDefault(_style_parser);
-
 var _style_manager = _dereq_('./styles/style_manager');
 
 var _layer = _dereq_('./styles/layer');
@@ -34061,10 +35151,6 @@ var _texture2 = _interopRequireDefault(_texture);
 var _vertex_elements = _dereq_('./gl/vertex_elements');
 
 var _vertex_elements2 = _interopRequireDefault(_vertex_elements);
-
-var _label = _dereq_('./labels/label');
-
-var _label2 = _interopRequireDefault(_label);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -34096,14 +35182,13 @@ if (_thread2.default.is_worker) {
             _vertex_elements2.default.setElementIndexUint(has_element_index_unit);
             _selection2.default.setPrefix(self._worker_id);
             self.style_manager = new _style_manager.StyleManager();
-            self.importExternalScripts(external_scripts);
-            _label2.default.id_prefix = worker_id;
+            self.importCustomScripts(external_scripts);
             return worker_id;
         },
 
 
-        // Import custom external scripts
-        importExternalScripts: function importExternalScripts(scripts) {
+        // Import custom scripts
+        importCustomScripts: function importCustomScripts(scripts) {
             if (scripts.length === 0) {
                 return;
             }
@@ -34151,7 +35236,7 @@ if (_thread2.default.is_worker) {
             self.createDataSources(config);
 
             // Expand styles
-            config.styles = _utils2.default.stringsToFunctions(config.styles, _style_parser2.default.wrapFunction);
+            config.styles = _utils2.default.stringsToFunctions(config.styles, _style_parser.StyleParser.wrapFunction);
             self.styles = self.style_manager.build(config.styles);
             self.style_manager.initStyles({
                 generation: self.generation,
@@ -34337,7 +35422,7 @@ if (_thread2.default.is_worker) {
             // Compile feature filter
             if (filter != null) {
                 filter = ['{', '['].indexOf(filter[0]) > -1 ? JSON.parse(filter) : filter; // de-serialize if looks like an object
-                filter = _utils2.default.stringsToFunctions(filter, _style_parser2.default.wrapFunction);
+                filter = _utils2.default.stringsToFunctions(filter, _style_parser.StyleParser.wrapFunction);
             }
             filter = (0, _filter.buildFilter)(filter, _layer.FilterOptions);
 
@@ -34351,7 +35436,7 @@ if (_thread2.default.is_worker) {
                         }
 
                         // Apply feature filter
-                        var context = _style_parser2.default.getFeatureParseContext(feature, tile, self.global);
+                        var context = _style_parser.StyleParser.getFeatureParseContext(feature, tile, self.global);
                         context.source = tile.source; // add data source name
                         context.layer = layer; // add data source layer name
 
@@ -34369,7 +35454,7 @@ if (_thread2.default.is_worker) {
                         if (geometry === true) {
                             // Transform back to lat lng (copy geometry to avoid local modification)
                             subset.geometry = _geo2.default.copyGeometry(feature.geometry);
-                            _geo2.default.tileSpaceToLatlng(subset.geometry, tile.coords.z, tile.min);
+                            _geo2.default.tileSpaceToLatlng(subset.geometry, tile.coords.z, tile.min, tile.max);
                         }
 
                         features.push(subset);
@@ -34446,7 +35531,7 @@ if (_thread2.default.is_worker) {
     _worker_broker2.default.addTarget('self', self);
 }
 
-},{"./geo":200,"./gl/texture":207,"./gl/vertex_elements":211,"./labels/label":215,"./selection":230,"./sources/data_source":231,"./styles/filter":236,"./styles/layer":237,"./styles/style_manager":244,"./styles/style_parser":245,"./tile":251,"./utils/debug_settings":255,"./utils/log":259,"./utils/thread":267,"./utils/utils":269,"./utils/worker_broker":271}],230:[function(_dereq_,module,exports){
+},{"./geo":209,"./gl/texture":216,"./gl/vertex_elements":220,"./selection":238,"./sources/data_source":239,"./styles/filter":244,"./styles/layer":245,"./styles/style_manager":252,"./styles/style_parser":253,"./tile":259,"./utils/debug_settings":263,"./utils/log":267,"./utils/thread":275,"./utils/utils":277,"./utils/worker_broker":279}],238:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34868,7 +35953,7 @@ FeatureSelection.map_entry = 0;
 FeatureSelection.map_prefix = 0; // set by worker to worker id #
 FeatureSelection.defaultColor = [0, 0, 0, 1];
 
-},{"./gl/texture":207,"./utils/log":259,"./utils/worker_broker":271}],231:[function(_dereq_,module,exports){
+},{"./gl/texture":216,"./utils/log":267,"./utils/worker_broker":279}],239:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -34933,12 +36018,6 @@ var DataSource = function () {
                     _this.rasters.push(r);
                 }
             });
-        }
-
-        // Optional function to preprocess source data
-        this.preprocess = config.preprocess;
-        if (typeof this.preprocess === 'function') {
-            this.preprocess.bind(this);
         }
 
         // Optional function to transform source data
@@ -35226,19 +36305,9 @@ var NetworkSource = exports.NetworkSource = function (_DataSource) {
                     dest.debug.response_size = body.length || body.byteLength;
                     dest.debug.network = +new Date() - dest.debug.network;
                     dest.debug.parsing = +new Date();
-
-                    // Apply optional data transform on raw network response
-                    if (typeof _this4.preprocess === 'function') {
-                        body = _this4.preprocess(body);
-                    }
-
-                    // Return data immediately, or after user-returned promise resolves
-                    body = body instanceof Promise ? body : Promise.resolve(body);
-                    body.then(function (body) {
-                        _this4.parseSourceData(dest, source_data, body);
-                        dest.debug.parsing = +new Date() - dest.debug.parsing;
-                        resolve(dest);
-                    });
+                    _this4.parseSourceData(dest, source_data, body);
+                    dest.debug.parsing = +new Date() - dest.debug.parsing;
+                    resolve(dest);
                 }).catch(function (error) {
                     source_data.error = error.stack;
                     resolve(dest); // resolve request but pass along error
@@ -35385,7 +36454,7 @@ var NetworkTileSource = exports.NetworkTileSource = function (_NetworkSource) {
     return NetworkTileSource;
 }(NetworkSource);
 
-},{"../geo":200,"../utils/errors":256,"../utils/log":259,"../utils/urls":268,"../utils/utils":269}],232:[function(_dereq_,module,exports){
+},{"../geo":209,"../utils/errors":264,"../utils/log":267,"../utils/urls":276,"../utils/utils":277}],240:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35546,8 +36615,8 @@ var GeoJSONSource = exports.GeoJSONSource = function (_NetworkSource) {
     }, {
         key: 'parseSourceData',
         value: function parseSourceData(tile, source, response) {
-            var data = typeof response === 'string' ? JSON.parse(response) : response;
-            var layers = this.getLayers(data);
+            var parsed_response = JSON.parse(response);
+            var layers = this.getLayers(parsed_response);
             source.layers = this.preprocessLayers(layers);
         }
     }, {
@@ -35555,7 +36624,7 @@ var GeoJSONSource = exports.GeoJSONSource = function (_NetworkSource) {
         value: function preprocessLayers(layers) {
             for (var key in layers) {
                 var layer = layers[key];
-                layer.features = this.preprocessFeatures(layer.features);
+                this.preprocessFeatures(layer.features);
             }
 
             // Apply optional data transform
@@ -35575,11 +36644,6 @@ var GeoJSONSource = exports.GeoJSONSource = function (_NetworkSource) {
     }, {
         key: 'preprocessFeatures',
         value: function preprocessFeatures(features) {
-            // Remove features without geometry (which is valid GeoJSON)
-            features = features.filter(function (f) {
-                return f.geometry != null;
-            });
-
             // Define centroids for polygons for centroid label placement
             // Avoids redundant label placement for each generated tile at higher zoom levels
             if (this.config.generate_label_centroids) {
@@ -35587,6 +36651,10 @@ var GeoJSONSource = exports.GeoJSONSource = function (_NetworkSource) {
                 var centroid_properties = { "label_placement": true };
 
                 features.forEach(function (feature) {
+                    if (feature.geometry == null) {
+                        return; // no geometry (which is valid GeoJSON)
+                    }
+
                     var coordinates = void 0,
                         centroid_feature = void 0;
                     switch (feature.geometry.type) {
@@ -35685,7 +36753,7 @@ var GeoJSONTileSource = exports.GeoJSONTileSource = function (_NetworkTileSource
     _createClass(GeoJSONTileSource, [{
         key: 'parseSourceData',
         value: function parseSourceData(tile, source, response) {
-            var data = typeof response === 'string' ? JSON.parse(response) : response;
+            var data = JSON.parse(response);
             this.prepareGeoJSON(data, tile, source);
         }
     }, {
@@ -35735,7 +36803,7 @@ function getCentroidFeatureForPolygon(coordinates, properties, newProperties) {
     };
 }
 
-},{"../geo":200,"../utils/log":259,"./data_source":231,"./mvt":233,"geojson-vt":83}],233:[function(_dereq_,module,exports){
+},{"../geo":209,"../utils/log":267,"./data_source":239,"./mvt":241,"geojson-vt":78}],241:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -35759,7 +36827,7 @@ var _pbf = _dereq_('pbf');
 
 var _pbf2 = _interopRequireDefault(_pbf);
 
-var _vectorTile = _dereq_('@mapbox/vector-tile');
+var _vectorTile = _dereq_('vector-tile');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -35904,7 +36972,7 @@ function decodeMultiPolygon(geom) {
 
 _data_source2.default.register(MVTSource, 'MVT');
 
-},{"../geo":200,"./data_source":231,"@mapbox/vector-tile":2,"pbf":186}],234:[function(_dereq_,module,exports){
+},{"../geo":209,"./data_source":239,"pbf":188,"vector-tile":200}],242:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -36002,7 +37070,7 @@ var RasterTileSource = exports.RasterTileSource = function (_NetworkTileSource) 
 
 _data_source2.default.register(RasterTileSource, 'Raster');
 
-},{"../geo":200,"../tile":251,"./data_source":231}],235:[function(_dereq_,module,exports){
+},{"../geo":209,"../tile":259,"./data_source":239}],243:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -36051,7 +37119,7 @@ var TopoJSONSource = exports.TopoJSONSource = function (_GeoJSONSource) {
     _createClass(TopoJSONSource, [{
         key: 'parseSourceData',
         value: function parseSourceData(tile, source, response) {
-            var data = typeof response === 'string' ? JSON.parse(response) : response;
+            var data = JSON.parse(response);
             data = this.toGeoJSON(data);
 
             var layers = this.getLayers(data);
@@ -36119,7 +37187,7 @@ var TopoJSONTileSource = exports.TopoJSONTileSource = function (_GeoJSONTileSour
     _createClass(TopoJSONTileSource, [{
         key: 'parseSourceData',
         value: function parseSourceData(tile, source, response) {
-            var data = typeof response === 'string' ? JSON.parse(response) : response;
+            var data = JSON.parse(response);
             data = TopoJSONSource.prototype.toGeoJSON(data);
             this.prepareGeoJSON(data, tile, source);
         }
@@ -36130,7 +37198,7 @@ var TopoJSONTileSource = exports.TopoJSONTileSource = function (_GeoJSONTileSour
 
 _data_source2.default.register(TopoJSONTileSource, 'TopoJSON'); // prefered shorter name
 
-},{"./data_source":231,"./geojson":232,"topojson-client":190}],236:[function(_dereq_,module,exports){
+},{"./data_source":239,"./geojson":240,"topojson-client":195}],244:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -36287,7 +37355,7 @@ function buildFilter(filter, options) {
     return new Function('context', 'return ' + filterToString(parseFilter(filter, options)) + ';');
 }
 
-},{}],237:[function(_dereq_,module,exports){
+},{}],245:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -36311,8 +37379,6 @@ exports.parseLayers = parseLayers;
 exports.matchFeature = matchFeature;
 
 var _style_parser = _dereq_('./style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 var _utils = _dereq_('../utils/utils');
 
@@ -36379,40 +37445,44 @@ function mergeTrees(matchingTrees, group) {
     var draw = {
         visible: true // visible by default
     };
+    //daibin,�����ķ��������ȱ������������ĸ���ǰһ���ģ�ͬʱ���ַ�������������ʽ˳����Ч
+    //��Ϊ˳�򸲸ǣ�ͬʱ���ظ�layername�����и��ǣ����ڵ��ظ����ǻ������⣩
+    var layer_names = [];
+    for (var i = 0; i < matchingTrees.length; i++) {
+        draws = matchingTrees[i].map(function (tree) {
+            if (tree && tree[group]) {
+                if (layer_names.indexOf(tree[group].layer_name) === -1) layer_names.push(tree[group].layer_name);else return null;
+            }
+            return tree && tree[group];
+        });
+        if (draws.length === 0) {
+            continue;
+        }
+        _merge2.default.apply(undefined, [draw].concat(_toConsumableArray(draws)));
+        delete draw.layer_name;
+    }
 
     // Iterate trees in parallel
-
-    var _loop = function _loop(x) {
+    /*for (let x=0; x < treeDepth; x++) {
         // Pull out the requested draw group, for each tree, at this depth (avoiding duplicates at the same level in tree)
         draws = [];
-        matchingTrees.forEach(function (tree) {
+        matchingTrees.forEach(tree => {
             if (tree[x] && tree[x][group] && draws.indexOf(tree[x][group]) === -1) {
                 draws.push(tree[x][group]);
             }
         });
         if (draws.length === 0) {
-            return 'continue';
+            continue;
         }
-
-        // Sort by layer name before merging, so layers are applied deterministically
+          // Sort by layer name before merging, so layers are applied deterministically
         // when multiple layers modify the same properties
-        draws.sort(function (a, b) {
-            return (a && a.layer_name) > (b && b.layer_name) ? 1 : -1;
-        });
-
-        // Merge draw objects
-        _merge2.default.apply(undefined, [draw].concat(_toConsumableArray(draws)));
-
-        // Remove layer names, they were only used transiently to sort and calculate final layer
+        draws.sort((a, b) => (a && a.layer_name) > (b && b.layer_name) ? 1 : -1);
+          // Merge draw objects
+        mergeObjects(draw, ...draws);
+          // Remove layer names, they were only used transiently to sort and calculate final layer
         // (final merged names will not be accurate since only one tree can win)
         delete draw.layer_name;
-    };
-
-    for (var x = 0; x < treeDepth; x++) {
-        var _ret = _loop(x);
-
-        if (_ret === 'continue') continue;
-    }
+    }*/
 
     // Short-circuit if not visible
     if (draw.visible === false) {
@@ -36483,14 +37553,14 @@ var Layer = function () {
     }, {
         key: 'buildDraw',
         value: function buildDraw() {
-            this.draw = _utils2.default.stringsToFunctions(this.draw, _style_parser2.default.wrapFunction);
+            this.draw = _utils2.default.stringsToFunctions(this.draw, _style_parser.StyleParser.wrapFunction);
             this.calculatedDraw = calculateDraw(this);
         }
     }, {
         key: 'buildFilter',
         value: function buildFilter() {
             this.filter_original = this.filter;
-            this.filter = _utils2.default.stringsToFunctions(this.filter, _style_parser2.default.wrapFunction);
+            this.filter = _utils2.default.stringsToFunctions(this.filter, _style_parser.StyleParser.wrapFunction);
 
             var type = _typeof(this.filter);
             if (this.filter != null && type !== 'object' && type !== 'function') {
@@ -36900,7 +37970,7 @@ function matchFeature(context, layers, collected_layers, collected_layers_ids) {
     return matched;
 }
 
-},{"../utils/log":259,"../utils/merge":261,"../utils/utils":269,"./filter":236,"./style_parser":245}],238:[function(_dereq_,module,exports){
+},{"../utils/log":267,"../utils/merge":269,"../utils/utils":277,"./filter":244,"./style_parser":253}],246:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -36951,7 +38021,7 @@ function renderDashArray(pattern) {
     return { pixels: pixels, length: length };
 }
 
-},{}],239:[function(_dereq_,module,exports){
+},{}],247:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -36959,15 +38029,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Lines = undefined;
 
-var _log = _dereq_('../../utils/log');
-
-var _log2 = _interopRequireDefault(_log);
-
 var _style = _dereq_('../style');
 
 var _style_parser = _dereq_('../style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 var _constants = _dereq_('../../gl/constants');
 
@@ -37004,9 +38068,7 @@ var _polygons = _dereq_('../polygons/polygons');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // web workers don't have access to GL context, so import all GL constants
-// Line rendering style
-
-var Lines = exports.Lines = Object.create(_style.Style);
+var Lines = exports.Lines = Object.create(_style.Style); // Line rendering style
 
 Lines.vertex_layouts = [[], []]; // first dimension is texcoords on/off, second is offsets on/off
 Lines.variants = {}; // mesh variants by variant key
@@ -37039,7 +38101,7 @@ Object.assign(Lines, {
 
     // Calculate width or offset at zoom given in `context`
     calcDistance: function calcDistance(prop, context) {
-        return prop && _style_parser2.default.evalCachedDistanceProperty(prop, context) || 0;
+        return prop && _style_parser.StyleParser.evalCachedDistanceProperty(prop, context) || 0;
     },
 
 
@@ -37165,9 +38227,9 @@ Object.assign(Lines, {
         style.variant = draw.variant; // pre-calculated mesh variant
 
         // height defaults to feature height, but extrude style can dynamically adjust height by returning a number or array (instead of a boolean)
-        style.z = draw.z && _style_parser2.default.evalCachedDistanceProperty(draw.z || 0, context) || _style_parser2.default.defaults.z;
-        style.height = feature.properties.height || _style_parser2.default.defaults.height;
-        style.extrude = _style_parser2.default.evalProperty(draw.extrude, context);
+        style.z = draw.z && _style_parser.StyleParser.evalCachedDistanceProperty(draw.z || 0, context) || _style_parser.StyleParser.defaults.z;
+        style.height = feature.properties.height || _style_parser.StyleParser.defaults.height;
+        style.extrude = _style_parser.StyleParser.evalProperty(draw.extrude, context);
         if (style.extrude) {
             if (typeof style.extrude === 'number') {
                 style.height = style.extrude;
@@ -37257,30 +38319,30 @@ Object.assign(Lines, {
         return style;
     },
     _preprocess: function _preprocess(draw) {
-        draw.color = _style_parser2.default.createColorPropertyCache(draw.color);
-        draw.width = _style_parser2.default.createPropertyCache(draw.width, _style_parser2.default.parseUnits);
-        if (draw.width && draw.width.type !== _style_parser2.default.CACHE_TYPE.STATIC) {
-            draw.next_width = _style_parser2.default.createPropertyCache(draw.width, _style_parser2.default.parseUnits);
+        draw.color = _style_parser.StyleParser.createColorPropertyCache(draw.color);
+        draw.width = _style_parser.StyleParser.createPropertyCache(draw.width, _style_parser.StyleParser.parseUnits);
+        if (draw.width && draw.width.type !== _style_parser.StyleParser.CACHE_TYPE.STATIC) {
+            draw.next_width = _style_parser.StyleParser.createPropertyCache(draw.width, _style_parser.StyleParser.parseUnits);
         }
-        draw.offset = draw.offset && _style_parser2.default.createPropertyCache(draw.offset, _style_parser2.default.parseUnits);
-        if (draw.offset && draw.offset.type !== _style_parser2.default.CACHE_TYPE.STATIC) {
-            draw.next_offset = _style_parser2.default.createPropertyCache(draw.offset, _style_parser2.default.parseUnits);
+        draw.offset = draw.offset && _style_parser.StyleParser.createPropertyCache(draw.offset, _style_parser.StyleParser.parseUnits);
+        if (draw.offset && draw.offset.type !== _style_parser.StyleParser.CACHE_TYPE.STATIC) {
+            draw.next_offset = _style_parser.StyleParser.createPropertyCache(draw.offset, _style_parser.StyleParser.parseUnits);
         }
-        draw.z = _style_parser2.default.createPropertyCache(draw.z, _style_parser2.default.parseUnits);
+        draw.z = _style_parser.StyleParser.createPropertyCache(draw.z, _style_parser.StyleParser.parseUnits);
 
         draw.dash = draw.dash !== undefined ? draw.dash : this.dash;
         draw.dash_key = draw.dash && this.dashTextureKey(draw.dash);
         draw.dash_background_color = draw.dash_background_color !== undefined ? draw.dash_background_color : this.dash_background_color;
-        draw.dash_background_color = draw.dash_background_color && _style_parser2.default.parseColor(draw.dash_background_color);
+        draw.dash_background_color = draw.dash_background_color && _style_parser.StyleParser.parseColor(draw.dash_background_color);
         draw.texture_merged = draw.dash_key || (draw.texture !== undefined ? draw.texture : this.texture);
         draw.texcoords = this.texcoords || draw.texture_merged ? 1 : 0;
         this.computeVariant(draw);
 
         if (draw.outline) {
             draw.outline.style = draw.outline.style || this.name;
-            draw.outline.color = _style_parser2.default.createColorPropertyCache(draw.outline.color);
-            draw.outline.width = _style_parser2.default.createPropertyCache(draw.outline.width, _style_parser2.default.parseUnits);
-            draw.outline.next_width = _style_parser2.default.createPropertyCache(draw.outline.width, _style_parser2.default.parseUnits); // width re-computed for next zoom
+            draw.outline.color = _style_parser.StyleParser.createColorPropertyCache(draw.outline.color);
+            draw.outline.width = _style_parser.StyleParser.createPropertyCache(draw.outline.width, _style_parser.StyleParser.parseUnits);
+            draw.outline.next_width = _style_parser.StyleParser.createPropertyCache(draw.outline.width, _style_parser.StyleParser.parseUnits); // width re-computed for next zoom
 
             draw.outline.cap = draw.outline.cap || draw.cap;
             draw.outline.join = draw.outline.join || draw.join;
@@ -37289,37 +38351,32 @@ Object.assign(Lines, {
 
             // outline inhertits dash pattern, but NOT explicit texture
             var outline_style = this.styles[draw.outline.style];
-            if (outline_style) {
-                draw.outline.dash = draw.outline.dash !== undefined ? draw.outline.dash : outline_style.dash;
-                draw.outline.texture = draw.outline.texture !== undefined ? draw.outline.texture : outline_style.texture;
+            draw.outline.dash = draw.outline.dash !== undefined ? draw.outline.dash : outline_style.dash;
+            draw.outline.texture = draw.outline.texture !== undefined ? draw.outline.texture : outline_style.texture;
 
-                if (draw.outline.dash != null) {
-                    // dash was defined by outline draw or style
-                    draw.outline.dash_key = draw.outline.dash && this.dashTextureKey(draw.outline.dash);
-                    draw.outline.texture_merged = draw.outline.dash_key;
-                } else if (draw.outline.dash === null) {
-                    // dash explicitly disabled by outline draw or style
-                    draw.outline.dash_key = null;
-                    draw.outline.texture_merged = draw.outline.texture;
-                } else if (draw.outline.texture != null) {
-                    // texture was defined by outline draw or style
-                    draw.outline.dash_key = null; // outline explicitly turning off dash
-                    draw.outline.texture_merged = draw.outline.texture;
-                } else {
-                    // no dash or texture defined for outline, inherit parent dash
-                    draw.outline.dash = draw.dash;
-                    draw.outline.dash_key = draw.outline.dash && this.dashTextureKey(draw.outline.dash);
-                    draw.outline.texture_merged = draw.outline.dash_key;
-                }
-                draw.outline.dash_background_color = draw.outline.dash_background_color !== undefined ? draw.outline.dash_background_color : outline_style.dash_background_color;
-                draw.outline.dash_background_color = draw.outline.dash_background_color !== undefined ? draw.outline.dash_background_color : draw.dash_background_color;
-                draw.outline.dash_background_color = draw.outline.dash_background_color && _style_parser2.default.parseColor(draw.outline.dash_background_color);
-                draw.outline.texcoords = outline_style.texcoords || draw.outline.texture_merged ? 1 : 0;
-                this.computeVariant(draw.outline);
+            if (draw.outline.dash != null) {
+                // dash was defined by outline draw or style
+                draw.outline.dash_key = draw.outline.dash && this.dashTextureKey(draw.outline.dash);
+                draw.outline.texture_merged = draw.outline.dash_key;
+            } else if (draw.outline.dash === null) {
+                // dash explicitly disabled by outline draw or style
+                draw.outline.dash_key = null;
+                draw.outline.texture_merged = draw.outline.texture;
+            } else if (draw.outline.texture != null) {
+                // texture was defined by outline draw or style
+                draw.outline.dash_key = null; // outline explicitly turning off dash
+                draw.outline.texture_merged = draw.outline.texture;
             } else {
-                (0, _log2.default)({ level: 'warn', once: true }, 'Layer \'' + draw.layers[draw.layers.length - 1] + '\': ' + ('line \'outline\' specifies non-existent draw style \'' + draw.outline.style + '\' (or maybe the style is ') + 'defined but is missing a \'base\' or has another error), skipping outlines in layer');
-                draw.outline = null;
+                // no dash or texture defined for outline, inherit parent dash
+                draw.outline.dash = draw.dash;
+                draw.outline.dash_key = draw.outline.dash && this.dashTextureKey(draw.outline.dash);
+                draw.outline.texture_merged = draw.outline.dash_key;
             }
+            draw.outline.dash_background_color = draw.outline.dash_background_color !== undefined ? draw.outline.dash_background_color : outline_style.dash_background_color;
+            draw.outline.dash_background_color = draw.outline.dash_background_color !== undefined ? draw.outline.dash_background_color : draw.dash_background_color;
+            draw.outline.dash_background_color = draw.outline.dash_background_color && _style_parser.StyleParser.parseColor(draw.outline.dash_background_color);
+            draw.outline.texcoords = outline_style.texcoords || draw.outline.texture_merged ? 1 : 0;
+            this.computeVariant(draw.outline);
         }
         return draw;
     },
@@ -37549,7 +38606,7 @@ Object.assign(Lines, {
     }
 });
 
-},{"../../builders/polylines":198,"../../geo":200,"../../gl/constants":201,"../../gl/texture":207,"../../gl/vertex_layout":212,"../../utils/hash":258,"../../utils/log":259,"../../utils/worker_broker":271,"../polygons/polygons":241,"../style":243,"../style_parser":245,"./dasharray":238}],240:[function(_dereq_,module,exports){
+},{"../../builders/polylines":207,"../../geo":209,"../../gl/constants":210,"../../gl/texture":216,"../../gl/vertex_layout":221,"../../utils/hash":266,"../../utils/worker_broker":279,"../polygons/polygons":249,"../style":251,"../style_parser":253,"./dasharray":246}],248:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -37569,8 +38626,6 @@ var _log2 = _interopRequireDefault(_log);
 var _style = _dereq_('../style');
 
 var _style_parser = _dereq_('../style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 var _constants = _dereq_('../../gl/constants');
 
@@ -37619,8 +38674,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 
-var shaderSrc_pointsVertex = "uniform vec2 u_resolution;\nuniform float u_time;\nuniform vec3 u_map_position;\nuniform vec4 u_tile_origin;\nuniform float u_tile_proxy_depth;\nuniform bool u_tile_fade_in;\nuniform float u_meters_per_pixel;\nuniform float u_device_pixel_ratio;\nuniform float u_visible_time;\nuniform bool u_view_panning;\nuniform float u_view_pan_snap_timer;\n\nuniform mat4 u_model;\nuniform mat4 u_modelView;\nuniform mat3 u_normalMatrix;\nuniform mat3 u_inverseNormalMatrix;\n\nattribute vec4 a_position;\nattribute vec4 a_shape;\nattribute vec4 a_color;\nattribute vec2 a_texcoord;\nattribute vec2 a_offset;\n\nuniform float u_point_type;\n\n#ifdef TANGRAM_CURVED_LABEL\n    attribute vec4 a_offsets;\n    attribute vec4 a_pre_angles;\n    attribute vec4 a_angles;\n#endif\n\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\nvarying vec4 v_world_position;\nvarying float v_alpha_factor;\n\n#ifdef TANGRAM_HAS_SHADER_POINTS\n    attribute float a_outline_edge;\n    attribute vec4 a_outline_color;\n\n    varying float v_outline_edge;\n    varying vec4 v_outline_color;\n    varying float v_aa_offset;\n#endif\n\n#ifdef TANGRAM_SHOW_HIDDEN_LABELS\n    varying float v_label_hidden;\n#endif\n\n#define PI 3.14159265359\n#define TANGRAM_NORMAL vec3(0., 0., 1.)\n\n#pragma tangram: camera\n#pragma tangram: material\n#pragma tangram: lighting\n#pragma tangram: raster\n#pragma tangram: global\n\nvec2 rotate2D(vec2 _st, float _angle) {\n    return mat2(cos(_angle),-sin(_angle),\n                sin(_angle),cos(_angle)) * _st;\n}\n\n#ifdef TANGRAM_CURVED_LABEL\n    // Assumes stops are [0, 0.33, 0.66, 0.99];\n    float mix4linear(float a, float b, float c, float d, float x) {\n        return mix(mix(a, b, 3. * x),\n                   mix(b,\n                       mix(c, d, 3. * (max(x, .66) - .66)),\n                       3. * (clamp(x, .33, .66) - .33)),\n                   step(0.33, x)\n                );\n    }\n#endif\n\nvoid main() {\n    // Initialize globals\n    #pragma tangram: setup\n\n    // discard hidden labels by collapsing into degenerate triangle\n    #ifndef TANGRAM_SHOW_HIDDEN_LABELS\n        if (a_shape.w == 0.) {\n            gl_Position = vec4(0., 0., 0., 1.);\n            return;\n        }\n    #else\n        // highlight hidden label in fragment shader for debugging\n        if (a_shape.w == 0.) {\n            v_label_hidden = 1.; // label debug testing\n        }\n        else {\n            v_label_hidden = 0.;\n        }\n    #endif\n\n\n    v_alpha_factor = 1.0;\n    v_color = a_color;\n    v_texcoord = a_texcoord; // UV from vertex\n\n    #ifdef TANGRAM_HAS_SHADER_POINTS\n        v_outline_color = a_outline_color;\n        v_outline_edge = a_outline_edge;\n        if (u_point_type == TANGRAM_POINT_TYPE_SHADER) { // shader point\n            v_outline_color = a_outline_color;\n            v_outline_edge = a_outline_edge;\n            float size = abs(a_shape.x/128.); // radius in pixels\n            v_texcoord = sign(a_shape.xy)*(size+1.)/(size);\n            size+=2.;\n            v_aa_offset=2./size;\n        }\n    #endif\n\n    // Position\n    vec4 position = u_modelView * vec4(a_position.xyz, 1.);\n\n    // Apply positioning and scaling in screen space\n    vec2 shape = a_shape.xy / 256.;                 // values have an 8-bit fraction\n    vec2 offset = vec2(a_offset.x, -a_offset.y);    // flip y to make it point down\n\n    float zoom = clamp(u_map_position.z - u_tile_origin.z, 0., 1.); //fract(u_map_position.z);\n    float theta = a_shape.z / 4096.;\n\n    #ifdef TANGRAM_CURVED_LABEL\n        //TODO: potential bug? null is passed in for non-curved labels, otherwise the first offset will be 0\n        if (a_offsets[0] != 0.){\n            vec4 angles_scaled = (PI / 16384.) * a_angles;\n            vec4 pre_angles_scaled = (PI / 128.) * a_pre_angles;\n            vec4 offsets_scaled = (1. / 64.) * a_offsets;\n\n            float pre_angle = mix4linear(pre_angles_scaled[0], pre_angles_scaled[1], pre_angles_scaled[2], pre_angles_scaled[3], zoom);\n            float angle = mix4linear(angles_scaled[0], angles_scaled[1], angles_scaled[2], angles_scaled[3], zoom);\n            float offset_curve = mix4linear(offsets_scaled[0], offsets_scaled[1], offsets_scaled[2], offsets_scaled[3], zoom);\n\n            shape = rotate2D(shape, pre_angle); // rotate in place\n            shape.x += offset_curve;            // offset for curved label segment\n            shape = rotate2D(shape, angle);     // rotate relative to curved label anchor\n            shape += rotate2D(offset, theta);   // offset if specified in the scene file\n        }\n        else {\n            shape = rotate2D(shape + offset, theta);\n        }\n    #else\n        shape = rotate2D(shape + offset, theta);\n    #endif\n\n    // Fade in (if requested) based on time mesh has been visible.\n    // Value passed to fragment shader in the v_alpha_factor varying\n    #ifdef TANGRAM_FADE_IN_RATE\n        if (u_tile_fade_in) {\n            v_alpha_factor *= clamp(u_visible_time * TANGRAM_FADE_IN_RATE, 0., 1.);\n        }\n    #endif\n\n    // Fade out when tile is zooming out, e.g. acting as proxy tiles\n    // NB: this is mostly done to compensate for text label collision happening at the label's 1x zoom. As labels\n    // in proxy tiles are scaled down, they begin to overlap, and the fade is a simple way to ease the transition.\n    // Value passed to fragment shader in the v_alpha_factor varying\n    #ifdef TANGRAM_FADE_ON_ZOOM_OUT\n        v_alpha_factor *= clamp(1. + TANGRAM_FADE_ON_ZOOM_OUT_RATE * (u_map_position.z - u_tile_origin.z), 0., 1.);\n    #endif\n\n    // World coordinates for 3d procedural textures\n    v_world_position = u_model * position;\n    v_world_position.xy += shape * u_meters_per_pixel;\n    v_world_position = wrapWorldPosition(v_world_position);\n\n    // Modify position before camera projection\n    #pragma tangram: position\n\n    cameraProjection(position);\n\n    #ifdef TANGRAM_LAYER_ORDER\n        // +1 is to keep all layers including proxies > 0\n        applyLayerOrder(a_position.w + u_tile_proxy_depth + 1., position);\n    #endif\n\n    // Apply pixel offset in screen-space\n    // Multiply by 2 is because screen is 2 units wide Normalized Device Coords (and u_resolution device pixels wide)\n    // Device pixel ratio adjustment is because shape is in logical pixels\n    position.xy += shape * position.w * 2. * u_device_pixel_ratio / u_resolution;\n    #ifdef TANGRAM_HAS_SHADER_POINTS\n        if (u_point_type == TANGRAM_POINT_TYPE_SHADER) { // shader point\n            // enlarge by 1px to catch missed MSAA fragments\n            position.xy += sign(shape) * position.w * u_device_pixel_ratio / u_resolution;\n        }\n    #endif\n\n    // Snap to pixel grid\n    // Only applied to fully upright sprites/labels (not shader-drawn points), while panning is not active\n    #ifdef TANGRAM_HAS_SHADER_POINTS\n    if (!u_view_panning && (abs(theta) < TANGRAM_EPSILON) && u_point_type != TANGRAM_POINT_TYPE_SHADER) {\n    #else\n    if (!u_view_panning && (abs(theta) < TANGRAM_EPSILON)) {\n    #endif\n        vec2 position_fract = fract((((position.xy / position.w) + 1.) * .5) * u_resolution);\n        vec2 position_snap = position.xy + ((step(0.5, position_fract) - position_fract) * position.w * 2. / u_resolution);\n\n        // Animate the snapping to smooth the transition and make it less noticeable\n        #ifdef TANGRAM_VIEW_PAN_SNAP_RATE\n            position.xy = mix(position.xy, position_snap, clamp(u_view_pan_snap_timer * TANGRAM_VIEW_PAN_SNAP_RATE, 0., 1.));\n        #else\n            position.xy = position_snap;\n        #endif\n    }\n\n    gl_Position = position;\n}\n";
-var shaderSrc_pointsFragment = "uniform vec2 u_resolution;\nuniform float u_time;\nuniform vec3 u_map_position;\nuniform vec4 u_tile_origin;\nuniform float u_meters_per_pixel;\nuniform float u_device_pixel_ratio;\nuniform float u_visible_time;\n\nuniform mat3 u_normalMatrix;\nuniform mat3 u_inverseNormalMatrix;\n\nuniform sampler2D u_texture;\nuniform float u_point_type;\nuniform bool u_apply_color_blocks;\n\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\nvarying vec4 v_world_position;\nvarying float v_alpha_factor;\n\n#ifdef TANGRAM_HAS_SHADER_POINTS\n    varying vec4 v_outline_color;\n    varying float v_outline_edge;\n    varying float v_aa_offset;\n#endif\n\n#ifdef TANGRAM_SHOW_HIDDEN_LABELS\n    varying float v_label_hidden;\n#endif\n\n#define TANGRAM_NORMAL vec3(0., 0., 1.)\n\n#pragma tangram: camera\n#pragma tangram: material\n#pragma tangram: lighting\n#pragma tangram: raster\n#pragma tangram: global\n\n#ifdef TANGRAM_HAS_SHADER_POINTS\n    //l is the distance from the center to the fragment, R is the radius of the drawn point\n    float _tangram_antialias(float l, float R){\n        float low  = R - v_aa_offset;\n        float high = R + v_aa_offset;\n        return 1. - smoothstep(low, high, l);\n    }\n#endif\n\nvoid main (void) {\n    // Initialize globals\n    #pragma tangram: setup\n\n    vec4 color = v_color;\n\n    #ifdef TANGRAM_HAS_SHADER_POINTS\n        // Only apply shader blocks to point, not to attached text (N.B.: for compatibility with ES)\n        if (u_point_type == TANGRAM_POINT_TYPE_TEXTURE) { // sprite texture\n            color *= texture2D(u_texture, v_texcoord);\n        }\n        else if (u_point_type == TANGRAM_POINT_TYPE_LABEL) { // label texture\n            color = texture2D(u_texture, v_texcoord);\n            color.rgb /= max(color.a, 0.001); // un-multiply canvas texture\n        }\n        else if (u_point_type == TANGRAM_POINT_TYPE_SHADER) { // shader point\n            float outline_edge = v_outline_edge;\n            vec4 outlineColor  = v_outline_color;\n            // Distance to this fragment from the center.\n            float l = length(v_texcoord);\n            // Mask of outermost circle, either outline or point boundary.\n            float outer_alpha  = _tangram_antialias(l, 1.);\n            float fill_alpha   = _tangram_antialias(l, 1.-v_outline_edge*0.5) * color.a;\n            float stroke_alpha = (outer_alpha - _tangram_antialias(l, 1.-v_outline_edge)) * outlineColor.a;\n\n            // Apply alpha compositing with stroke 'over' fill.\n            #ifdef TANGRAM_BLEND_ADD\n                color.a = stroke_alpha + fill_alpha;\n                color.rgb = color.rgb * fill_alpha + outlineColor.rgb * stroke_alpha;\n            #else // TANGRAM_BLEND_OVERLAY (and fallback for not implemented blending modes)\n                color.a = stroke_alpha + fill_alpha * (1. - stroke_alpha);\n                color.rgb = mix(color.rgb * fill_alpha, outlineColor.rgb, stroke_alpha) / max(color.a, 0.001); // avoid divide by zero\n            #endif\n        }\n    #else\n        // If shader points not supported, assume label texture\n        color = texture2D(u_texture, v_texcoord);\n        color.rgb /= max(color.a, 0.001); // un-multiply canvas texture\n    #endif\n\n    // Shader blocks for color/filter are only applied for sprites, shader points, and standalone text,\n    // NOT for text attached to a point (N.B.: for compatibility with ES)\n    if (u_apply_color_blocks) {\n        #pragma tangram: color\n        #pragma tangram: filter\n    }\n\n    color.a *= v_alpha_factor;\n\n    // highlight hidden label in fragment shader for debugging\n    #ifdef TANGRAM_SHOW_HIDDEN_LABELS\n        if (v_label_hidden > 0.) {\n            color.a *= 0.5;\n            color.rgb = vec3(1., 0., 0.);\n        }\n    #endif\n\n    // If blending is off, use alpha discard as a lower-quality substitute\n    #if !defined(TANGRAM_BLEND_OVERLAY) && !defined(TANGRAM_BLEND_INLAY) && !defined(TANGRAM_BLEND_ADD)\n        if (color.a < TANGRAM_ALPHA_TEST) {\n            discard;\n        }\n    #endif\n\n    gl_FragColor = color;\n}\n";
+var shaderSrc_pointsVertex = "uniform vec2 u_resolution;\r\nuniform float u_time;\r\nuniform vec3 u_map_position;\r\nuniform vec4 u_tile_origin;\r\nuniform float u_tile_proxy_depth;\r\nuniform bool u_tile_fade_in;\r\nuniform float u_meters_per_pixel;\r\nuniform float u_device_pixel_ratio;\r\nuniform float u_visible_time;\r\nuniform bool u_view_panning;\r\nuniform float u_view_pan_snap_timer;\r\n\r\nuniform mat4 u_model;\r\nuniform mat4 u_modelView;\r\nuniform mat3 u_normalMatrix;\r\nuniform mat3 u_inverseNormalMatrix;\r\n\r\nattribute vec4 a_position;\r\nattribute vec4 a_shape;\r\nattribute vec4 a_color;\r\nattribute vec2 a_texcoord;\r\nattribute vec2 a_offset;\r\n\r\nuniform float u_point_type;\r\n\r\n#ifdef TANGRAM_CURVED_LABEL\r\n    attribute vec4 a_offsets;\r\n    attribute vec4 a_pre_angles;\r\n    attribute vec4 a_angles;\r\n#endif\r\n\r\nvarying vec4 v_color;\r\nvarying vec2 v_texcoord;\r\nvarying vec4 v_world_position;\r\nvarying float v_alpha_factor;\r\n\r\n#ifdef TANGRAM_HAS_SHADER_POINTS\r\n    attribute float a_outline_edge;\r\n    attribute vec4 a_outline_color;\r\n\r\n    varying float v_outline_edge;\r\n    varying vec4 v_outline_color;\r\n    varying float v_aa_offset;\r\n#endif\r\n\r\n#define PI 3.14159265359\r\n#define TANGRAM_NORMAL vec3(0., 0., 1.)\r\n\r\n#pragma tangram: camera\r\n#pragma tangram: material\r\n#pragma tangram: lighting\r\n#pragma tangram: raster\r\n#pragma tangram: global\r\n\r\nvec2 rotate2D(vec2 _st, float _angle) {\r\n    return mat2(cos(_angle),-sin(_angle),\r\n                sin(_angle),cos(_angle)) * _st;\r\n}\r\n\r\n#ifdef TANGRAM_CURVED_LABEL\r\n    // Assumes stops are [0, 0.33, 0.66, 0.99];\r\n    float mix4linear(float a, float b, float c, float d, float x) {\r\n        return mix(mix(a, b, 3. * x),\r\n                   mix(b,\r\n                       mix(c, d, 3. * (max(x, .66) - .66)),\r\n                       3. * (clamp(x, .33, .66) - .33)),\r\n                   step(0.33, x)\r\n                );\r\n    }\r\n#endif\r\n\r\nvoid main() {\r\n    // Initialize globals\r\n    #pragma tangram: setup\r\n\r\n    v_alpha_factor = 1.0;\r\n    v_color = a_color;\r\n    v_texcoord = a_texcoord; // UV from vertex\r\n\r\n    #ifdef TANGRAM_HAS_SHADER_POINTS\r\n        v_outline_color = a_outline_color;\r\n        v_outline_edge = a_outline_edge;\r\n        if (u_point_type == TANGRAM_POINT_TYPE_SHADER) { // shader point\r\n            v_outline_color = a_outline_color;\r\n            v_outline_edge = a_outline_edge;\r\n            float size = abs(a_shape.x/128.); // radius in pixels\r\n            v_texcoord = sign(a_shape.xy)*(size+1.)/(size);\r\n            size+=2.;\r\n            v_aa_offset=2./size;\r\n        }\r\n    #endif\r\n\r\n    // Position\r\n    vec4 position = u_modelView * vec4(a_position.xyz, 1.);\r\n\r\n    // Apply positioning and scaling in screen space\r\n    vec2 shape = a_shape.xy / 256.;                 // values have an 8-bit fraction\r\n    vec2 offset = vec2(a_offset.x, -a_offset.y);    // flip y to make it point down\r\n\r\n    float zoom = clamp(u_map_position.z - u_tile_origin.z, 0., 1.); //fract(u_map_position.z);\r\n    float theta = a_shape.z / 4096.;\r\n\r\n    #ifdef TANGRAM_CURVED_LABEL\r\n        //TODO: potential bug? null is passed in for non-curved labels, otherwise the first offset will be 0\r\n        if (a_offsets[0] != 0.){\r\n            #ifdef TANGRAM_FADE_ON_ZOOM_IN\r\n                v_alpha_factor *= clamp(1. + TANGRAM_FADE_ON_ZOOM_IN_RATE - TANGRAM_FADE_ON_ZOOM_IN_RATE * (u_map_position.z - u_tile_origin.z), 0., 1.);\r\n            #endif\r\n\r\n            vec4 angles_scaled = (PI / 16384.) * a_angles;\r\n            vec4 pre_angles_scaled = (PI / 128.) * a_pre_angles;\r\n            vec4 offsets_scaled = (1. / 64.) * a_offsets;\r\n\r\n            float pre_angle = mix4linear(pre_angles_scaled[0], pre_angles_scaled[1], pre_angles_scaled[2], pre_angles_scaled[3], zoom);\r\n            float angle = mix4linear(angles_scaled[0], angles_scaled[1], angles_scaled[2], angles_scaled[3], zoom);\r\n            float offset_curve = mix4linear(offsets_scaled[0], offsets_scaled[1], offsets_scaled[2], offsets_scaled[3], zoom);\r\n\r\n            shape = rotate2D(shape, pre_angle); // rotate in place\r\n            shape.x += offset_curve;            // offset for curved label segment\r\n            shape = rotate2D(shape, angle);     // rotate relative to curved label anchor\r\n            shape += rotate2D(offset, theta);   // offset if specified in the scene file\r\n        }\r\n        else {\r\n            shape = rotate2D(shape + offset, theta);\r\n        }\r\n    #else\r\n        shape = rotate2D(shape + offset, theta);\r\n    #endif\r\n\r\n    // Fade in (if requested) based on time mesh has been visible.\r\n    // Value passed to fragment shader in the v_alpha_factor varying\r\n    #ifdef TANGRAM_FADE_IN_RATE\r\n        if (u_tile_fade_in) {\r\n            v_alpha_factor *= clamp(u_visible_time * TANGRAM_FADE_IN_RATE, 0., 1.);\r\n        }\r\n    #endif\r\n\r\n    // Fade out when tile is zooming out, e.g. acting as proxy tiles\r\n    // NB: this is mostly done to compensate for text label collision happening at the label's 1x zoom. As labels\r\n    // in proxy tiles are scaled down, they begin to overlap, and the fade is a simple way to ease the transition.\r\n    // Value passed to fragment shader in the v_alpha_factor varying\r\n    #ifdef TANGRAM_FADE_ON_ZOOM_OUT\r\n        v_alpha_factor *= clamp(1. + TANGRAM_FADE_ON_ZOOM_OUT_RATE * (u_map_position.z - u_tile_origin.z), 0., 1.);\r\n    #endif\r\n\r\n    // World coordinates for 3d procedural textures\r\n    v_world_position = u_model * position;\r\n    v_world_position.xy += shape * u_meters_per_pixel;\r\n    v_world_position = wrapWorldPosition(v_world_position);\r\n\r\n    // Modify position before camera projection\r\n    #pragma tangram: position\r\n\r\n    cameraProjection(position);\r\n\r\n    #ifdef TANGRAM_LAYER_ORDER\r\n        // +1 is to keep all layers including proxies > 0\r\n        applyLayerOrder(a_position.w + u_tile_proxy_depth + 1., position);\r\n    #endif\r\n\r\n    // Apply pixel offset in screen-space\r\n    // Multiply by 2 is because screen is 2 units wide Normalized Device Coords (and u_resolution device pixels wide)\r\n    // Device pixel ratio adjustment is because shape is in logical pixels\r\n    position.xy += shape * position.w * 2. * u_device_pixel_ratio / u_resolution;\r\n    #ifdef TANGRAM_HAS_SHADER_POINTS\r\n        if (u_point_type == TANGRAM_POINT_TYPE_SHADER) { // shader point\r\n            // enlarge by 1px to catch missed MSAA fragments\r\n            position.xy += sign(shape) * position.w * u_device_pixel_ratio / u_resolution;\r\n        }\r\n    #endif\r\n\r\n    // Snap to pixel grid\r\n    // Only applied to fully upright sprites/labels (not shader-drawn points), while panning is not active\r\n    #ifdef TANGRAM_HAS_SHADER_POINTS\r\n    if (!u_view_panning && (abs(theta) < TANGRAM_EPSILON) && u_point_type != TANGRAM_POINT_TYPE_SHADER) {\r\n    #else\r\n    if (!u_view_panning && (abs(theta) < TANGRAM_EPSILON)) {\r\n    #endif\r\n        vec2 position_fract = fract((((position.xy / position.w) + 1.) * .5) * u_resolution);\r\n        vec2 position_snap = position.xy + ((step(0.5, position_fract) - position_fract) * position.w * 2. / u_resolution);\r\n\r\n        // Animate the snapping to smooth the transition and make it less noticeable\r\n        #ifdef TANGRAM_VIEW_PAN_SNAP_RATE\r\n            position.xy = mix(position.xy, position_snap, clamp(u_view_pan_snap_timer * TANGRAM_VIEW_PAN_SNAP_RATE, 0., 1.));\r\n        #else\r\n            position.xy = position_snap;\r\n        #endif\r\n    }\r\n\r\n    gl_Position = position;\r\n}\r\n";
+var shaderSrc_pointsFragment = "uniform vec2 u_resolution;\r\nuniform float u_time;\r\nuniform vec3 u_map_position;\r\nuniform vec4 u_tile_origin;\r\nuniform float u_meters_per_pixel;\r\nuniform float u_device_pixel_ratio;\r\nuniform float u_visible_time;\r\n\r\nuniform mat3 u_normalMatrix;\r\nuniform mat3 u_inverseNormalMatrix;\r\n\r\nuniform sampler2D u_texture;\r\nuniform float u_point_type;\r\nuniform bool u_apply_color_blocks;\r\n\r\nvarying vec4 v_color;\r\nvarying vec2 v_texcoord;\r\nvarying vec4 v_world_position;\r\nvarying float v_alpha_factor;\r\n\r\n#ifdef TANGRAM_HAS_SHADER_POINTS\r\n    varying vec4 v_outline_color;\r\n    varying float v_outline_edge;\r\n    varying float v_aa_offset;\r\n#endif\r\n\r\n#define TANGRAM_NORMAL vec3(0., 0., 1.)\r\n\r\n#pragma tangram: camera\r\n#pragma tangram: material\r\n#pragma tangram: lighting\r\n#pragma tangram: raster\r\n#pragma tangram: global\r\n\r\n#ifdef TANGRAM_HAS_SHADER_POINTS\r\n    //l is the distance from the center to the fragment, R is the radius of the drawn point\r\n    float _tangram_antialias(float l, float R){\r\n        float low  = R - v_aa_offset;\r\n        float high = R + v_aa_offset;\r\n        return 1. - smoothstep(low, high, l);\r\n    }\r\n#endif\r\n\r\nvoid main (void) {\r\n    // Initialize globals\r\n    #pragma tangram: setup\r\n\r\n    vec4 color = v_color;\r\n\r\n    #ifdef TANGRAM_HAS_SHADER_POINTS\r\n        // Only apply shader blocks to point, not to attached text (N.B.: for compatibility with ES)\r\n        if (u_point_type == TANGRAM_POINT_TYPE_TEXTURE) { // sprite texture\r\n            color *= texture2D(u_texture, v_texcoord);\r\n        }\r\n        else if (u_point_type == TANGRAM_POINT_TYPE_LABEL) { // label texture\r\n            color = texture2D(u_texture, v_texcoord);\r\n            color.rgb /= max(color.a, 0.001); // un-multiply canvas texture\r\n        }\r\n        else if (u_point_type == TANGRAM_POINT_TYPE_SHADER) { // shader point\r\n            float outline_edge = v_outline_edge;\r\n            vec4 outlineColor  = v_outline_color;\r\n            // Distance to this fragment from the center.\r\n            float l = length(v_texcoord);\r\n            // Mask of outermost circle, either outline or point boundary.\r\n            float outer_alpha  = _tangram_antialias(l, 1.);\r\n            float fill_alpha   = _tangram_antialias(l, 1.-v_outline_edge*0.5) * color.a;\r\n            float stroke_alpha = (outer_alpha - _tangram_antialias(l, 1.-v_outline_edge)) * outlineColor.a;\r\n\r\n            // Apply alpha compositing with stroke 'over' fill.\r\n            #ifdef TANGRAM_BLEND_ADD\r\n                color.a = stroke_alpha + fill_alpha;\r\n                color.rgb = color.rgb * fill_alpha + outlineColor.rgb * stroke_alpha;\r\n            #else // TANGRAM_BLEND_OVERLAY (and fallback for not implemented blending modes)\r\n                color.a = stroke_alpha + fill_alpha * (1. - stroke_alpha);\r\n                color.rgb = mix(color.rgb * fill_alpha, outlineColor.rgb, stroke_alpha) / max(color.a, 0.001); // avoid divide by zero\r\n            #endif\r\n        }\r\n    #else\r\n        // If shader points not supported, assume label texture\r\n        color = texture2D(u_texture, v_texcoord);\r\n        color.rgb /= max(color.a, 0.001); // un-multiply canvas texture\r\n    #endif\r\n\r\n    // Shader blocks for color/filter are only applied for sprites, shader points, and standalone text,\r\n    // NOT for text attached to a point (N.B.: for compatibility with ES)\r\n    if (u_apply_color_blocks) {\r\n        #pragma tangram: color\r\n        #pragma tangram: filter\r\n    }\r\n\r\n    color.a *= v_alpha_factor;\r\n\r\n    // If blending is off, use alpha discard as a lower-quality substitute\r\n    #if !defined(TANGRAM_BLEND_OVERLAY) && !defined(TANGRAM_BLEND_INLAY) && !defined(TANGRAM_BLEND_ADD)\r\n        if (color.a < TANGRAM_ALPHA_TEST) {\r\n            discard;\r\n        }\r\n    #endif\r\n\r\n    gl_FragColor = color;\r\n}\r\n";
 
 var PLACEMENT = _label_point2.default.PLACEMENT;
 
@@ -37637,9 +38692,6 @@ Points.variants = {}; // mesh variants by variant key
 var TANGRAM_POINT_TYPE_TEXTURE = 1; // style texture/sprites (assigned by user)
 var TANGRAM_POINT_TYPE_LABEL = 2; // labels (generated by rendering labels to canvas)
 var TANGRAM_POINT_TYPE_SHADER = 3; // point (drawn in shader)
-
-// default point size in pixels
-var DEFAULT_POINT_SIZE = 16;
 
 // Mixin text label methods
 Object.assign(Points, _text_labels.TextLabels);
@@ -37717,11 +38769,6 @@ Object.assign(Points, {
         if (_debug_settings2.default.suppress_label_snap_animation !== true) {
             this.defines.TANGRAM_VIEW_PAN_SNAP_RATE = 1 / _view.VIEW_PAN_SNAP_TIME; // inverse time in seconds
         }
-
-        // Show hidden labels for debugging
-        if (_debug_settings2.default.show_hidden_labels === true) {
-            this.defines.TANGRAM_SHOW_HIDDEN_LABELS = true;
-        }
     },
     reset: function reset() {
         this.queues = {};
@@ -37762,20 +38809,21 @@ Object.assign(Points, {
         // point size defined explicitly, or defaults to sprite size, or generic fallback
         style.size = draw.size;
         if (!style.size) {
-            style.size = sprite_info && sprite_info.css_size || [DEFAULT_POINT_SIZE, DEFAULT_POINT_SIZE];
+            if (sprite_info) {
+                style.size = sprite_info.css_size;
+            } else {
+                style.size = [16, 16];
+            }
         } else {
-            style.size = _style_parser2.default.evalCachedPointSizeProperty(draw.size, sprite_info, context);
-            if (style.size == null) {
-                (0, _log2.default)({ level: 'warn', once: true }, 'Layer \'' + draw.layers[draw.layers.length - 1] + '\': ' + ('\'size\' includes % and/or ratio-based scaling (' + JSON.stringify(draw.size.value) + '); ') + 'these can only applied to sprites, but no sprite was specified, skipping features in layer');
-                return;
-            } else if (typeof style.size === 'number') {
+            style.size = _style_parser.StyleParser.evalCachedProperty(style.size, context);
+            if (typeof style.size === 'number') {
                 style.size = [style.size, style.size]; // convert 1d size to 2d
             }
         }
 
         // incorporate outline into size
         if (draw.outline) {
-            style.outline_width = _style_parser2.default.evalCachedProperty(draw.outline.width, context) || _style_parser2.default.defaults.outline.width;
+            style.outline_width = _style_parser.StyleParser.evalCachedProperty(draw.outline.width, context) || _style_parser.StyleParser.defaults.outline.width;
             style.outline_color = this.parseColor(draw.outline.color, context);
         }
 
@@ -37788,23 +38836,22 @@ Object.assign(Points, {
         }
 
         // size will be scaled to 16-bit signed int, so max allowed width + height of 256 pixels
-        style.size[0] = Math.min(style.size[0], 256);
-        style.size[1] = Math.min(style.size[1], 256);
+        style.size = [Math.min(style.size[0], 256), Math.min(style.size[1], 256)];
 
         // Placement strategy
         style.placement = draw.placement;
-        style.placement_min_length_ratio = _style_parser2.default.evalCachedProperty(draw.placement_min_length_ratio, context);
+        style.placement_min_length_ratio = _style_parser.StyleParser.evalCachedProperty(draw.placement_min_length_ratio, context);
 
         // Spacing parameter (in pixels) to equally space points along a line
         if (style.placement === PLACEMENT.SPACED && draw.placement_spacing) {
-            style.placement_spacing = _style_parser2.default.evalCachedProperty(draw.placement_spacing, context);
+            style.placement_spacing = _style_parser.StyleParser.evalCachedProperty(draw.placement_spacing, context);
         }
 
         // Angle parameter (can be a number or the string "auto")
-        style.angle = _style_parser2.default.evalProperty(draw.angle, context) || 0;
+        style.angle = _style_parser.StyleParser.evalProperty(draw.angle, context) || 0;
 
         // points can be placed off the ground
-        style.z = draw.z && _style_parser2.default.evalCachedDistanceProperty(draw.z, context) || _style_parser2.default.defaults.z;
+        style.z = draw.z && _style_parser.StyleParser.evalCachedDistanceProperty(draw.z, context) || _style_parser.StyleParser.defaults.z;
 
         style.tile_edges = draw.tile_edges; // usually activated for debugging, or rare visualization needs
 
@@ -37816,7 +38863,7 @@ Object.assign(Points, {
 
         if (Array.isArray(tf)) {
             tf = null; // NB: boundary labels not supported for point label attachments, should log warning
-            (0, _log2.default)({ level: 'warn', once: true }, 'Layer \'' + draw.layers[draw.layers.length - 1] + '\': ' + 'cannot use boundary labels (e.g. \'text_source: { left: ..., right: ... }\') for \'text\' labels attached to \'points\'; ' + ('provided \'text_source\' value was ' + JSON.stringify(draw.text.text_source)));
+            (0, _log2.default)({ level: 'warn', once: true }, 'Layer \'' + draw.layers[draw.layers.length - 1] + '\': ' + 'cannot use boundary labels (e.g. \'text_source: { left: ..., right: ... }\') for \'text\' labels attached to \'points\'; ' + ('provided \'text_source\' value was \'' + JSON.stringify(draw.text.text_source) + '\''));
         }
 
         if (tf) {
@@ -37851,13 +38898,11 @@ Object.assign(Points, {
                 (0, _log2.default)('debug', 'Style: in style \'' + this.name + '\', could not find sprite \'' + sprite + '\' for texture \'' + style.texture + '\'');
                 this.texture_missing_sprites[style.texture][sprite] = true;
             }
-        } else if (info) {
-            info.sprite = sprite;
         }
         return info;
     },
     parseSprite: function parseSprite(style, draw, context) {
-        var sprite = _style_parser2.default.evalProperty(draw.sprite, context);
+        var sprite = _style_parser.StyleParser.evalProperty(draw.sprite, context);
         var sprite_info = this.getSpriteInfo(style, sprite) || this.getSpriteInfo(style, draw.sprite_default);
         return sprite_info;
     },
@@ -37935,7 +38980,6 @@ Object.assign(Points, {
             point_objs.forEach(function (q) {
                 _this.feature_style = q.style;
                 _this.feature_style.label = q.label;
-                _this.feature_style.linked = q.linked; // TODO: move linked into label to avoid extra prop tracking?
                 _style.Style.addFeature.call(_this, q.feature, q.draw, q.context);
             });
         }),
@@ -37957,7 +39001,6 @@ Object.assign(Points, {
                     // setup styling object expected by Style class
                     var style = _this.feature_style;
                     style.label = q.label;
-                    style.linked = q.linked; // TODO: move linked into label to avoid extra prop tracking?
                     style.size = text_info.size.logical_size;
                     style.angle = 0; // text attached to point is always upright
                     style.texcoords = text_info.align[q.label.align].texcoords;
@@ -37982,39 +39025,41 @@ Object.assign(Points, {
         });
     },
     _preprocess: function _preprocess(draw) {
-        draw.color = _style_parser2.default.createColorPropertyCache(draw.color);
+        draw.color = _style_parser.StyleParser.createColorPropertyCache(draw.color);
         draw.texture = draw.texture !== undefined ? draw.texture : this.texture; // optional or default texture
 
         if (draw.outline) {
-            draw.outline.color = _style_parser2.default.createColorPropertyCache(draw.outline.color);
-            draw.outline.width = _style_parser2.default.createPropertyCache(draw.outline.width, _style_parser2.default.parsePositiveNumber);
+            draw.outline.color = _style_parser.StyleParser.createColorPropertyCache(draw.outline.color);
+            draw.outline.width = _style_parser.StyleParser.createPropertyCache(draw.outline.width, function (v) {
+                return Array.isArray(v) ? v.map(parseFloat) : parseFloat(v);
+            });
         }
 
-        draw.z = _style_parser2.default.createPropertyCache(draw.z, _style_parser2.default.parseUnits);
+        draw.z = _style_parser.StyleParser.createPropertyCache(draw.z, _style_parser.StyleParser.parseUnits);
 
         // Size (1d value or 2d array)
-        try {
-            draw.size = _style_parser2.default.createPointSizePropertyCache(draw.size);
-        } catch (e) {
-            (0, _log2.default)({ level: 'warn', once: true }, 'Layer \'' + draw.layers[draw.layers.length - 1] + '\': ' + (e + ' (' + JSON.stringify(draw.size) + '), skipping features in layer'));
-            return null;
-        }
+        draw.size = _style_parser.StyleParser.createPropertyCache(draw.size, function (v) {
+            return Array.isArray(v) ? v.map(parseFloat) : parseFloat(v);
+        });
 
         // Offset (2d array)
-        draw.offset = _style_parser2.default.createPropertyCache(draw.offset, function (v) {
-            return Array.isArray(v) && v.map(_style_parser2.default.parseNumber);
+        draw.offset = _style_parser.StyleParser.createPropertyCache(draw.offset, function (v) {
+            return Array.isArray(v) && v.map(parseFloat).map(function (v) {
+                return isNaN(v) ? 0 : v;
+            }) || [0, 0];
         });
 
         // Buffer (1d value or or 2d array) - must be >= 0
-        draw.buffer = _style_parser2.default.createPropertyCache(draw.buffer, function (v) {
-            return (Array.isArray(v) ? v : [v, v]).map(_style_parser2.default.parsePositiveNumber);
+        draw.buffer = _style_parser.StyleParser.createPropertyCache(draw.buffer, function (v) {
+            return (Array.isArray(v) ? v : [v, v]).map(function (v) {
+                return Math.max(parseFloat(v), 0);
+            }).map(function (v) {
+                return isNaN(v) ? 0 : v;
+            }) || [0, 0];
         });
 
         // Repeat rules - no repeat limitation for points by default
-        draw.repeat_distance = _style_parser2.default.createPropertyCache(draw.repeat_distance, _style_parser2.default.parseNumber);
-        if (draw.repeat_group == null) {
-            draw.repeat_group = draw.layers.join('-');
-        }
+        draw.repeat_distance = _style_parser.StyleParser.createPropertyCache(draw.repeat_distance, parseFloat);
 
         // Placement strategies
         draw.placement = PLACEMENT[draw.placement && draw.placement.toUpperCase()];
@@ -38023,10 +39068,10 @@ Object.assign(Points, {
         }
 
         draw.placement_spacing = draw.placement_spacing != null ? draw.placement_spacing : 80; // default spacing
-        draw.placement_spacing = _style_parser2.default.createPropertyCache(draw.placement_spacing, _style_parser2.default.parsePositiveNumber);
+        draw.placement_spacing = _style_parser.StyleParser.createPropertyCache(draw.placement_spacing, parseFloat);
 
         draw.placement_min_length_ratio = draw.placement_min_length_ratio != null ? draw.placement_min_length_ratio : 1;
-        draw.placement_min_length_ratio = _style_parser2.default.createPropertyCache(draw.placement_min_length_ratio, _style_parser2.default.parsePositiveNumber);
+        draw.placement_min_length_ratio = _style_parser.StyleParser.createPropertyCache(draw.placement_min_length_ratio, parseFloat);
 
         if (typeof draw.angle === 'number') {
             draw.angle = draw.angle * Math.PI / 180;
@@ -38057,11 +39102,29 @@ Object.assign(Points, {
     // Compute label layout-related properties
     computeLayout: function computeLayout(target, feature, draw, context, tile) {
         var layout = target || {};
+        if (typeof draw.angle === 'string') {
+            layout.angle = feature.properties[draw.angle] * Math.PI / 180.0;
+        } else if (draw.angle instanceof Function) {
+            layout.angle = draw.angle(context) * Math.PI / 180.0;
+        } else {
+            layout.angle = draw.angle * Math.PI / 180.0;
+        }
+        if (draw.spacing instanceof Function) {
+            draw.spacing = draw.spacing(context);
+        } else {
+            layout.spacing = draw.spacing;
+        }
         layout.id = feature;
         layout.units_per_pixel = tile.units_per_pixel || 1;
 
         // collision flag
         layout.collide = draw.collide === false ? false : true;
+
+        // tile boundary handling
+        layout.cull_from_tile = draw.cull_from_tile != null ? draw.cull_from_tile : false;
+
+        // points should not move into tile if over tile boundary
+        layout.move_into_tile = false;
 
         // label anchors (point labels only)
         // label position will be adjusted in the given direction, relative to its original point
@@ -38069,19 +39132,20 @@ Object.assign(Points, {
         layout.anchor = draw.anchor;
 
         // label offset and buffer in pixel (applied in screen space)
-        layout.offset = _style_parser2.default.evalCachedProperty(draw.offset, context) || _style_parser2.default.zeroPair;
-        layout.buffer = _style_parser2.default.evalCachedProperty(draw.buffer, context) || _style_parser2.default.zeroPair;
+        layout.offset = _style_parser.StyleParser.evalCachedProperty(draw.offset, context) || _style_parser.StyleParser.zeroPair;
+        layout.buffer = _style_parser.StyleParser.evalCachedProperty(draw.buffer, context) || _style_parser.StyleParser.zeroPair;
 
         // repeat rules
-        layout.repeat_distance = _style_parser2.default.evalCachedProperty(draw.repeat_distance, context);
+        layout.repeat_distance = _style_parser.StyleParser.evalCachedProperty(draw.repeat_distance, context);
         if (layout.repeat_distance) {
             layout.repeat_distance *= layout.units_per_pixel;
-            layout.repeat_scale = 1; // initial repeat pass in tile with full scale
 
             if (typeof draw.repeat_group === 'function') {
-                layout.repeat_group = draw.repeat_group(context); // dynamic repeat group
+                layout.repeat_group = draw.repeat_group(context);
+            } else if (typeof draw.repeat_group === 'string') {
+                layout.repeat_group = draw.repeat_group;
             } else {
-                layout.repeat_group = draw.repeat_group; // pre-computer repeat group
+                layout.repeat_group = draw.key; // default to unique set of matching layers
             }
         }
 
@@ -38184,7 +39248,7 @@ Object.assign(Points, {
      * A plain JS array matching the order of the vertex layout.
      */
     makeVertexTemplate: function makeVertexTemplate(style, mesh) {
-        var color = style.color || _style_parser2.default.defaults.color;
+        var color = style.color || _style_parser.StyleParser.defaults.color;
         var vertex_layout = mesh.vertex_data.vertex_layout;
 
         // position - x & y coords will be filled in per-vertex below
@@ -38193,9 +39257,8 @@ Object.assign(Points, {
         // layer order - w coord of 'position' attribute (for packing efficiency)
         this.fillVertexTemplate(vertex_layout, 'a_position', this.scaleOrder(style.order), { size: 1, offset: 3 });
 
-        // scaling vector - (x, y) components per pixel, z = angle, w = show/hide
-        this.fillVertexTemplate(vertex_layout, 'a_shape', 0, { size: 4 });
-        this.fillVertexTemplate(vertex_layout, 'a_shape', style.label.layout.collide ? 0 : 1, { size: 1, offset: 3 }); // set initial label hide/show state
+        // scaling vector - (x, y) components per pixel, z = angle
+        this.fillVertexTemplate(vertex_layout, 'a_shape', 0, { size: 3 }); // NB: w coord is currently unused, change size: 4 if needed
 
         // texture coords
         this.fillVertexTemplate(vertex_layout, 'a_texcoord', 0, { size: 2 });
@@ -38208,9 +39271,9 @@ Object.assign(Points, {
 
         // outline (can be static or dynamic depending on style)
         if (this.defines.TANGRAM_HAS_SHADER_POINTS && mesh.variant.shader_point) {
-            var outline_color = style.outline_color || _style_parser2.default.defaults.outline.color;
+            var outline_color = style.outline_color || _style_parser.StyleParser.defaults.outline.color;
             this.fillVertexTemplate(vertex_layout, 'a_outline_color', _vector2.default.mult(outline_color, 255), { size: 4 });
-            this.fillVertexTemplate(vertex_layout, 'a_outline_edge', style.outline_edge_pct || _style_parser2.default.defaults.outline.width, { size: 1 });
+            this.fillVertexTemplate(vertex_layout, 'a_outline_edge', style.outline_edge_pct || _style_parser.StyleParser.defaults.outline.width, { size: 1 });
         }
 
         // selection color
@@ -38221,10 +39284,6 @@ Object.assign(Points, {
         return this.vertex_template;
     },
     buildQuad: function buildQuad(points, size, angle, angles, pre_angles, offset, offsets, texcoord_scale, curve, vertex_data, vertex_template) {
-        if (size[0] <= 0 || size[1] <= 0) {
-            return 0; // size must be positive
-        }
-
         return (0, _points.buildQuadsForPoints)(points, vertex_data, vertex_template, {
             texcoord_index: vertex_data.vertex_layout.index.a_texcoord,
             position_index: vertex_data.vertex_layout.index.a_position,
@@ -38255,18 +39314,18 @@ Object.assign(Points, {
     build: function build(style, mesh, context) {
         var label = style.label;
         if (label.type === 'curved') {
-            return this.buildCurvedLabel(label, style, mesh, context);
+            return this.buildArticulatedLabel(label, style, mesh, context);
         } else {
-            return this.buildStraightLabel(label, style, mesh, context);
+            return this.buildLabel(label, style, mesh, context);
         }
     },
-    buildStraightLabel: function buildStraightLabel(label, style, mesh, context) {
+    buildLabel: function buildLabel(label, style, mesh, context) {
         var vertex_template = this.makeVertexTemplate(style, mesh);
         var angle = label.angle || style.angle;
 
         var size = void 0,
             texcoords = void 0;
-        if (label.type !== 'point') {
+        if (label.type) {
             size = style.size[label.type];
             texcoords = style.texcoords[label.type].texcoord;
         } else {
@@ -38294,7 +39353,7 @@ Object.assign(Points, {
 
         // TODO: instead of passing null, pass arrays with fingerprintable values
         // This value is checked in the shader to determine whether to apply curving logic
-        var geom_count = this.buildQuad([label.position], // position
+        return this.buildQuad([label.position], // position
         size, // size in pixels
         angle, // angle in radians
         null, // placeholder for multiple angles
@@ -38305,12 +39364,8 @@ Object.assign(Points, {
         false, // if curved boolean
         mesh.vertex_data, vertex_template // VBO and data for current vertex
         );
-
-        // track label mesh buffer data
-        var linked = style.linked && style.linked.label.id;
-        this.trackLabel(label, linked, mesh, geom_count, context);
     },
-    buildCurvedLabel: function buildCurvedLabel(label, style, mesh, context) {
+    buildArticulatedLabel: function buildArticulatedLabel(label, style, mesh, context) {
         var vertex_template = this.makeVertexTemplate(style, mesh);
         var angle = label.angle;
         var geom_count = 0;
@@ -38340,7 +39395,7 @@ Object.assign(Points, {
             var offsets = label.offsets[i];
             var pre_angles = label.pre_angles[i];
 
-            var seg_count = this.buildQuad([position], // position
+            geom_count += this.buildQuad([position], // position
             size, // size in pixels
             angle, // angle in degrees
             angles, // angles per segment
@@ -38351,11 +39406,6 @@ Object.assign(Points, {
             true, // if curved
             mesh_data.vertex_data, vertex_template // VBO and data for current vertex
             );
-            geom_count += seg_count;
-
-            // track label mesh buffer data
-            var linked = style.linked && style.linked.label.id;
-            this.trackLabel(label, linked, mesh, seg_count, context);
         }
 
         // pass for fill
@@ -38380,7 +39430,7 @@ Object.assign(Points, {
             var _offsets = label.offsets[_i5];
             var _pre_angles = label.pre_angles[_i5];
 
-            var _seg_count = this.buildQuad([_position], // position
+            geom_count += this.buildQuad([_position], // position
             _size, // size in pixels
             angle, // angle in degrees
             _angles, // angles per segment
@@ -38391,39 +39441,9 @@ Object.assign(Points, {
             true, // if curved
             _mesh_data.vertex_data, vertex_template // VBO and data for current vertex
             );
-            geom_count += _seg_count;
-
-            // track label mesh buffer data
-            var _linked = style.linked && style.linked.label.id;
-            this.trackLabel(label, _linked, mesh, _seg_count, context);
         }
 
         return geom_count;
-    },
-
-
-    // track mesh data for label (byte ranges occupied by label in VBO)
-    trackLabel: function trackLabel(label, linked, mesh, geom_count, context) {
-        if (label.layout.collide) {
-            mesh.labels = mesh.labels || {};
-            mesh.labels[label.id] = mesh.labels[label.id] || {
-                container: {
-                    label: label.toJSON(),
-                    linked: linked
-                },
-                ranges: []
-                // debug: { // uncomment and pass in context for debugging
-                //     id: context.feature.properties.id,
-                //     name: context.feature.properties.name,
-                //     props: JSON.stringify(context.feature.properties),
-                //     point_type: mesh.uniforms.u_point_type
-                // }
-            };
-
-            var vertex_count = geom_count * 2; // geom count is triangles: 2 triangles = 1 quad = 4 vertices
-            var start = mesh.vertex_data.offset - mesh.vertex_data.stride * vertex_count; // start offset of byte range
-            mesh.labels[label.id].ranges.push([start, vertex_count]);
-        }
     },
 
 
@@ -38469,7 +39489,7 @@ Object.assign(Points, {
     }
 });
 
-},{"../../builders/points":196,"../../geo":200,"../../gl/constants":201,"../../gl/texture":207,"../../gl/vertex_layout":212,"../../labels/collision":213,"../../labels/label_point":217,"../../labels/point_placement":220,"../../utils/debug_settings":255,"../../utils/log":259,"../../vector":272,"../../view":273,"../style":243,"../style_parser":245,"../text/text_labels":249}],241:[function(_dereq_,module,exports){
+},{"../../builders/points":205,"../../geo":209,"../../gl/constants":210,"../../gl/texture":216,"../../gl/vertex_layout":221,"../../labels/collision":222,"../../labels/label_point":226,"../../labels/point_placement":228,"../../utils/debug_settings":263,"../../utils/log":267,"../../vector":280,"../../view":281,"../style":251,"../style_parser":253,"../text/text_labels":257}],249:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38480,8 +39500,6 @@ exports.Polygons = exports.shaderSrc_polygonsFragment = exports.shaderSrc_polygo
 var _style = _dereq_('../style');
 
 var _style_parser = _dereq_('../style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 var _constants = _dereq_('../../gl/constants');
 
@@ -38502,8 +39520,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // Polygon rendering style
 
  // web workers don't have access to GL context, so import all GL constants
-var shaderSrc_polygonsVertex = exports.shaderSrc_polygonsVertex = "uniform vec2 u_resolution;\nuniform float u_time;\nuniform vec3 u_map_position;\nuniform vec4 u_tile_origin;\nuniform float u_tile_proxy_depth;\nuniform float u_meters_per_pixel;\nuniform float u_device_pixel_ratio;\n\nuniform mat4 u_model;\nuniform mat4 u_modelView;\nuniform mat3 u_normalMatrix;\nuniform mat3 u_inverseNormalMatrix;\n\nattribute vec4 a_position;\nattribute vec4 a_color;\n\n// Optional normal attribute, otherwise default to up\n#ifdef TANGRAM_NORMAL_ATTRIBUTE\n    attribute vec3 a_normal;\n    #define TANGRAM_NORMAL a_normal\n#else\n    #define TANGRAM_NORMAL vec3(0., 0., 1.)\n#endif\n\n// Optional dynamic line extrusion\n#ifdef TANGRAM_EXTRUDE_LINES\n    // xy: extrusion direction in xy plane\n    // z:  half-width of line (amount to extrude)\n    // w:  scaling factor for interpolating width between zooms\n    attribute vec2 a_extrude;\n    // xy: direction of line, for getting perpendicular offset\n    attribute vec2 a_offset;\n    // x: zoom scaling factor for line width\n    // y: zoom scaling factor for line offset\n    attribute vec2 a_scaling;\n\n    uniform float u_v_scale_adjust;\n#endif\n\nvarying vec4 v_position;\nvarying vec3 v_normal;\nvarying vec4 v_color;\nvarying vec4 v_world_position;\n\n// Optional texture UVs\n#if defined(TANGRAM_TEXTURE_COORDS) || defined(TANGRAM_EXTRUDE_LINES)\n    attribute vec2 a_texcoord;\n    varying vec2 v_texcoord;\n#endif\n\n// Optional model position varying for tile coordinate zoom\n#ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n    varying vec4 v_modelpos_base_zoom;\n#endif\n\n#if defined(TANGRAM_LIGHTING_VERTEX)\n    varying vec4 v_lighting;\n#endif\n\n#define UNPACK_SCALING(x) (x / 1024.)\n\n#pragma tangram: camera\n#pragma tangram: material\n#pragma tangram: lighting\n#pragma tangram: raster\n#pragma tangram: global\n\nvoid main() {\n    // Initialize globals\n    #pragma tangram: setup\n\n    // Texture UVs\n    #ifdef TANGRAM_TEXTURE_COORDS\n        v_texcoord = a_texcoord;\n        #ifdef TANGRAM_EXTRUDE_LINES\n            v_texcoord.y *= u_v_scale_adjust;\n        #endif\n    #endif\n\n    // Pass model position to fragment shader\n    #ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n        v_modelpos_base_zoom = modelPositionBaseZoom();\n    #endif\n\n    // Position\n    vec4 position = vec4(a_position.xy, a_position.z / TANGRAM_HEIGHT_SCALE, 1.); // convert height back to meters\n\n    #ifdef TANGRAM_EXTRUDE_LINES\n        vec2 extrude = a_extrude.xy;\n        vec2 offset = a_offset.xy;\n\n        // Adjust line width based on zoom level, to prevent proxied lines\n        // from being either too small or too big.\n        // \"Flattens\" the zoom between 1-2 to peg it to 1 (keeps lines from\n        // prematurely shrinking), then interpolate and clamp to 4 (keeps lines\n        // from becoming too small when far away).\n        float dz = clamp(u_map_position.z - u_tile_origin.z, 0., 4.);\n        dz += step(1., dz) * (1. - dz) + mix(0., 2., clamp((dz - 2.) / 2., 0., 1.));\n\n        // Interpolate line width between zooms\n        float mdz = (dz - 0.5) * 2.; // zoom from mid-point\n        extrude -= extrude * UNPACK_SCALING(a_scaling.x) * mdz;\n\n        // Interpolate line offset between zooms\n        // Scales from the larger value to the smaller one\n        float dwdz = UNPACK_SCALING(a_scaling.y);\n        float sdwdz = sign(step(0., dwdz) - 0.5); // sign indicates \"direction\" of scaling\n        offset -= offset * abs(dwdz) * ((1.-step(0., sdwdz)) - (dz * -sdwdz)); // scale \"up\" or \"down\"\n\n        // Scale line width and offset to be consistent in screen space\n        float ssz = exp2(-dz - (u_tile_origin.z - u_tile_origin.w));\n        extrude *= ssz;\n        offset *= ssz;\n\n        // Modify line width before extrusion\n        #ifdef TANGRAM_BLOCK_WIDTH\n            float width = 1.;\n            #pragma tangram: width\n            extrude *= width;\n        #endif\n\n        position.xy += extrude + offset;\n    #endif\n\n    // World coordinates for 3d procedural textures\n    v_world_position = wrapWorldPosition(u_model * position);\n\n    // Adjust for tile and view position\n    position = u_modelView * position;\n\n    // Modify position before camera projection\n    #pragma tangram: position\n\n    // Setup varyings\n    v_position = position;\n    v_normal = normalize(u_normalMatrix * TANGRAM_NORMAL);\n    v_color = a_color;\n\n    #if defined(TANGRAM_LIGHTING_VERTEX)\n        // Vertex lighting\n        vec3 normal = v_normal;\n\n        // Modify normal before lighting\n        #pragma tangram: normal\n\n        // Pass lighting intensity to fragment shader\n        v_lighting = calculateLighting(position.xyz - u_eye, normal, vec4(1.));\n    #endif\n\n    // Camera\n    cameraProjection(position);\n\n    // +1 is to keep all layers including proxies > 0\n    applyLayerOrder(a_position.w + u_tile_proxy_depth + 1., position);\n\n    gl_Position = position;\n}\n";
-var shaderSrc_polygonsFragment = exports.shaderSrc_polygonsFragment = "uniform vec2 u_resolution;\nuniform float u_time;\nuniform vec3 u_map_position;\nuniform vec4 u_tile_origin;\nuniform float u_meters_per_pixel;\nuniform float u_device_pixel_ratio;\n\nuniform mat3 u_normalMatrix;\nuniform mat3 u_inverseNormalMatrix;\n\nvarying vec4 v_position;\nvarying vec3 v_normal;\nvarying vec4 v_color;\nvarying vec4 v_world_position;\n\n#ifdef TANGRAM_EXTRUDE_LINES\n    uniform bool u_has_line_texture;\n    uniform sampler2D u_texture;\n    uniform float u_texture_ratio;\n    uniform vec4 u_dash_background_color;\n#endif\n\n#define TANGRAM_NORMAL v_normal\n\n#if defined(TANGRAM_TEXTURE_COORDS) || defined(TANGRAM_EXTRUDE_LINES)\n    varying vec2 v_texcoord;\n#endif\n\n#ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\n    varying vec4 v_modelpos_base_zoom;\n#endif\n\n#if defined(TANGRAM_LIGHTING_VERTEX)\n    varying vec4 v_lighting;\n#endif\n\n#pragma tangram: camera\n#pragma tangram: material\n#pragma tangram: lighting\n#pragma tangram: raster\n#pragma tangram: global\n\nvoid main (void) {\n    // Initialize globals\n    #pragma tangram: setup\n\n    vec4 color = v_color;\n    vec3 normal = TANGRAM_NORMAL;\n\n    // Apply raster to vertex color\n    #ifdef TANGRAM_RASTER_TEXTURE_COLOR\n        color *= sampleRaster(0); // multiplied to tint texture color\n    #endif\n\n    // Apply line texture\n    #ifdef TANGRAM_EXTRUDE_LINES\n        if (u_has_line_texture) {\n            vec2 _line_st = vec2(v_texcoord.x, fract(v_texcoord.y / u_texture_ratio));\n            vec4 _line_color = texture2D(u_texture, _line_st);\n\n            if (_line_color.a < TANGRAM_ALPHA_TEST) {\n                #if !defined(TANGRAM_BLEND_OVERLAY) && !defined(TANGRAM_BLEND_INLAY) // TODO: should be for opaque blend only?\n                    // use discard when alpha blending is unavailable\n                    if (u_dash_background_color.a == 0.) {\n                        discard;\n                    }\n                    color = u_dash_background_color;\n                #else\n                    // use alpha channel when blending is available\n                    color = vec4(u_dash_background_color.rgb, color.a * step(TANGRAM_EPSILON, u_dash_background_color.a));\n                #endif\n\n\n            }\n            else {\n                color *= _line_color;\n            }\n        }\n    #endif\n\n    // First, get normal from raster tile (if applicable)\n    #ifdef TANGRAM_RASTER_TEXTURE_NORMAL\n        normal = normalize(sampleRaster(0).rgb * 2. - 1.);\n    #endif\n\n    // Second, alter normal with normal map texture (if applicable)\n    #if defined(TANGRAM_LIGHTING_FRAGMENT) && defined(TANGRAM_MATERIAL_NORMAL_TEXTURE)\n        calculateNormal(normal);\n    #endif\n\n    // Normal modification applied here for fragment lighting or no lighting,\n    // and in vertex shader for vertex lighting\n    #if !defined(TANGRAM_LIGHTING_VERTEX)\n        #pragma tangram: normal\n    #endif\n\n    // Color modification before lighting is applied\n    #pragma tangram: color\n\n    #if defined(TANGRAM_LIGHTING_FRAGMENT)\n        // Calculate per-fragment lighting\n        color = calculateLighting(v_position.xyz - u_eye, normal, color);\n    #elif defined(TANGRAM_LIGHTING_VERTEX)\n        // Apply lighting intensity interpolated from vertex shader\n        color *= v_lighting;\n    #endif\n\n    // Post-processing effects (modify color after lighting)\n    #pragma tangram: filter\n\n    gl_FragColor = color;\n}\n";
+var shaderSrc_polygonsVertex = exports.shaderSrc_polygonsVertex = "uniform vec2 u_resolution;\r\nuniform float u_time;\r\nuniform vec3 u_map_position;\r\nuniform vec4 u_tile_origin;\r\nuniform float u_tile_proxy_depth;\r\nuniform float u_meters_per_pixel;\r\nuniform float u_device_pixel_ratio;\r\n\r\nuniform mat4 u_model;\r\nuniform mat4 u_modelView;\r\nuniform mat3 u_normalMatrix;\r\nuniform mat3 u_inverseNormalMatrix;\r\n\r\nattribute vec4 a_position;\r\nattribute vec4 a_color;\r\n\r\n// Optional normal attribute, otherwise default to up\r\n#ifdef TANGRAM_NORMAL_ATTRIBUTE\r\n    attribute vec3 a_normal;\r\n    #define TANGRAM_NORMAL a_normal\r\n#else\r\n    #define TANGRAM_NORMAL vec3(0., 0., 1.)\r\n#endif\r\n\r\n// Optional dynamic line extrusion\r\n#ifdef TANGRAM_EXTRUDE_LINES\r\n    // xy: extrusion direction in xy plane\r\n    // z:  half-width of line (amount to extrude)\r\n    // w:  scaling factor for interpolating width between zooms\r\n    attribute vec2 a_extrude;\r\n    // xy: direction of line, for getting perpendicular offset\r\n    attribute vec2 a_offset;\r\n    // x: zoom scaling factor for line width\r\n    // y: zoom scaling factor for line offset\r\n    attribute vec2 a_scaling;\r\n\r\n    uniform float u_v_scale_adjust;\r\n#endif\r\n\r\nvarying vec4 v_position;\r\nvarying vec3 v_normal;\r\nvarying vec4 v_color;\r\nvarying vec4 v_world_position;\r\n\r\n// Optional texture UVs\r\n#if defined(TANGRAM_TEXTURE_COORDS) || defined(TANGRAM_EXTRUDE_LINES)\r\n    attribute vec2 a_texcoord;\r\n    varying vec2 v_texcoord;\r\n#endif\r\n\r\n// Optional model position varying for tile coordinate zoom\r\n#ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\r\n    varying vec4 v_modelpos_base_zoom;\r\n#endif\r\n\r\n#if defined(TANGRAM_LIGHTING_VERTEX)\r\n    varying vec4 v_lighting;\r\n#endif\r\n\r\n#define UNPACK_SCALING(x) (x / 1024.)\r\n\r\n#pragma tangram: camera\r\n#pragma tangram: material\r\n#pragma tangram: lighting\r\n#pragma tangram: raster\r\n#pragma tangram: global\r\n\r\nvoid main() {\r\n    // Initialize globals\r\n    #pragma tangram: setup\r\n\r\n    // Texture UVs\r\n    #ifdef TANGRAM_TEXTURE_COORDS\r\n        v_texcoord = a_texcoord;\r\n        #ifdef TANGRAM_EXTRUDE_LINES\r\n            v_texcoord.y *= u_v_scale_adjust;\r\n        #endif\r\n    #endif\r\n\r\n    // Pass model position to fragment shader\r\n    #ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\r\n        v_modelpos_base_zoom = modelPositionBaseZoom();\r\n    #endif\r\n\r\n    // Position\r\n    vec4 position = vec4(a_position.xy, a_position.z / TANGRAM_HEIGHT_SCALE, 1.); // convert height back to meters\r\n\r\n    #ifdef TANGRAM_EXTRUDE_LINES\r\n        vec2 extrude = a_extrude.xy;\r\n        vec2 offset = a_offset.xy;\r\n\r\n        // Adjust line width based on zoom level, to prevent proxied lines\r\n        // from being either too small or too big.\r\n        // \"Flattens\" the zoom between 1-2 to peg it to 1 (keeps lines from\r\n        // prematurely shrinking), then interpolate and clamp to 4 (keeps lines\r\n        // from becoming too small when far away).\r\n        float dz = clamp(u_map_position.z - u_tile_origin.z, 0., 4.);\r\n        dz += step(1., dz) * (1. - dz) + mix(0., 2., clamp((dz - 2.) / 2., 0., 1.));\r\n\r\n        // Interpolate line width between zooms\r\n        float mdz = (dz - 0.5) * 2.; // zoom from mid-point\r\n        extrude -= extrude * UNPACK_SCALING(a_scaling.x) * mdz;\r\n\r\n        // Interpolate line offset between zooms\r\n        // Scales from the larger value to the smaller one\r\n        float dwdz = UNPACK_SCALING(a_scaling.y);\r\n        float sdwdz = sign(step(0., dwdz) - 0.5); // sign indicates \"direction\" of scaling\r\n        offset -= offset * abs(dwdz) * ((1.-step(0., sdwdz)) - (dz * -sdwdz)); // scale \"up\" or \"down\"\r\n\r\n        // Scale line width and offset to be consistent in screen space\r\n        float ssz = exp2(-dz - (u_tile_origin.z - u_tile_origin.w));\r\n        extrude *= ssz;\r\n        offset *= ssz;\r\n\r\n        // Modify line width before extrusion\r\n        #ifdef TANGRAM_BLOCK_WIDTH\r\n            float width = 1.;\r\n            #pragma tangram: width\r\n            extrude *= width;\r\n        #endif\r\n\r\n        position.xy += extrude + offset;\r\n    #endif\r\n\r\n    // World coordinates for 3d procedural textures\r\n    v_world_position = wrapWorldPosition(u_model * position);\r\n\r\n    // Adjust for tile and view position\r\n    position = u_modelView * position;\r\n\r\n    // Modify position before camera projection\r\n    #pragma tangram: position\r\n\r\n    // Setup varyings\r\n    v_position = position;\r\n    v_normal = normalize(u_normalMatrix * TANGRAM_NORMAL);\r\n    v_color = a_color;\r\n\r\n    #if defined(TANGRAM_LIGHTING_VERTEX)\r\n        // Vertex lighting\r\n        vec3 normal = v_normal;\r\n\r\n        // Modify normal before lighting\r\n        #pragma tangram: normal\r\n\r\n        // Pass lighting intensity to fragment shader\r\n        v_lighting = calculateLighting(position.xyz - u_eye, normal, vec4(1.));\r\n    #endif\r\n\r\n    // Camera\r\n    cameraProjection(position);\r\n\r\n    // +1 is to keep all layers including proxies > 0\r\n    applyLayerOrder(a_position.w + u_tile_proxy_depth + 1., position);\r\n\r\n    gl_Position = position;\r\n}\r\n";
+var shaderSrc_polygonsFragment = exports.shaderSrc_polygonsFragment = "uniform vec2 u_resolution;\r\nuniform float u_time;\r\nuniform vec3 u_map_position;\r\nuniform vec4 u_tile_origin;\r\nuniform float u_meters_per_pixel;\r\nuniform float u_device_pixel_ratio;\r\n\r\nuniform mat3 u_normalMatrix;\r\nuniform mat3 u_inverseNormalMatrix;\r\n\r\nvarying vec4 v_position;\r\nvarying vec3 v_normal;\r\nvarying vec4 v_color;\r\nvarying vec4 v_world_position;\r\n\r\n#ifdef TANGRAM_EXTRUDE_LINES\r\n    uniform bool u_has_line_texture;\r\n    uniform sampler2D u_texture;\r\n    uniform float u_texture_ratio;\r\n    uniform vec4 u_dash_background_color;\r\n#endif\r\n\r\n#define TANGRAM_NORMAL v_normal\r\n\r\n#if defined(TANGRAM_TEXTURE_COORDS) || defined(TANGRAM_EXTRUDE_LINES)\r\n    varying vec2 v_texcoord;\r\n#endif\r\n\r\n#ifdef TANGRAM_MODEL_POSITION_BASE_ZOOM_VARYING\r\n    varying vec4 v_modelpos_base_zoom;\r\n#endif\r\n\r\n#if defined(TANGRAM_LIGHTING_VERTEX)\r\n    varying vec4 v_lighting;\r\n#endif\r\n\r\n#pragma tangram: camera\r\n#pragma tangram: material\r\n#pragma tangram: lighting\r\n#pragma tangram: raster\r\n#pragma tangram: global\r\n\r\nvoid main (void) {\r\n    // Initialize globals\r\n    #pragma tangram: setup\r\n\r\n    vec4 color = v_color;\r\n    vec3 normal = TANGRAM_NORMAL;\r\n\r\n    // Apply raster to vertex color\r\n    #ifdef TANGRAM_RASTER_TEXTURE_COLOR\r\n        color *= sampleRaster(0); // multiplied to tint texture color\r\n    #endif\r\n\r\n    // Apply line texture\r\n    #ifdef TANGRAM_EXTRUDE_LINES\r\n        if (u_has_line_texture) {\r\n            vec2 _line_st = vec2(v_texcoord.x, fract(v_texcoord.y / u_texture_ratio));\r\n            vec4 _line_color = texture2D(u_texture, _line_st);\r\n\r\n            if (_line_color.a < TANGRAM_ALPHA_TEST) {\r\n                #if !defined(TANGRAM_BLEND_OVERLAY) && !defined(TANGRAM_BLEND_INLAY) // TODO: should be for opaque blend only?\r\n                    // use discard when alpha blending is unavailable\r\n                    if (u_dash_background_color.a == 0.) {\r\n                        discard;\r\n                    }\r\n                    color = u_dash_background_color;\r\n                #else\r\n                    // use alpha channel when blending is available\r\n                    color = vec4(u_dash_background_color.rgb, color.a * step(TANGRAM_EPSILON, u_dash_background_color.a));\r\n                #endif\r\n\r\n\r\n            }\r\n            else {\r\n                color *= _line_color;\r\n            }\r\n        }\r\n    #endif\r\n\r\n    // First, get normal from raster tile (if applicable)\r\n    #ifdef TANGRAM_RASTER_TEXTURE_NORMAL\r\n        normal = normalize(sampleRaster(0).rgb * 2. - 1.);\r\n    #endif\r\n\r\n    // Second, alter normal with normal map texture (if applicable)\r\n    #if defined(TANGRAM_LIGHTING_FRAGMENT) && defined(TANGRAM_MATERIAL_NORMAL_TEXTURE)\r\n        calculateNormal(normal);\r\n    #endif\r\n\r\n    // Normal modification applied here for fragment lighting or no lighting,\r\n    // and in vertex shader for vertex lighting\r\n    #if !defined(TANGRAM_LIGHTING_VERTEX)\r\n        #pragma tangram: normal\r\n    #endif\r\n\r\n    // Color modification before lighting is applied\r\n    #pragma tangram: color\r\n\r\n    #if defined(TANGRAM_LIGHTING_FRAGMENT)\r\n        // Calculate per-fragment lighting\r\n        color = calculateLighting(v_position.xyz - u_eye, normal, color);\r\n    #elif defined(TANGRAM_LIGHTING_VERTEX)\r\n        // Apply lighting intensity interpolated from vertex shader\r\n        color *= v_lighting;\r\n    #endif\r\n\r\n    // Post-processing effects (modify color after lighting)\r\n    #pragma tangram: filter\r\n\r\n    gl_FragColor = color;\r\n}\r\n";
 
 var Polygons = exports.Polygons = Object.create(_style.Style);
 
@@ -38543,15 +39561,15 @@ Object.assign(Polygons, {
             return null;
         }
 
-        style.z = draw.z && _style_parser2.default.evalCachedDistanceProperty(draw.z, context) || _style_parser2.default.defaults.z;
+        style.z = draw.z && _style_parser.StyleParser.evalCachedDistanceProperty(draw.z, context) || _style_parser.StyleParser.defaults.z;
         style.z *= _geo2.default.height_scale; // provide sub-meter precision of height values
 
-        style.extrude = _style_parser2.default.evalProperty(draw.extrude, context);
+        style.extrude = _style_parser.StyleParser.evalProperty(draw.extrude, context);
         if (style.extrude) {
             // use feature's height and min_height properties
             if (style.extrude === true) {
-                style.height = feature.properties.height || _style_parser2.default.defaults.height;
-                style.min_height = feature.properties.min_height || _style_parser2.default.defaults.min_height;
+                style.height = feature.properties.height || _style_parser.StyleParser.defaults.height;
+                style.min_height = feature.properties.min_height || _style_parser.StyleParser.defaults.min_height;
             }
             // explicit height, no min_height
             else if (typeof style.extrude === 'number') {
@@ -38573,8 +39591,8 @@ Object.assign(Polygons, {
         return style;
     },
     _preprocess: function _preprocess(draw) {
-        draw.color = _style_parser2.default.createColorPropertyCache(draw.color);
-        draw.z = _style_parser2.default.createPropertyCache(draw.z, _style_parser2.default.parseUnits);
+        draw.color = _style_parser.StyleParser.createColorPropertyCache(draw.color);
+        draw.z = _style_parser.StyleParser.createPropertyCache(draw.z, _style_parser.StyleParser.parseUnits);
         return draw;
     },
 
@@ -38643,7 +39661,7 @@ Object.assign(Polygons, {
     }
 });
 
-},{"../../builders/polygons":197,"../../geo":200,"../../gl/constants":201,"../../gl/vertex_layout":212,"../style":243,"../style_parser":245}],242:[function(_dereq_,module,exports){
+},{"../../builders/polygons":206,"../../geo":209,"../../gl/constants":210,"../../gl/vertex_layout":221,"../style":251,"../style_parser":253}],250:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38653,11 +39671,7 @@ exports.RasterStyle = undefined;
 
 var _style_parser = _dereq_('../style_parser');
 
-var _style_parser2 = _interopRequireDefault(_style_parser);
-
 var _polygons = _dereq_('../polygons/polygons');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Raster tile rendering style
 
@@ -38678,12 +39692,12 @@ Object.assign(RasterStyle, {
     },
     _preprocess: function _preprocess(draw) {
         // Raster tiles default to white vertex color, as this color will tint the underlying texture
-        draw.color = draw.color || _style_parser2.default.defaults.color;
+        draw.color = draw.color || _style_parser.StyleParser.defaults.color;
         return this.super._preprocess.apply(this, arguments);
     }
 });
 
-},{"../polygons/polygons":241,"../style_parser":245}],243:[function(_dereq_,module,exports){
+},{"../polygons/polygons":249,"../style_parser":253}],251:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -38696,8 +39710,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 exports.addLayerDebugEntry = addLayerDebugEntry;
 
 var _style_parser = _dereq_('./style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 var _selection = _dereq_('../selection');
 
@@ -38794,7 +39806,7 @@ var Style = exports.Style = {
         // If the style defines its own material, replace the inherited material instance
         if (!(this.material instanceof _material2.default)) {
             if (!_material2.default.isValid(this.material)) {
-                this.material = _style_parser2.default.defaults.material;
+                this.material = _style_parser.StyleParser.defaults.material;
             }
             this.material = new _material2.default(this.material);
         }
@@ -39001,6 +40013,7 @@ var Style = exports.Style = {
 
             // Calculate order
             style.order = this.parseOrder(draw.order, context);
+            style.blend_order = this.parseOrder(draw.blend_order, context);
             if (style.order == null && this.blend !== 'overlay') {
                 var msg = 'Layer \'' + draw.layers.join(', ') + '\', draw group \'' + draw.group + '\': ';
                 msg += '\'order\' parameter is required unless blend mode is \'overlay\'';
@@ -39020,7 +40033,7 @@ var Style = exports.Style = {
 
             // Feature selection (only if feature is marked as interactive, and style supports it)
             if (this.selection) {
-                style.interactive = _style_parser2.default.evalProperty(this.introspection || draw.interactive, context);
+                style.interactive = _style_parser.StyleParser.evalProperty(this.introspection || draw.interactive, context);
             } else {
                 style.interactive = false;
             }
@@ -39077,7 +40090,7 @@ var Style = exports.Style = {
     parseOrder: function parseOrder(order, context) {
         // Calculate order if it was not cached
         if (typeof order !== 'number') {
-            return _style_parser2.default.calculateOrder(order, context);
+            return _style_parser.StyleParser.calculateOrder(order, context);
         }
         return order;
     },
@@ -39093,9 +40106,9 @@ var Style = exports.Style = {
     parseColor: function parseColor(color, context) {
         // Need either a color, or a shader block for 'color' or 'filter'
         if (color) {
-            return _style_parser2.default.evalCachedColorProperty(color, context);
+            return _style_parser.StyleParser.evalCachedColorProperty(color, context);
         } else if (this.shaders.blocks.color || this.shaders.blocks.filter) {
-            return _style_parser2.default.defaults.color;
+            return _style_parser.StyleParser.defaults.color;
         }
     },
 
@@ -39496,7 +40509,7 @@ function addLayerDebugEntry(target, layer, faeture_count, geom_count, styles, ba
     }
 }
 
-},{"../gl/shader_program":206,"../gl/texture":207,"../gl/vbo_mesh":209,"../light":223,"../material":224,"../selection":230,"../sources/raster":234,"../utils/debug_settings":255,"../utils/log":259,"../utils/merge":261,"../utils/thread":267,"../utils/worker_broker":271,"./style_parser":245}],244:[function(_dereq_,module,exports){
+},{"../gl/shader_program":215,"../gl/texture":216,"../gl/vbo_mesh":218,"../light":231,"../material":232,"../selection":238,"../sources/raster":242,"../utils/debug_settings":263,"../utils/log":267,"../utils/merge":269,"../utils/thread":275,"../utils/worker_broker":279,"./style_parser":253}],252:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -40020,12 +41033,13 @@ var StyleManager = exports.StyleManager = function () {
     return StyleManager;
 }();
 
-},{"../geo":200,"../gl/shader_program":206,"../utils/log":259,"../utils/merge":261,"./lines/lines":239,"./points/points":240,"./polygons/polygons":241,"./raster/raster":242,"./text/text":248}],245:[function(_dereq_,module,exports){
+},{"../geo":209,"../gl/shader_program":215,"../utils/log":267,"../utils/merge":269,"./lines/lines":247,"./points/points":248,"./polygons/polygons":249,"./raster/raster":250,"./text/text":256}],253:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+exports.StyleParser = undefined;
 
 var _utils = _dereq_('../utils/utils');
 
@@ -40041,25 +41055,7 @@ var _csscolorparser2 = _interopRequireDefault(_csscolorparser);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var StyleParser = {};
-exports.default = StyleParser;
-
-// Helpers for string converstion / NaN handling
-
-var clampPositive = function clampPositive(v) {
-    return Math.max(v, 0);
-};
-var noNaN = function noNaN(v) {
-    return isNaN(v) ? 0 : v;
-};
-var parseNumber = function parseNumber(v) {
-    return Array.isArray(v) ? v.map(parseFloat).map(noNaN) : noNaN(parseFloat(v));
-};
-var parsePositiveNumber = function parsePositiveNumber(v) {
-    return Array.isArray(v) ? v.map(parseNumber).map(clampPositive) : clampPositive(parseNumber(v));
-};
-
-Object.assign(StyleParser, { clampPositive: clampPositive, noNaN: noNaN, parseNumber: parseNumber, parsePositiveNumber: parsePositiveNumber });
+var StyleParser = exports.StyleParser = {};
 
 // Wraps style functions and provides a scope of commonly accessible data:
 // - feature: the 'properties' of the feature, e.g. accessed as 'feature.name'
@@ -40161,12 +41157,12 @@ StyleParser.createPropertyCache = function (obj) {
     if (typeof transform === 'function') {
         if (c.zoom) {
             // apply to each zoom stop value
-            c.value = c.value.map(function (v, i) {
-                return [v[0], transform(v[1], i)];
+            c.value = c.value.map(function (v) {
+                return [v[0], transform(v[1])];
             });
         } else if (typeof c.value !== 'function') {
             // don't transform functions
-            c.value = transform(c.value, 0); // single value
+            c.value = transform(c.value); // single value
         }
     }
 
@@ -40185,127 +41181,6 @@ StyleParser.createColorPropertyCache = function (obj) {
 
         return v;
     });
-};
-
-// Caching for point sizes, which include optional %-based or aspect-ratio-constrained scaling from sprite size
-// Returns a cache object if successful, or throws error message
-var isPercent = function isPercent(v) {
-    return typeof v === 'string' && v[v.length - 1] === '%';
-}; // size computed by %
-var isRatio = function isRatio(v) {
-    return v === 'auto';
-}; // size derived from aspect ratio of one dimension
-var isComputed = function isComputed(v) {
-    return isPercent(v) || isRatio(v);
-};
-var dualRatioError = '\'size\' can specify either width or height as derived from aspect ratio, but not both';
-StyleParser.createPointSizePropertyCache = function (obj) {
-    // mimics the structure of the size value (at each zoom stop if applicable),
-    // stores flags indicating if each element is a %-based size or not, or derived from aspect
-    var has_pct = null;
-    var has_ratio = null;
-    if (isPercent(obj)) {
-        // 1D size
-        has_pct = [true];
-    } else if (Array.isArray(obj)) {
-        // track which fields are % vals
-        if (Array.isArray(obj[0])) {
-            // zoom stops
-            // could be a 1D value (that could be a %), or a 2D value (either width or height or both could be a %)
-            if (obj.some(function (v) {
-                return Array.isArray(v[1]) ? v[1].some(function (w) {
-                    return isComputed(w);
-                }) : isPercent(v[1]);
-            })) {
-                has_pct = obj.map(function (v) {
-                    return Array.isArray(v[1]) ? v[1].map(function (w) {
-                        return isPercent(w);
-                    }) : isPercent(v[1]);
-                });
-                has_ratio = obj.map(function (v) {
-                    return Array.isArray(v[1]) && v[1].map(function (w) {
-                        return isRatio(w);
-                    });
-                });
-                if (has_ratio.some(function (v) {
-                    return Array.isArray(v) && v.every(function (c) {
-                        return c;
-                    });
-                })) {
-                    throw dualRatioError; // invalid case where both dims are ratios
-                }
-            }
-        } else if (obj.some(isComputed)) {
-            // 2D size
-            has_pct = [obj.map(isPercent)];
-            has_ratio = [obj.map(isRatio)];
-            if (has_ratio[0].every(function (c) {
-                return c;
-            })) {
-                throw dualRatioError; // invalid case where both dims are ratios
-            }
-        }
-    }
-
-    if (!has_pct) {
-        // no percentage-based calculation, one cache for all sprites
-        obj = StyleParser.createPropertyCache(obj, parsePositiveNumber);
-    } else {
-        // per-sprite based evaluation
-        obj = { value: obj };
-        obj.has_pct = has_pct;
-        obj.has_ratio = has_ratio;
-        obj.sprites = {}; // cache by sprite
-    }
-
-    return obj;
-};
-
-StyleParser.evalCachedPointSizeProperty = function (val, sprite_info, context) {
-    // no percentage-based calculation, one cache for all sprites
-    if (!val.has_pct && !val.has_ratio) {
-        return StyleParser.evalCachedProperty(val, context);
-    }
-
-    // per-sprite based evaluation
-    if (!sprite_info) {
-        return; // trying to apply percentage or ratio sizing to a sprite
-    }
-
-    // cache sizes per sprite
-    if (!val.sprites[sprite_info.sprite]) {
-        val.sprites[sprite_info.sprite] = StyleParser.createPropertyCache(val.value, function (v, i) {
-            if (Array.isArray(v)) {
-                // 2D size
-                // either width or height or both could be a %
-                v = v.map(function (c, j) {
-                    return val.has_ratio[i][j] ? c : parsePositiveNumber(c);
-                }). // convert non-ratio values to px
-                map(function (c, j) {
-                    return val.has_pct[i][j] ? sprite_info.css_size[j] * c / 100 : c;
-                }); // apply % scaling as needed
-
-                // either width or height could be a ratio
-                if (val.has_ratio[i][0]) {
-                    v[0] = v[1] * sprite_info.aspect;
-                } else if (val.has_ratio[i][1]) {
-                    v[1] = v[0] / sprite_info.aspect;
-                }
-            } else {
-                // 1D size
-                v = parsePositiveNumber(v);
-                if (val.has_pct[i]) {
-                    v = sprite_info.css_size.map(function (c) {
-                        return c * v / 100;
-                    }); // set size as % of sprite
-                } else {
-                    v = [v, v]; // expand 1D size to 2D
-                }
-            }
-            return v;
-        });
-    }
-    return StyleParser.evalCachedProperty(val.sprites[sprite_info.sprite], context);
 };
 
 // Interpolation and caching for a generic property (not a color or distance)
@@ -40358,10 +41233,10 @@ StyleParser.convertUnits = function (val, context) {
     // un-parsed unit string
     else if (typeof val === 'string') {
             if (val.trim().slice(-2) === 'px') {
-                val = parseNumber(val);
+                val = parseFloat(val);
                 val *= _geo2.default.metersPerPixel(context.zoom); // convert from pixels
             } else {
-                val = parseNumber(val);
+                val = parseFloat(val);
             }
         }
         // multiple values or stops
@@ -40384,7 +41259,7 @@ StyleParser.convertUnits = function (val, context) {
 
 // Pre-parse units from string values
 StyleParser.parseUnits = function (val) {
-    var obj = { val: parseNumber(val) };
+    var obj = { val: parseFloat(val) };
     if (obj.val !== 0 && typeof val === 'string' && val.trim().slice(-2) === 'px') {
         obj.units = 'px';
     }
@@ -40567,7 +41442,7 @@ StyleParser.calculateOrder = function (order, context) {
         }
         // Explicit order value
         else {
-                order = parsePositiveNumber(order);
+                order = parseFloat(order);
             }
     }
 
@@ -40582,7 +41457,7 @@ StyleParser.evalProperty = function (prop, context) {
     return prop;
 };
 
-},{"../geo":200,"../utils/utils":269,"csscolorparser":76}],246:[function(_dereq_,module,exports){
+},{"../geo":209,"../utils/utils":277,"csscolorparser":71}],254:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -40612,10 +41487,6 @@ var _font_manager2 = _interopRequireDefault(_font_manager);
 var _task = _dereq_('../../utils/task');
 
 var _task2 = _interopRequireDefault(_task);
-
-var _style_parser = _dereq_('../style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 var _debug_settings = _dereq_('../../utils/debug_settings');
 
@@ -40684,7 +41555,8 @@ var CanvasText = function () {
             return _font_manager2.default.loadFonts().then(function () {
                 return _task2.default.add({
                     type: 'textSizes',
-                    run: _this.processTextSizesTask.bind(_this),
+                    target: _this,
+                    method: 'processTextSizesTask',
                     texts: texts,
                     tile_id: tile_id,
                     cursor: {
@@ -40778,7 +41650,8 @@ var CanvasText = function () {
                 max_lines = _ref2.max_lines,
                 _ref2$stroke_width = _ref2.stroke_width,
                 stroke_width = _ref2$stroke_width === undefined ? 0 : _ref2$stroke_width,
-                supersample = _ref2.supersample;
+                supersample = _ref2.supersample,
+                spacing = _ref2.spacing;
 
             // Check cache first
             CanvasText.cache.text[style] = CanvasText.cache.text[style] || {};
@@ -40799,11 +41672,13 @@ var CanvasText = function () {
             var line_height = this.px_size + leading; // px_size already in device pixels
 
             // Parse string into series of lines if it exceeds the text wrapping value or contains line breaks
-            var multiline = MultiLine.parse(str, text_wrap, max_lines, line_height, ctx);
+            var multiline = MultiLine.parse(str, text_wrap, max_lines, line_height, spacing, ctx);
 
             // Final dimensions of text
             var height = multiline.height;
             var width = multiline.width;
+            if (width === 0) width = line_height * 1;
+            if (height === 0) height = line_height * 1;
             var lines = multiline.lines;
 
             var collision_size = [width / dpr, height / dpr];
@@ -40834,13 +41709,14 @@ var CanvasText = function () {
                 stroke_width = _ref4$stroke_width === undefined ? 0 : _ref4$stroke_width,
                 transform = _ref4.transform,
                 align = _ref4.align,
-                supersample = _ref4.supersample;
+                supersample = _ref4.supersample,
+                spacing = _ref4.spacing;
 
             var line_height = size.line_height;
             var height = y;
             for (var line_num = 0; line_num < lines.length; line_num++) {
                 var line = lines[line_num];
-                this.drawTextLine(line, [x, height], size, { stroke: stroke, stroke_width: stroke_width, transform: transform, align: align, supersample: supersample }, type);
+                this.drawTextLine(line, [x, height], size, { stroke: stroke, stroke_width: stroke_width, transform: transform, align: align, supersample: supersample, spacing: spacing }, type);
                 height += line_height;
             }
 
@@ -40897,7 +41773,8 @@ var CanvasText = function () {
                 stroke_width = _ref7$stroke_width === undefined ? 0 : _ref7$stroke_width,
                 transform = _ref7.transform,
                 align = _ref7.align,
-                supersample = _ref7.supersample;
+                supersample = _ref7.supersample,
+                spacing = _ref7.spacing;
 
             var dpr = _utils2.default.device_pixel_ratio * supersample;
             align = align || 'center';
@@ -40923,20 +41800,50 @@ var CanvasText = function () {
             // 0.75 buffer produces a better approximate vertical centering of text
             var ty = y + vertical_buffer * 0.75 + line_height;
 
+            if (!line.new_line && str.length == 1 && align === 'center') {
+                if (ty < this.canvas.height / 2 && ty > this.canvas.height / 4) ty = this.canvas.height / 2;
+                if (tx < this.canvas.width / 3 && tx > this.canvas.width / 6) tx = this.canvas.width / 3;
+            }
+
             // Draw stroke and fill separately for curved text. Offset stroke in texture atlas by shift.
             if (stroke && stroke_width > 0) {
                 var shift = type === 'curved' ? texture_size[0] : 0;
                 this.context.strokeText(str, tx + shift, ty);
             }
-            this.context.fillText(str, tx, ty);
+
+            x = tx;
+            y = ty;
+            var wAll = this.context.measureText(str).width;
+            do {
+                //Remove the first character from the string
+                var char = str.substr(0, 1);
+                str = str.substr(1);
+                //Print the first character at position (X, Y) using fillText()
+                this.context.fillText(char, x, y);
+                //Measure wShorter, the width of the resulting shorter string using measureText().
+                var wShorter = 0;
+                if (str == "") wShorter = 0;else wShorter = this.context.measureText(str).width;
+                //Subtract the width of the shorter string from the width of the entire string, giving the kerned width of the character, wChar = wAll - wShorter
+                var wChar = wAll - wShorter;
+                x += wChar + spacing;
+                wAll = wShorter;
+            } while (str != "");
+            //this.context.fillText(str, tx, ty);
+        }
+    }, {
+        key: 'getFont',
+        value: function getFont(dpr, supersample) {
+            var ctx = this.context;
+            return { "font_css": ctx.font, "fill": ctx.fillStyle, "stroke": ctx.strokeStyle, "stroke_width": ctx.lineWidth / dpr, "px_size": this.px_size, "supersample": supersample };
         }
     }, {
         key: 'rasterize',
         value: function rasterize(texts, textures, tile_id, texture_prefix, gl) {
             return _task2.default.add({
                 type: 'rasterizeLabels',
-                run: this.processRasterizeTask.bind(this),
-                cancel: this.cancelRasterizeTask.bind(this),
+                target: this,
+                method: 'processRasterizeTask',
+                cancel: 'cancelRasterizeTask',
                 pause_factor: 2, // pause 2 frames when task run past allowed time
                 user_moving_view: false, // don't run task when user is moving view
                 texts: texts,
@@ -40958,6 +41865,8 @@ var CanvasText = function () {
     }, {
         key: 'processRasterizeTask',
         value: function processRasterizeTask(task) {
+            var _this2 = this;
+
             var cursor = task.cursor,
                 texts = task.texts,
                 textures = task.textures;
@@ -41054,25 +41963,30 @@ var CanvasText = function () {
                                                 texcoord_stroke = _cache.texcoord_stroke;
                                                 text_info.texcoords_stroke.push(texcoord_stroke);
                                             } else {
-                                                var _texture_position = _cache.texture_position;
+                                                (function () {
+                                                    var texture_position = _cache.texture_position;
 
-                                                var _textSize2 = this.textSize(style, _word, text_settings),
-                                                    _size = _textSize2.size,
-                                                    _lines = _textSize2.lines;
+                                                    var _textSize2 = _this2.textSize(style, _word, text_settings),
+                                                        size = _textSize2.size,
+                                                        lines = _textSize2.lines;
 
-                                                this.drawTextMultiLine(_lines, _texture_position, _size, text_settings, type);
+                                                    if (words.length > 1) Object.keys(lines).forEach(function (p) {
+                                                        return lines[p].new_line = true;
+                                                    });
+                                                    _this2.drawTextMultiLine(lines, texture_position, size, text_settings, type);
 
-                                                _texcoord = _texture2.default.getTexcoordsForSprite(_texture_position, _size.texture_size, texture.texture_size);
+                                                    _texcoord = _texture2.default.getTexcoordsForSprite(texture_position, size.texture_size, texture.texture_size);
 
-                                                var texture_position_stroke = [_texture_position[0] + _size.texture_size[0], _texture_position[1]];
+                                                    var texture_position_stroke = [texture_position[0] + size.texture_size[0], texture_position[1]];
 
-                                                texcoord_stroke = _texture2.default.getTexcoordsForSprite(texture_position_stroke, _size.texture_size, texture.texture_size);
+                                                    texcoord_stroke = _texture2.default.getTexcoordsForSprite(texture_position_stroke, size.texture_size, texture.texture_size);
 
-                                                _cache.texcoord = _texcoord;
-                                                _cache.texcoord_stroke = texcoord_stroke;
+                                                    _cache.texcoord = _texcoord;
+                                                    _cache.texcoord_stroke = texcoord_stroke;
 
-                                                // NB: texture_id is the same between stroke and fill, so it's not duplicated here
-                                                text_info.texcoords_stroke.push(texcoord_stroke);
+                                                    // NB: texture_id is the same between stroke and fill, so it's not duplicated here
+                                                    text_info.texcoords_stroke.push(texcoord_stroke);
+                                                })();
                                             }
 
                                             text_info.texcoords.curved.push({
@@ -41084,7 +41998,7 @@ var CanvasText = function () {
                                 }
                             }
                         } else {
-                            var _lines2 = this.textSize(style, text, text_settings).lines;
+                            var _lines = this.textSize(style, text, text_settings).lines;
 
                             for (var align in text_info.align) {
                                 // Only render for current texture
@@ -41092,12 +42006,13 @@ var CanvasText = function () {
                                     continue;
                                 }
 
-                                this.drawTextMultiLine(_lines2, text_info.align[align].texture_position, text_info.size, {
+                                this.drawTextMultiLine(_lines, text_info.align[align].texture_position, text_info.size, {
                                     stroke: text_settings.stroke,
                                     stroke_width: text_settings.stroke_width,
                                     transform: text_settings.transform,
                                     supersample: text_settings.supersample,
-                                    align: align
+                                    align: align,
+                                    spacing: text_settings.spacing
                                 });
 
                                 text_info.align[align].texcoords = _texture2.default.getTexcoordsForSprite(text_info.align[align].texture_position, text_info.size.texture_size, texture.texture_size);
@@ -41198,9 +42113,9 @@ var CanvasText = function () {
                                         var _word2 = text_info.segments[w];
 
                                         if (!texture.texcoord_cache[style][_word2]) {
-                                            var _size2 = text_info.segment_sizes[w].texture_size;
-                                            var width = 2 * _size2[0]; // doubled to account for side-by-side rendering of fill and stroke
-                                            texture_position = this.placeText(width, _size2[1], style, texture, textures, max_texture_size);
+                                            var _size = text_info.segment_sizes[w].texture_size;
+                                            var width = 2 * _size[0]; // doubled to account for side-by-side rendering of fill and stroke
+                                            texture_position = this.placeText(width, _size[1], style, texture, textures, max_texture_size);
                                             texture.texcoord_cache[style][_word2] = {
                                                 texture_id: texture.texture_id,
                                                 texture_position: texture_position
@@ -41215,11 +42130,11 @@ var CanvasText = function () {
                         }
                     } else {
                         // rendered size is same for all alignments
-                        var _size3 = text_info.size.texture_size;
+                        var _size2 = text_info.size.texture_size;
 
                         // but each alignment needs to be rendered separately
                         for (var align in text_info.align) {
-                            texture_position = this.placeText(_size3[0], _size3[1], style, texture, textures, max_texture_size);
+                            texture_position = this.placeText(_size2[0], _size2[1], style, texture, textures, max_texture_size);
                             text_info.align[align].texture_id = texture.texture_id;
                             text_info.align[align].texture_position = texture_position;
                         }
@@ -41332,7 +42247,7 @@ var CanvasText = function () {
                 px_size /= 6.25;
             }
 
-            px_size = _style_parser2.default.parsePositiveNumber(px_size);
+            px_size = parseFloat(px_size);
             px_size *= _utils2.default.device_pixel_ratio;
             return px_size;
         }
@@ -41496,6 +42411,7 @@ var MultiLine = function () {
     function MultiLine(context) {
         var max_lines = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Infinity;
         var text_wrap = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : Infinity;
+        var spacing = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
 
         _classCallCheck(this, MultiLine);
 
@@ -41506,24 +42422,30 @@ var MultiLine = function () {
         this.max_lines = max_lines;
         this.text_wrap = text_wrap;
         this.context = context;
+        this.spacing = spacing;
     }
 
     _createClass(MultiLine, [{
         key: 'createLine',
-        value: function createLine(line_height) {
+        value: function createLine(line_height, spacing, new_line) {
             if (this.lines.length < this.max_lines) {
-                return new Line(line_height, this.text_wrap);
+                return new Line(line_height, this.text_wrap, spacing, new_line);
             } else {
                 return false;
             }
         }
     }, {
         key: 'push',
-        value: function push(line) {
+        value: function push(line, line_height, spacing, new_line) {
             if (this.lines.length < this.max_lines) {
                 // measure line width
                 var line_width = this.context.measureText(line.text).width;
                 line.width = line_width;
+
+                if (line_width === 0) {
+                    line_width = line_height;
+                }
+                line.width = line_width + spacing * (line.text.length - 1);
 
                 if (line_width > this.width) {
                     this.width = Math.ceil(line_width);
@@ -41543,10 +42465,12 @@ var MultiLine = function () {
 
     }, {
         key: 'advance',
-        value: function advance(line, line_height) {
-            var can_push = this.push(line);
+        value: function advance(line, line_height, spacing) {
+            var can_push = this.push(line, line_height, spacing);
             if (can_push) {
-                return this.createLine(line_height);
+                //记录下这个line是不是multiline的换行
+                this.lines[this.lines.length - 1].new_line = true;
+                return this.createLine(line_height, spacing, true);
             } else {
                 return false;
             }
@@ -41566,16 +42490,17 @@ var MultiLine = function () {
         }
     }, {
         key: 'finish',
-        value: function finish(line) {
+        value: function finish(line, line_height, spacing) {
             if (line) {
-                this.push(line);
+                if (this.lines.length > 0) line.new_line = true;
+                this.push(line, line_height, spacing);
             } else {
                 this.addEllipsis();
             }
         }
     }], [{
         key: 'parse',
-        value: function parse(str, text_wrap, max_lines, line_height, ctx) {
+        value: function parse(str, text_wrap, max_lines, line_height, spacing, ctx) {
             // Word wrapping
             // Line breaks can be caused by:
             //  - implicit line break when a maximum character threshold is exceeded per line (text_wrap)
@@ -41587,7 +42512,7 @@ var MultiLine = function () {
                 words = [str]; // no max line word wrapping (but new lines will still be in effect)
             }
 
-            var multiline = new MultiLine(ctx, max_lines, text_wrap);
+            var multiline = new MultiLine(ctx, max_lines, text_wrap, spacing);
             var line = multiline.createLine(line_height);
 
             // First iterate on space-break groups (will be one if max line length off), then iterate on line-break groups
@@ -41612,7 +42537,7 @@ var MultiLine = function () {
                     // if adding current word would overflow, add a new line instead
                     // first word (i === 0) always appends
                     if (text_wrap && i > 0 && line.exceedsTextwrap(spaced_word)) {
-                        line = multiline.advance(line, line_height);
+                        line = multiline.advance(line, line_height, spacing);
                         if (!line) {
                             break;
                         }
@@ -41624,13 +42549,13 @@ var MultiLine = function () {
 
                     // if line breaks present, add new line (unless on last line)
                     if (n < breaks.length - 1) {
-                        line = multiline.advance(line, line_height);
+                        line = multiline.advance(line, line_height, spacing);
                         new_line = true;
                     }
                 }
 
                 if (i === words.length - 1) {
-                    multiline.finish(line);
+                    multiline.finish(line, line_height, spacing);
                 }
             }
             return multiline;
@@ -41649,11 +42574,15 @@ var Line = function () {
     function Line() {
         var height = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
         var text_wrap = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var spacing = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+        var new_line = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
 
         _classCallCheck(this, Line);
 
         this.chars = 0;
         this.text = '';
+        this.spacing = spacing;
+        this.new_line = new_line;
 
         this.height = Math.ceil(height);
         this.text_wrap = text_wrap;
@@ -41675,7 +42604,7 @@ var Line = function () {
     return Line;
 }();
 
-},{"../../gl/texture":207,"../../utils/debug_settings":255,"../../utils/log":259,"../../utils/task":266,"../../utils/utils":269,"../style_parser":245,"./font_manager":247}],247:[function(_dereq_,module,exports){
+},{"../../gl/texture":216,"../../utils/debug_settings":263,"../../utils/log":267,"../../utils/task":274,"../../utils/utils":277,"./font_manager":255}],255:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -41848,7 +42777,7 @@ var FontManager = {
 
 exports.default = FontManager;
 
-},{"../../utils/log":259,"../../utils/utils":269,"fontfaceobserver":79}],248:[function(_dereq_,module,exports){
+},{"../../utils/log":267,"../../utils/utils":277,"fontfaceobserver":74}],256:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -41874,7 +42803,7 @@ var _label_point2 = _interopRequireDefault(_label_point);
 
 var _label_line = _dereq_('../../labels/label_line');
 
-var _label_line2 = _interopRequireDefault(_label_line);
+var _label_line3 = _interopRequireDefault(_label_line);
 
 var _constants = _dereq_('../../gl/constants');
 
@@ -42120,24 +43049,111 @@ Object.assign(TextStyle, {
 
         return labels;
     },
-
+    getAngle: function getAngle(p, q) {
+        var angle = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+        return angle === 'auto' ? Math.atan2(q[0] - p[0], q[1] - p[1]) : angle;
+    },
+    getLineLength: function getLineLength(line) {
+        var distance = 0;
+        for (var i = 0; i < line.length - 1; i++) {
+            distance += this.norm(line[i], line[i + 1]);
+        }
+        return distance;
+    },
+    norm: function norm(p, q) {
+        return Math.sqrt(Math.pow(p[0] - q[0], 2) + Math.pow(p[1] - q[1], 2));
+    },
 
     // Build one or more labels for a line geometry
     buildLineLabels: function buildLineLabels(line, size, layout, total_size) {
         var labels = [];
+        if (layout.dash && layout.dash !== null && typeof layout.dash !== "undefined") {
+            var tmp_length = 0;
+            var total_pos = 0;
+            var dash_count = layout.dash.length;
+            var length = this.getLineLength(line);
+            var points = [];
+            while (tmp_length < length) {
+                var cur_pos = total_pos % dash_count;
+                if (tmp_length > 0 && cur_pos % 2 === 0) {
+                    var distance = 0;
+                    var point = null;
+                    var angle = 'auto';
+                    //console.log("tmp_length:" + tmp_length);
+                    for (var i = 0; i < line.length - 1; i++) {
+                        var tmp_distance = this.norm(line[i], line[i + 1]);
+                        if (distance + tmp_distance < tmp_length) {
+                            distance += tmp_distance;
+                            continue;
+                        }
+                        if (points.indexOf(i) > -1) console.log("test dup :" + i);else points.push(i);
+                        //angle = Math.atan((line[i + 1][1] - line[i][1]) / (line[i + 1][0] - line[i][0]));
+                        angle = this.getAngle(line[i], line[i + 1], angle);
+                        //console.log("tmp_distance :" + tmp_distance);
+                        //console.log("tmp_length - distance :" + (Math.cos(angle) * (tmp_length - distance)));
+                        point = [line[i][0] + Math.round(Math.sin(angle) * (tmp_length - distance)), line[i][1] + Math.round(Math.cos(angle) * (tmp_length - distance))];
+                        //console.log(line[i] + "---" + point + "---" + line[i + 1]);
+                        var dy = Math.round(Math.cos(angle) * layout.dash[cur_pos + 1] * 5 * layout.units_per_pixel);
+                        var dx = Math.round(Math.sin(angle) * layout.dash[cur_pos + 1] * 5 * layout.units_per_pixel);
+                        var p1 = [point[0] - dx, point[1] - dy];
+                        var p2 = [point[0] + dx, point[1] + dy];
+                        //console.log(p1 + "---" + point + "---" + p2);
+                        var label = _label_line2.default.create(size, total_size, [p1, point, p2], layout);
+                        if (label) {
+                            //label.position = point;
+                            //label.angle = angle;
+                            labels.push(label);
+                        }
+
+                        break;
+                    }
+                    //var label = _label_line2.default.create(size, total_size, line_segment, layout);
+                    //layout.angle = angle;
+                    //console.log("angle:" + angle);
+                    //console.log("point:" + line[1]);
+                }
+
+                tmp_length += layout.dash[cur_pos] * 5 * layout.units_per_pixel;
+                total_pos++;
+            }
+
+            /*console.log("points:" + points);
+            for (var j = 0; j < points.length; j ++)
+            //if (points.length > 0)
+            {
+                //var j = parseInt(points.length / 2);
+                point = null;
+                point = line[points[j]];
+                if (point === null)
+                    console.log("line:" + line);
+                else
+                {
+                    var label = _label_line2.default.create(size, total_size, [ line[points[j]], line[points[j] + 1] ], layout);
+                    if (label) {
+                        labels.push(label);
+                    }
+                    /*console.log("point:" + point + "---size:" + size + "---layout" + layout);
+                    var pLabel = new _label_point2.default(point, size, layout);
+                    if (pLabel)
+                        labels.push(pLabel);
+                }
+            }*/
+
+            return labels;
+        }
         var subdiv = Math.min(layout.subdiv, line.length - 1);
         if (subdiv > 1) {
             // Create multiple labels for line, with each allotted a range of segments
             // in which it will attempt to place
             var seg_per_div = (line.length - 1) / subdiv;
-            for (var i = 0; i < subdiv; i++) {
-                var start = Math.floor(i * seg_per_div);
-                var end = Math.floor((i + 1) * seg_per_div) + 1;
+            for (var _i2 = 0; _i2 < subdiv; _i2++) {
+                var start = Math.floor(_i2 * seg_per_div);
+                var end = Math.floor((_i2 + 1) * seg_per_div) + 1;
                 var line_segment = line.slice(start, end);
 
-                var label = _label_line2.default.create(size, total_size, line_segment, layout);
-                if (label) {
-                    labels.push(label);
+                var _label = _label_line3.default.create(size, total_size, line_segment, layout);
+                if (_label) {
+                    labels.push(_label);
                 }
             }
         }
@@ -42146,9 +43162,9 @@ Object.assign(TextStyle, {
         // labels placed (e.g. fewer than requested subdivisions)
         // TODO: refactor multiple label placements per line / move into label placement class for better effectiveness
         if (labels.length < subdiv) {
-            var _label = _label_line2.default.create(size, total_size, line, layout);
-            if (_label) {
-                labels.push(_label);
+            var _label2 = _label_line3.default.create(size, total_size, line, layout);
+            if (_label2) {
+                labels.push(_label2);
             }
         }
         return labels;
@@ -42163,7 +43179,7 @@ Object.assign(TextStyle, {
 
 TextStyle.texture_id = 0; // namespaces per-tile label textures
 
-},{"../../geo":200,"../../gl/constants":201,"../../gl/vertex_layout":212,"../../labels/collision":213,"../../labels/label_line":216,"../../labels/label_point":217,"../points/points":240,"../style":243}],249:[function(_dereq_,module,exports){
+},{"../../geo":209,"../../gl/constants":210,"../../gl/vertex_layout":221,"../../labels/collision":222,"../../labels/label_line":225,"../../labels/label_point":226,"../points/points":248,"../style":251}],257:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -42174,8 +43190,6 @@ exports.TextLabels = undefined;
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; // Text label rendering methods, can be mixed into a rendering style
 
 var _style_parser = _dereq_('../style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 var _geo = _dereq_('../../geo');
 
@@ -42481,29 +43495,35 @@ var TextLabels = exports.TextLabels = {
         }
 
         // Colors
-        draw.font.fill = _style_parser2.default.createPropertyCache(draw.font.fill);
+        draw.font.fill = _style_parser.StyleParser.createPropertyCache(draw.font.fill);
         if (draw.font.stroke) {
-            draw.font.stroke.color = _style_parser2.default.createPropertyCache(draw.font.stroke.color);
+            draw.font.stroke.color = _style_parser.StyleParser.createPropertyCache(draw.font.stroke.color);
         }
 
         // Convert font and text stroke sizes
-        draw.font.px_size = _style_parser2.default.createPropertyCache(draw.font.size || _text_settings2.default.defaults.size, _canvas_text2.default.fontPixelSize);
+        draw.font.px_size = _style_parser.StyleParser.createPropertyCache(draw.font.size || _text_settings2.default.defaults.size, _canvas_text2.default.fontPixelSize);
         if (draw.font.stroke && draw.font.stroke.width != null) {
-            draw.font.stroke.width = _style_parser2.default.createPropertyCache(draw.font.stroke.width, _style_parser2.default.parsePositiveNumber);
+            draw.font.stroke.width = _style_parser.StyleParser.createPropertyCache(draw.font.stroke.width, parseFloat);
         }
 
         // Offset (2d array)
-        draw.offset = _style_parser2.default.createPropertyCache(draw.offset, function (v) {
-            return Array.isArray(v) && v.map(_style_parser2.default.parseNumber);
+        draw.offset = _style_parser.StyleParser.createPropertyCache(draw.offset, function (v) {
+            return Array.isArray(v) && v.map(parseFloat).map(function (v) {
+                return isNaN(v) ? 0 : v;
+            }) || [0, 0];
         });
 
         // Buffer (1d value or or 2d array) - must be >= 0
-        draw.buffer = _style_parser2.default.createPropertyCache(draw.buffer, function (v) {
-            return (Array.isArray(v) ? v : [v, v]).map(_style_parser2.default.parsePositiveNumber);
+        draw.buffer = _style_parser.StyleParser.createPropertyCache(draw.buffer, function (v) {
+            return (Array.isArray(v) ? v : [v, v]).map(function (v) {
+                return Math.max(parseFloat(v), 0);
+            }).map(function (v) {
+                return isNaN(v) ? 0 : v;
+            }) || [0, 0];
         });
 
         // Repeat rules - for text labels, defaults to tile size
-        draw.repeat_distance = _style_parser2.default.createPropertyCache(draw.repeat_distance || _geo2.default.tile_size, _style_parser2.default.parsePositiveNumber);
+        draw.repeat_distance = _style_parser.StyleParser.createPropertyCache(draw.repeat_distance || _geo2.default.tile_size, parseFloat);
 
         return draw;
     },
@@ -42515,6 +43535,12 @@ var TextLabels = exports.TextLabels = {
 
         // common settings w/points
         layout = this.computeLayout(layout, feature, draw, context, tile);
+
+        // tile boundary handling
+        layout.cull_from_tile = draw.cull_from_tile != null ? draw.cull_from_tile : true;
+
+        // standalone text can move into tile if specified
+        layout.move_into_tile = draw.move_into_tile != null ? draw.move_into_tile : true;
 
         // repeat rules include the text
         if (layout.repeat_distance) {
@@ -42530,7 +43556,6 @@ var TextLabels = exports.TextLabels = {
         layout.align = draw.align;
 
         // used to fudge width value as text may overflow bounding box if it has italic, bold, etc style
-        // TODO rename to more generic, not italic-specific (bold)
         layout.italic = text_settings.style !== 'normal';
 
         // used to determine orientation of text if the text_source has a `left` or `right` key
@@ -42544,7 +43569,7 @@ var TextLabels = exports.TextLabels = {
     }
 };
 
-},{"../../geo":200,"../../labels/collision":213,"../../utils/log":259,"../../utils/thread":267,"../../utils/worker_broker":271,"../style_parser":245,"../text/canvas_text":246,"../text/text_settings":250}],250:[function(_dereq_,module,exports){
+},{"../../geo":209,"../../labels/collision":222,"../../utils/log":267,"../../utils/thread":275,"../../utils/worker_broker":279,"../style_parser":253,"../text/canvas_text":254,"../text/text_settings":258}],258:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -42561,8 +43586,6 @@ var _geo2 = _interopRequireDefault(_geo);
 
 var _style_parser = _dereq_('../style_parser');
 
-var _style_parser2 = _interopRequireDefault(_style_parser);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var TextSettings;
@@ -42571,11 +43594,13 @@ exports.default = TextSettings = {
 
     // A key for grouping all labels of the same text style (e.g. same Canvas state, to minimize state changes)
     key: function key(settings) {
-        return [settings.style, settings.weight, settings.family, settings.px_size, settings.fill, settings.stroke, settings.stroke_width, settings.transform, settings.text_wrap, settings.max_lines, settings.supersample, _utils2.default.device_pixel_ratio].join('/');
+        return [settings.spacing, settings.dash, settings.angle, settings.style, settings.weight, settings.family, settings.px_size, settings.fill, settings.stroke, settings.stroke_width, settings.transform, settings.text_wrap, settings.max_lines, settings.supersample, _utils2.default.device_pixel_ratio].join('/');
     },
 
 
     defaults: {
+        spacing: 0,
+        angle: 0,
         style: 'normal',
         weight: null,
         size: '12px',
@@ -42598,7 +43623,7 @@ exports.default = TextSettings = {
         style.can_articulate = draw.can_articulate;
 
         // Use fill if specified, or default
-        style.fill = draw.font.fill && _utils2.default.toCSSColor(_style_parser2.default.evalCachedColorProperty(draw.font.fill, context)) || this.defaults.fill;
+        style.fill = draw.font.fill && _utils2.default.toCSSColor(_style_parser.StyleParser.evalCachedColorProperty(draw.font.fill, context)) || this.defaults.fill;
 
         // Font properties are modeled after CSS names:
         // - family: Helvetica, Futura, etc.
@@ -42624,12 +43649,12 @@ exports.default = TextSettings = {
 
         // calculated pixel size
         style.supersample = draw.supersample_text ? 1.5 : 1; // optionally render text at 150% to improve clarity
-        style.px_size = _style_parser2.default.evalCachedProperty(draw.font.px_size, context) * style.supersample;
+        style.px_size = _style_parser.StyleParser.evalCachedProperty(draw.font.px_size, context) * style.supersample;
 
         // Use stroke if specified
         if (draw.font.stroke && draw.font.stroke.color) {
-            style.stroke = _utils2.default.toCSSColor(_style_parser2.default.evalCachedColorProperty(draw.font.stroke.color, context) || this.defaults.stroke);
-            style.stroke_width = _style_parser2.default.evalCachedProperty(draw.font.stroke.width, context) || this.defaults.stroke_width;
+            style.stroke = _utils2.default.toCSSColor(_style_parser.StyleParser.evalCachedColorProperty(draw.font.stroke.color, context) || this.defaults.stroke);
+            style.stroke_width = _style_parser.StyleParser.evalCachedProperty(draw.font.stroke.width, context) || this.defaults.stroke_width;
         }
 
         style.font_css = this.fontCSS(style);
@@ -42653,6 +43678,22 @@ exports.default = TextSettings = {
         // max_lines setting to truncate very long labels with an ellipsis
         style.max_lines = draw.max_lines || this.defaults.max_lines;
 
+        if (typeof draw.angle === 'string') {
+            style.angle = feature.properties[draw.angle] * Math.PI / 180.0;
+        } else if (draw.angle instanceof Function) {
+            style.angle = draw.angle(context) * Math.PI / 180.0;
+        } else {
+            style.angle = draw.angle * Math.PI / 180.0 || this.defaults.angle;
+        }
+
+        style.dash = draw.dash;
+
+        if (draw.spacing instanceof Function) {
+            style.spacing = draw.spacing(context) || this.defaults.spacing;
+        } else {
+            style.spacing = draw.spacing || this.defaults.spacing;
+        }
+
         return style;
     },
 
@@ -42671,7 +43712,7 @@ exports.default = TextSettings = {
     }
 };
 
-},{"../../geo":200,"../../utils/utils":269,"../style_parser":245}],251:[function(_dereq_,module,exports){
+},{"../../geo":209,"../../utils/utils":277,"../style_parser":253}],259:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -42700,8 +43741,6 @@ var _style = _dereq_('./styles/style');
 
 var _style_parser = _dereq_('./styles/style_parser');
 
-var _style_parser2 = _interopRequireDefault(_style_parser);
-
 var _collision = _dereq_('./labels/collision');
 
 var _collision2 = _interopRequireDefault(_collision);
@@ -42726,8 +43765,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var rbush = _dereq_('rbush');
 var id = 0; // unique tile id
-var build_id = 0; // id tracking order in which tiles were build
 
 var Tile = function () {
 
@@ -42752,7 +43791,6 @@ var Tile = function () {
         this.view = view;
         this.source = source;
         this.generation = null;
-        this.valid = true;
 
         this.visible = false;
         this.proxy_for = null;
@@ -42762,7 +43800,6 @@ var Tile = function () {
         this.loading = false;
         this.loaded = false;
         this.built = false;
-        this.labeled = false;
         this.error = null;
         this.debug = {};
 
@@ -42774,6 +43811,7 @@ var Tile = function () {
         this.min = _geo2.default.metersForTile(this.coords);
         this.max = _geo2.default.metersForTile({ x: this.coords.x + 1, y: this.coords.y + 1, z: this.coords.z }), this.span = { x: this.max.x - this.min.x, y: this.max.y - this.min.y };
         this.bounds = { sw: { x: this.min.x, y: this.max.y }, ne: { x: this.max.x, y: this.min.y } };
+        this.lnglat = _geo2.default.lnglatForTile(this.min, this.max);
         this.center_dist = 0;
 
         this.meters_per_pixel = _geo2.default.metersPerPixel(this.style_zoom);
@@ -42781,9 +43819,12 @@ var Tile = function () {
         this.units_per_pixel = _geo2.default.units_per_pixel / this.overzoom2; // adjusted for overzoom
         this.units_per_meter_overzoom = _geo2.default.unitsPerMeter(this.coords.z) * this.overzoom2; // adjusted for overzoom
 
+        this.features = []; //�洢������Ӧfeature
+        this.tree = rbush(16); //�洢�ռ�����
         this.meshes = {}; // renderable VBO meshes keyed by style
+        this.textures = []; // textures that the tile owns (labels, etc.)
+        this.previous_textures = []; // textures retained by the tile in the previous build generation
         this.new_mesh_styles = []; // meshes that have been built so far in current build generation
-        this.pending_label_meshes = null; // meshes that are pending collision (shouldn't be displayed yet)
     }
 
     _createClass(Tile, [{
@@ -42799,14 +43840,15 @@ var Tile = function () {
             }
             this.meshes = {};
 
-            if (this.pending_label_meshes) {
-                for (var _m in this.pending_label_meshes) {
-                    this.pending_label_meshes[_m].forEach(function (m) {
-                        return m.destroy();
-                    });
-                }
-            }
-            this.pending_label_meshes = null;
+            this.textures.forEach(function (t) {
+                return _texture2.default.release(t);
+            });
+            this.textures = [];
+
+            this.previous_textures.forEach(function (t) {
+                return _texture2.default.release(t);
+            });
+            this.previous_textures = [];
         }
     }, {
         key: 'destroy',
@@ -42815,7 +43857,6 @@ var Tile = function () {
             this.workerMessage('self.removeTile', this.key);
             this.freeResources();
             this.worker = null;
-            this.valid = false;
         }
     }, {
         key: 'buildAsMessage',
@@ -42835,7 +43876,9 @@ var Tile = function () {
                 overzoom: this.overzoom,
                 overzoom2: this.overzoom2,
                 generation: this.generation,
-                debug: this.debug
+                debug: this.debug,
+                tree: this.tree, //����tree��features��������Ϣ�������ַ��������ܴ����ã�����Ҫcopyһ��
+                features: this.features
             };
         }
     }, {
@@ -42859,7 +43902,6 @@ var Tile = function () {
             if (!this.loaded) {
                 this.loading = true;
                 this.built = false;
-                this.labeled = false;
             }
             return this.workerMessage('self.buildTile', { tile: this.buildAsMessage() }).catch(function (e) {
                 throw e;
@@ -42881,11 +43923,11 @@ var Tile = function () {
            for a single tile.
         */
         value: function buildMeshes(styles, progress) {
+            var _textures;
+
             if (this.error) {
                 return;
             }
-
-            this.build_id = build_id++; // record order in which tile was built
 
             // Debug
             if (progress.start) {
@@ -42894,7 +43936,8 @@ var Tile = function () {
             }
 
             // Create VBOs
-            var meshes = {}; // new data to be added to tile
+            var meshes = {},
+                textures = []; // new data to be added to tile
             var mesh_data = this.mesh_data;
             if (mesh_data) {
                 for (var s in mesh_data) {
@@ -42911,20 +43954,10 @@ var Tile = function () {
                             mesh_options.uniforms = Object.assign({}, mesh_options.uniforms, mesh_variant.uniforms);
                             mesh_options.variant = mesh_variant.variant;
 
-                            // for labels, keep buffer data on CPU so they can be modified later
-                            if (mesh_variant.labels) {
-                                mesh_options.retain = true;
-                            }
-
                             var mesh = styles[s].makeMesh(mesh_variant.vertex_data, mesh_variant.vertex_elements, mesh_options);
                             mesh.variant = mesh_options.variant;
-                            mesh.labels = mesh_variant.labels;
                             meshes[s] = meshes[s] || [];
                             meshes[s].push(mesh);
-                            if (mesh.variant.order == null) {
-                                mesh.variant.order = meshes[s].length - 1; // assign default variant render order
-                            }
-
                             this.debug.buffer_size += mesh.buffer_size;
                             this.debug.geometry_count += mesh.geometry_count;
                         }
@@ -42939,73 +43972,59 @@ var Tile = function () {
                             return ao == null ? 1 : bo == null ? -1 : ao < bo ? -1 : 1;
                         });
                     }
+
+                    // Assign texture ownership to tiles
+                    // Note that it's valid for a single texture to be referenced from multiple styles
+                    // (e.g. same raster texture attached to multiple sources). This means the same
+                    // texture may be added to the tile's texture list more than once, which ensures
+                    // that it is properly released (to match its retain count).
+                    if (mesh_data[s].textures) {
+                        textures.push.apply(textures, _toConsumableArray(mesh_data[s].textures));
+                    }
                 }
             }
             delete this.mesh_data;
 
+            // Initialize tracking for this tile generation
+            if (progress.start) {
+                this.previous_textures = [].concat(_toConsumableArray(this.textures)); // copy old list of textures
+                this.textures = [];
+            }
+
             // New meshes
             for (var m in meshes) {
-                // swap in non-collision meshes right away
-                if (!styles[m].collision) {
-                    if (this.meshes[m]) {
-                        this.meshes[m].forEach(function (m) {
-                            return m.destroy();
-                        }); // free old meshes
-                    }
-
-                    this.meshes[m] = meshes[m]; // set new mesh
-                    this.new_mesh_styles.push(m);
+                if (this.meshes[m]) {
+                    this.meshes[m].forEach(function (m) {
+                        return m.destroy();
+                    }); // free old meshes
                 }
-                // keep label meshes out of view until collision is complete
-                else {
-                        this.pending_label_meshes = this.pending_label_meshes || {};
-                        this.pending_label_meshes[m] = meshes[m];
-                    }
+                this.meshes[m] = meshes[m]; // set new mesh
+                this.new_mesh_styles.push(m);
             }
+
+            // New textures
+            (_textures = this.textures).push.apply(_textures, textures);
 
             if (progress.done) {
                 // Release un-replaced meshes (existing in previous generation, but weren't built for this one)
-                for (var _m2 in this.meshes) {
-                    if (this.new_mesh_styles.indexOf(_m2) === -1 && (!this.pending_label_meshes || this.pending_label_meshes[_m2] == null)) {
-                        this.meshes[_m2].forEach(function (m) {
+                for (var _m in this.meshes) {
+                    if (this.new_mesh_styles.indexOf(_m) === -1) {
+                        this.meshes[_m].forEach(function (m) {
                             return m.destroy();
                         });
-                        delete this.meshes[_m2];
+                        delete this.meshes[_m];
                     }
                 }
                 this.new_mesh_styles = [];
 
+                // Release old textures
+                this.previous_textures.forEach(function (t) {
+                    return _texture2.default.release(t);
+                });
+                this.previous_textures = [];
+
                 this.debug.geometry_ratio = (this.debug.geometry_count / this.debug.feature_count).toFixed(1);
                 this.printDebug();
-            }
-        }
-
-        // How many styles are currently pending label collision
-
-    }, {
-        key: 'pendingLabelStyleCount',
-        value: function pendingLabelStyleCount() {
-            return this.pending_label_meshes ? Object.keys(this.pending_label_meshes).length : 0;
-        }
-
-        // Swap label style meshes after collision is complete
-
-    }, {
-        key: 'swapPendingLabels',
-        value: function swapPendingLabels() {
-            this.labeled = true; // mark as labeled
-
-            if (this.pending_label_meshes) {
-                for (var m in this.pending_label_meshes) {
-                    if (this.meshes[m]) {
-                        this.meshes[m].forEach(function (m) {
-                            return m.destroy();
-                        }); // free old meshes
-                    }
-
-                    this.meshes[m] = this.pending_label_meshes[m]; // set new mesh
-                }
-                this.pending_label_meshes = null;
             }
         }
 
@@ -43031,11 +44050,6 @@ var Tile = function () {
                 this.proxy_for = null;
                 this.proxy_depth = 0;
             }
-        }
-    }, {
-        key: 'isProxy',
-        value: function isProxy() {
-            return this.proxy_for != null;
         }
 
         // Proxy tiles only need to render a specific style if any of the tiles they are proxying *for*
@@ -43084,10 +44098,13 @@ var Tile = function () {
         value: function merge(other) {
             this.loading = other.loading;
             this.loaded = other.loaded;
-            this.generation = other.generation;
+            this.generation = other.loaded;
             this.error = other.error;
             this.mesh_data = other.mesh_data;
             this.debug = (0, _merge2.default)(this.debug, other.debug);
+            //�����ϲ�
+            this.features = (0, _merge2.default)(this.features, other.features);
+            this.tree = (0, _merge2.default)(this.tree, other.tree);
             return this;
         }
     }, {
@@ -43228,7 +44245,9 @@ var Tile = function () {
             tile.debug.feature_count = 0;
             tile.debug.layers = null;
 
-            _collision2.default.startTile(tile.id, { apply_repeat_groups: true });
+            tile.tree = null;
+            tile.features = null;
+            _collision2.default.startTile(tile.id);
 
             // Process each top-level layer
             for (var layer_name in layers) {
@@ -43261,7 +44280,7 @@ var Tile = function () {
                             continue; // skip features w/o geometry (valid GeoJSON)
                         }
 
-                        var context = _style_parser2.default.getFeatureParseContext(feature, tile, global);
+                        var context = _style_parser.StyleParser.getFeatureParseContext(feature, tile, global);
                         context.winding = tile.default_winding;
                         context.source = tile.source; // add data source name
                         context.layer = source_layer.layer; // add data source layer name
@@ -43271,6 +44290,19 @@ var Tile = function () {
                         if (!draw_groups) {
                             continue;
                         }
+                        //copy�ռ�����������תΪ��γ��
+                        var geometry = _geo2.default.copyGeometry(feature.geometry);
+                        geometry = _geo2.default.tileSpaceToLatlng(geometry, tile.coords.z, tile.min, tile.max);
+                        //������������
+                        var bbox = _geo2.default.getBoundingBox(geometry);
+                        if (tile.tree === null) tile.tree = rbush(16);
+                        if (tile.features === null) tile.features = [];
+                        for (var r = 0; r < bbox.length; r += 4) {
+                            tile.tree.insert({ 'id': tile.features.length, 'minX': bbox[r], 'minY': bbox[r + 1], 'maxX': bbox[r + 2], 'maxY': bbox[r + 3] });
+                            //this.grid.insert(key, bbox[0], bbox[1], bbox[2], bbox[3]);
+                        }
+
+                        //var groups = {};
 
                         // Render draw groups
                         for (var group_name in draw_groups) {
@@ -43289,11 +44321,14 @@ var Tile = function () {
                             if (group == null || group.visible === false) {
                                 continue;
                             }
+                            //groups[group_name] = group;
 
                             context.layers = group.layers; // add matching draw layers
 
                             style.addFeature(feature, group, context);
                         }
+                        //feature.source_layer = source_layer.layer;
+                        tile.features.push(feature);
 
                         tile.debug.feature_count++;
                     }
@@ -43463,7 +44498,7 @@ var Tile = function () {
     }, {
         key: 'slice',
         value: function slice(tile, keys) {
-            var keep = ['id', 'key', 'loading', 'loaded', 'generation', 'error', 'debug'];
+            var keep = ['id', 'key', 'loading', 'loaded', 'generation', 'error', 'debug', 'features', 'tree'];
             if (Array.isArray(keys)) {
                 keep.push.apply(keep, _toConsumableArray(keys));
             }
@@ -43520,7 +44555,7 @@ function addDebugLayers(node, tree) {
     }
 }
 
-},{"./geo":200,"./gl/texture":207,"./labels/collision":213,"./styles/style":243,"./styles/style_parser":245,"./utils/gl-matrix":257,"./utils/log":259,"./utils/merge":261,"./utils/task":266,"./utils/utils":269,"./utils/worker_broker":271}],252:[function(_dereq_,module,exports){
+},{"./geo":209,"./gl/texture":216,"./labels/collision":222,"./styles/style":251,"./styles/style_parser":253,"./utils/gl-matrix":265,"./utils/log":267,"./utils/merge":269,"./utils/task":274,"./utils/utils":277,"./utils/worker_broker":279,"rbush":193}],260:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -43541,10 +44576,6 @@ var _geo = _dereq_('./geo');
 
 var _geo2 = _interopRequireDefault(_geo);
 
-var _main_pass = _dereq_('./labels/main_pass');
-
-var _main_pass2 = _interopRequireDefault(_main_pass);
-
 var _log = _dereq_('./utils/log');
 
 var _log2 = _interopRequireDefault(_log);
@@ -43552,10 +44583,6 @@ var _log2 = _interopRequireDefault(_log);
 var _worker_broker = _dereq_('./utils/worker_broker');
 
 var _worker_broker2 = _interopRequireDefault(_worker_broker);
-
-var _task = _dereq_('./utils/task');
-
-var _task2 = _interopRequireDefault(_task);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -43577,14 +44604,6 @@ var TileManager = function () {
         this.building_tiles = null;
         this.renderable_tiles = [];
         this.active_styles = [];
-        this.collision = {
-            tiles: [],
-            generations: [],
-            style_counts: [],
-            pending_label_style_counts: [],
-            zoom: null,
-            zoom_steps: 2
-        };
 
         // Provide a hook for this object to be called from worker threads
         this.main_thread_target = ['TileManager', this.scene.id].join('_');
@@ -43699,83 +44718,11 @@ var TileManager = function () {
             this.view.pruneTilesForView();
             this.updateRenderableTiles();
             this.updateActiveStyles();
-            return this.updateLabels();
-        }
-    }, {
-        key: 'updateLabels',
-        value: function updateLabels() {
-            var _this2 = this;
-
-            if (this.scene.building && !this.scene.building.initial) {
-                // log('debug', `Skip label layout due to on-going scene rebuild`);
-                return Promise.resolve({});
-            }
-
-            // get current visible tiles and sort by key for consistency collision order
-            var tiles = this.renderable_tiles.filter(function (t) {
-                return t.valid;
-            }).filter(function (t) {
-                return t.built;
-            });
-
-            if (tiles.length === 0) {
-                return Promise.resolve({});
-            }
-
-            // Evaluate labels in order of tile build, to prevent previously visible labels
-            // from disappearing, e.g. due to a newly loaded repeat label nearby
-            tiles.sort(function (a, b) {
-                return a.build_id < b.build_id ? -1 : a.build_id > b.build_id ? 1 : 0;
-            });
-
-            // check if tile set has changed (in ways that affect collision)
-            if (roundPrecision(this.view.zoom, this.collision.zoom_steps) === this.collision.zoom && tiles.every(function (t) {
-                var i = _this2.collision.tiles.indexOf(t);
-                return i > -1 && _this2.collision.generations[i] === t.generation && _this2.collision.style_counts[i] === Object.keys(t.meshes).length && _this2.collision.pending_label_style_counts[i] === t.pendingLabelStyleCount();
-            })) {
-                // log('debug', `Skip label layout due to same tile/meshes (zoom ${this.view.zoom.toFixed(2)}, tiles ${JSON.stringify(this.collision.tiles.map(t => t.key))}, mesh counts ${JSON.stringify(this.collision.style_counts)}, pending label mesh counts ${JSON.stringify(this.collision.pending_label_style_counts)})`);
-                return Promise.resolve({});
-            }
-
-            // update collision if not already updating
-            if (!this.collision.task) {
-                this.collision.tiles = tiles;
-                this.collision.generations = tiles.map(function (t) {
-                    return t.generation;
-                });
-                this.collision.style_counts = tiles.map(function (t) {
-                    return Object.keys(t.meshes).length;
-                });
-                this.collision.pending_label_style_counts = tiles.map(function (t) {
-                    return t.pendingLabelStyleCount();
-                });
-                this.collision.zoom = roundPrecision(this.view.zoom, this.collision.zoom_steps);
-                // log('debug', `Update label collisions (zoom ${this.collision.zoom}, ${JSON.stringify(this.collision.tiles.map(t => t.key))}, mesh counts ${JSON.stringify(this.collision.style_counts)}, pending label mesh counts ${JSON.stringify(this.collision.pending_label_style_counts)})`);
-
-                this.collision.task = {
-                    type: 'tileManagerUpdateLabels',
-                    run: function run(task) {
-                        return (0, _main_pass2.default)(_this2.collision.tiles, _this2.collision.zoom, _this2.isLoadingVisibleTiles()).then(function (results) {
-                            _this2.collision.task = null;
-                            _task2.default.finish(task, results);
-                            _this2.updateTileStates().then(function () {
-                                return _this2.scene.immediateRedraw();
-                            });
-                        });
-                    },
-                    user_moving_view: false // don't run task when user is moving view
-                };
-                _task2.default.add(this.collision.task);
-            }
-            // else {
-            //     log('debug', `Skip label layout due to on-going layout (zoom ${this.view.zoom.toFixed(2)}, tiles ${JSON.stringify(this.collision.tiles.map(t => t.key))}, mesh counts ${JSON.stringify(this.collision.style_counts)}, pending label mesh counts ${JSON.stringify(this.collision.pending_label_style_counts)})`);
-            // }
-            return this.collision.task.promise;
         }
     }, {
         key: 'updateProxyTiles',
         value: function updateProxyTiles() {
-            var _this3 = this;
+            var _this2 = this;
 
             if (this.view.zoom_direction === 0) {
                 return;
@@ -43788,17 +44735,17 @@ var TileManager = function () {
 
             var proxy = false;
             this.forEachTile(function (tile) {
-                if (_this3.view.zoom_direction === 1) {
-                    if (tile.visible && !tile.labeled) {
-                        var parent = _this3.pyramid.getAncestor(tile);
+                if (_this2.view.zoom_direction === 1) {
+                    if (tile.visible && !tile.built) {
+                        var parent = _this2.pyramid.getAncestor(tile);
                         if (parent) {
                             parent.setProxyFor(tile);
                             proxy = true;
                         }
                     }
-                } else if (_this3.view.zoom_direction === -1) {
-                    if (tile.visible && !tile.labeled) {
-                        var descendants = _this3.pyramid.getDescendants(tile);
+                } else if (_this2.view.zoom_direction === -1) {
+                    if (tile.visible && !tile.built) {
+                        var descendants = _this2.pyramid.getDescendants(tile);
                         for (var i = 0; i < descendants.length; i++) {
                             descendants[i].setProxyFor(tile);
                             proxy = true;
@@ -43897,17 +44844,10 @@ var TileManager = function () {
     }, {
         key: 'isLoadingVisibleTiles',
         value: function isLoadingVisibleTiles() {
-            var _this4 = this;
+            var _this3 = this;
 
             return Object.keys(this.tiles).some(function (k) {
-                return _this4.tiles[k].visible && !_this4.tiles[k].built;
-            });
-        }
-    }, {
-        key: 'allVisibleTilesLabeled',
-        value: function allVisibleTilesLabeled() {
-            return this.renderable_tiles.every(function (t) {
-                return t.labeled;
+                return _this3.tiles[k].visible && !_this3.tiles[k].built;
             });
         }
 
@@ -43924,7 +44864,7 @@ var TileManager = function () {
     }, {
         key: 'loadQueuedCoordinates',
         value: function loadQueuedCoordinates() {
-            var _this5 = this;
+            var _this4 = this;
 
             if (this.queued_coords.length === 0) {
                 return;
@@ -43932,7 +44872,7 @@ var TileManager = function () {
 
             // Sort queued tiles from center tile
             this.queued_coords.sort(function (a, b) {
-                var center = _this5.view.center.meters;
+                var center = _this4.view.center.meters;
                 var half_span = _geo2.default.metersPerTile(a.z) / 2;
 
                 var ac = _geo2.default.metersForTile(a);
@@ -43952,7 +44892,7 @@ var TileManager = function () {
                 return bd > ad ? -1 : bd === ad ? 0 : 1;
             });
             this.queued_coords.forEach(function (coords) {
-                return _this5.loadCoordinate(coords);
+                return _this4.loadCoordinate(coords);
             });
             this.queued_coords = [];
         }
@@ -44129,18 +45069,9 @@ var TileManager = function () {
     return TileManager;
 }();
 
-// Round a number to given number of decimal divisions
-// e.g. roundPrecision(x, 4) rounds a number to increments of 0.25
-
-
 exports.default = TileManager;
-function roundPrecision(x, d) {
-    var places = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 2;
 
-    return (Math.floor(x * d) / d).toFixed(places);
-}
-
-},{"./geo":200,"./labels/main_pass":218,"./tile":251,"./tile_pyramid":253,"./utils/log":259,"./utils/task":266,"./utils/worker_broker":271}],253:[function(_dereq_,module,exports){
+},{"./geo":209,"./tile":259,"./tile_pyramid":261,"./utils/log":267,"./utils/worker_broker":279}],261:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44327,7 +45258,7 @@ var TilePyramid = function () {
 
 exports.default = TilePyramid;
 
-},{"./geo":200,"./tile":251}],254:[function(_dereq_,module,exports){
+},{"./geo":209,"./tile":259}],262:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -44350,7 +45281,7 @@ function debounce(func, wait) {
     };
 }
 
-},{}],255:[function(_dereq_,module,exports){
+},{}],263:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -44372,9 +45303,6 @@ exports.default = debugSettings = {
     // suppress animaton of label snap to pixel grid
     suppress_label_snap_animation: false,
 
-    // show hidden labels for debugging
-    show_hidden_labels: false,
-
     // collect feature/geometry stats on styling layers
     layer_stats: false
 };
@@ -44382,7 +45310,7 @@ function mergeDebugSettings(settings) {
     Object.assign(debugSettings, settings);
 }
 
-},{}],256:[function(_dereq_,module,exports){
+},{}],264:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44411,13 +45339,21 @@ var MethodNotImplemented = exports.MethodNotImplemented = function (_Error) {
     return MethodNotImplemented;
 }(Error);
 
-},{}],257:[function(_dereq_,module,exports){
+},{}],265:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.mat4 = exports.mat3 = exports.vec3 = undefined;
+exports.mat4 = exports.mat3 = exports.mat2 = exports.vec3 = undefined;
+
+var _create = _dereq_('gl-mat2/create');
+
+var _create2 = _interopRequireDefault(_create);
+
+var _rotate = _dereq_('gl-mat2/rotate');
+
+var _rotate2 = _interopRequireDefault(_rotate);
 
 var _normalFromMat = _dereq_('gl-mat3/normal-from-mat4');
 
@@ -44426,6 +45362,22 @@ var _normalFromMat2 = _interopRequireDefault(_normalFromMat);
 var _invert = _dereq_('gl-mat3/invert');
 
 var _invert2 = _interopRequireDefault(_invert);
+
+var _rotate3 = _dereq_('gl-mat4/rotate');
+
+var _rotate4 = _interopRequireDefault(_rotate3);
+
+var _rotateX = _dereq_('gl-mat4/rotateX');
+
+var _rotateX2 = _interopRequireDefault(_rotateX);
+
+var _rotateY = _dereq_('gl-mat4/rotateY');
+
+var _rotateY2 = _interopRequireDefault(_rotateY);
+
+var _rotateZ = _dereq_('gl-mat4/rotateZ');
+
+var _rotateZ2 = _interopRequireDefault(_rotateZ);
 
 var _multiply = _dereq_('gl-mat4/multiply');
 
@@ -44475,6 +45427,13 @@ var vec3 = {
     }
 };
 
+// mat2
+
+var mat2 = {
+    create: _create2.default,
+    rotate: _rotate2.default
+};
+
 // mat3
 
 var mat3 = {
@@ -44485,6 +45444,10 @@ var mat3 = {
 // mat4
 
 var mat4 = {
+    rotate: _rotate4.default,
+    rotateX: _rotateX2.default,
+    rotateY: _rotateY2.default,
+    rotateZ: _rotateZ2.default,
     multiply: _multiply2.default,
     translate: _translate2.default,
     scale: _scale2.default,
@@ -44495,10 +45458,11 @@ var mat4 = {
 };
 
 exports.vec3 = vec3;
+exports.mat2 = mat2;
 exports.mat3 = mat3;
 exports.mat4 = mat4;
 
-},{"gl-mat3/invert":88,"gl-mat3/normal-from-mat4":89,"gl-mat4/copy":90,"gl-mat4/identity":91,"gl-mat4/lookAt":92,"gl-mat4/multiply":93,"gl-mat4/perspective":94,"gl-mat4/scale":95,"gl-mat4/translate":96}],258:[function(_dereq_,module,exports){
+},{"gl-mat2/create":83,"gl-mat2/rotate":84,"gl-mat3/invert":85,"gl-mat3/normal-from-mat4":86,"gl-mat4/copy":87,"gl-mat4/identity":88,"gl-mat4/lookAt":89,"gl-mat4/multiply":90,"gl-mat4/perspective":91,"gl-mat4/rotate":92,"gl-mat4/rotateX":93,"gl-mat4/rotateY":94,"gl-mat4/rotateZ":95,"gl-mat4/scale":96,"gl-mat4/translate":97}],266:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -44524,7 +45488,7 @@ function hashString(string) {
     return hash;
 }
 
-},{}],259:[function(_dereq_,module,exports){
+},{}],267:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44624,7 +45588,7 @@ if (_thread2.default.is_main) {
 _worker_broker2.default.addTarget('_logProxy', log); // proxy log messages from worker to main thread
 _worker_broker2.default.addTarget('_logSetLevelProxy', log.setLevel); // proxy log level setting from main to worker thread
 
-},{"./thread":267,"./version":270,"./worker_broker":271}],260:[function(_dereq_,module,exports){
+},{"./thread":275,"./version":278,"./worker_broker":279}],268:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44641,8 +45605,6 @@ var _log2 = _interopRequireDefault(_log);
 var _urls = _dereq_('./urls');
 
 var _style_parser = _dereq_('../styles/style_parser');
-
-var _style_parser2 = _interopRequireDefault(_style_parser);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -44711,7 +45673,7 @@ var MediaCapture = function () {
                 // Optional background to blend with (only RGB, alpha is ignored)
                 var background = this.queue_screenshot.background;
                 if (background && background !== 'transparent') {
-                    background = _style_parser2.default.parseColor(background).slice(0, 3).map(function (c) {
+                    background = _style_parser.StyleParser.parseColor(background).slice(0, 3).map(function (c) {
                         return c * 255;
                     });
                 } else {
@@ -44854,7 +45816,7 @@ var MediaCapture = function () {
 
 exports.default = MediaCapture;
 
-},{"../styles/style_parser":245,"./log":259,"./urls":268}],261:[function(_dereq_,module,exports){
+},{"../styles/style_parser":253,"./log":267,"./urls":276}],269:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44898,7 +45860,7 @@ function mergeObjects(dest) {
     return dest;
 }
 
-},{}],262:[function(_dereq_,module,exports){
+},{}],270:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -44929,20 +45891,17 @@ var OBB = function () {
     }
 
     _createClass(OBB, [{
-        key: 'toJSON',
-        value: function toJSON() {
-            return {
-                x: this.centroid[0],
-                y: this.centroid[1],
-                a: this.angle,
-                w: this.dimension[0],
-                h: this.dimension[1]
-            };
+        key: 'move',
+        value: function move(px, py) {
+            this.centroid = [px, py];
+
+            this.update();
         }
     }, {
         key: 'getExtent',
         value: function getExtent() {
-            var aabb = [Infinity, Infinity, -Infinity, -Infinity];
+            var inf = 1e6;
+            var aabb = [inf, inf, -inf, -inf];
 
             for (var i = 0; i < 4; ++i) {
                 aabb[0] = Math.min(this.quad[i][0], aabb[0]);
@@ -44978,8 +45937,9 @@ var OBB = function () {
     }], [{
         key: 'projectToAxis',
         value: function projectToAxis(obb, axis) {
-            var min = Infinity;
-            var max = -Infinity;
+            var inf = 1e6;
+            var min = inf;
+            var max = -inf;
 
             var quad = obb.quad;
 
@@ -45017,7 +45977,7 @@ var OBB = function () {
 
 exports.default = OBB;
 
-},{"../vector":272}],263:[function(_dereq_,module,exports){
+},{"../vector":280}],271:[function(_dereq_,module,exports){
 'use strict';
 
 _dereq_('core-js/es6/promise');
@@ -45094,7 +46054,7 @@ if (perf && typeof perf.now !== 'function') {
     };
 }
 
-},{"core-js/es6/promise":11}],264:[function(_dereq_,module,exports){
+},{"core-js/es6/promise":6}],272:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -45109,7 +46069,7 @@ function sliceObject(obj, keys) {
     return sliced;
 }
 
-},{}],265:[function(_dereq_,module,exports){
+},{}],273:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -45169,7 +46129,7 @@ function subscribeMixin(target) {
     });
 }
 
-},{"./log":259}],266:[function(_dereq_,module,exports){
+},{"./log":267}],274:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -45193,7 +46153,6 @@ var Task = {
             task.reject = reject;
         });
         task.promise = promise;
-
         task.total_elapsed = 0;
         task.stats = { calls: 0 };
         this.queue.push(task);
@@ -45230,7 +46189,7 @@ var Task = {
 
         task.stats.calls++;
         task.start_time = performance.now(); // start task timer
-        return task.run(task);
+        return task.target[task.method](task);
     },
     processAll: function processAll() {
         this.start_time = this.start_time || performance.now(); // start frame timer if necessary
@@ -45266,8 +46225,8 @@ var Task = {
     cancel: function cancel(task) {
         var val = void 0;
 
-        if (task.cancel instanceof Function) {
-            val = task.cancel(task); // optional cancel function
+        if (task.cancel && task.target[task.cancel] instanceof Function) {
+            val = task.target[task.cancel](task); // optional cancel function
         }
 
         task.resolve(val || {}); // resolve with result of cancel function, or empty object
@@ -45294,7 +46253,7 @@ var Task = {
 
 exports.default = Task;
 
-},{}],267:[function(_dereq_,module,exports){
+},{}],275:[function(_dereq_,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -45326,7 +46285,7 @@ try {
     }
 }
 
-},{}],268:[function(_dereq_,module,exports){
+},{}],276:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -45546,7 +46505,7 @@ function getURLParameter(name, url) {
     return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
-},{"./log":259}],269:[function(_dereq_,module,exports){
+},{"./log":267}],277:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -45862,18 +46821,53 @@ Utils.pointInTile = function (point) {
     return point[0] >= 0 && point[1] > -_geo2.default.tile_scale && point[0] < _geo2.default.tile_scale && point[1] <= 0;
 };
 
-},{"../geo":200,"./log":259,"./thread":267,"./worker_broker":271}],270:[function(_dereq_,module,exports){
+Utils.pointInTile2 = function (min, max, anchor) {
+    if (anchor == 'right' && min[0] >=0 && max[0] >=0 && min[0] < _geo2.default.tile_scale && max[0] < _geo2.default.tile_scale
+        && min[1] > -_geo2.default.tile_scale - 100 && max[1] > -_geo2.default.tile_scale - 100 && min[1] <= 100 && max[1] <= 100)
+        return true;
+    else if (anchor == 'left' && min[0] >=0 && max[0] >=0 && min[0] < _geo2.default.tile_scale && max[0] < _geo2.default.tile_scale
+        && min[1] > -_geo2.default.tile_scale - 100 && max[1] > -_geo2.default.tile_scale - 100 && min[1] <= 100 && max[1] <= 100)
+        return true;
+    else if (anchor == 'bottom' && min[1] > -_geo2.default.tile_scale && max[1] > -_geo2.default.tile_scale && min[1] <= 0 && max[1] <= 0
+        && min[0] >= -100 && max[0] >= -100 && min[0] < _geo2.default.tile_scale && max[0] + 100 < _geo2.default.tile_scale + 100)
+        return true;
+    else if (anchor == 'top' && min[1] > -_geo2.default.tile_scale && max[1] > -_geo2.default.tile_scale && min[1] <= 0 && max[1] <= 0
+        && min[0] >= -100 && max[0] >= -100 && min[0] < _geo2.default.tile_scale && max[0] + 100 < _geo2.default.tile_scale + 100)
+        return true;
+    return false;
+};
+
+Utils.wrap = function (n, min, max) {
+    var d = max - min;
+    var w = ((n - min) % d + d) % d + min;
+    return w === min ? max : w;
+};
+
+Utils.clamp = function (n, min, max) {
+    return Math.min(max, Math.max(min, n));
+};
+
+Utils.bindAll = function (fns, context) {
+    fns.forEach(function (fn) {
+        if (!context[fn]) {
+            return;
+        }
+        context[fn] = context[fn].bind(context);
+    });
+};
+
+},{"../geo":209,"./log":267,"./thread":275,"./worker_broker":279}],278:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var pkg = JSON.parse("{\n  \"name\": \"tangram\",\n  \"version\": \"0.15.1\",\n  \"description\": \"WebGL Maps for Vector Tiles\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git://github.com/tangrams/tangram.git\"\n  },\n  \"main\": \"dist/tangram.min.js\",\n  \"homepage\": \"https://github.com/tangrams/tangram\",\n  \"keywords\": [\n    \"maps\",\n    \"graphics\",\n    \"rendering\",\n    \"visualization\",\n    \"WebGL\",\n    \"OpenStreetMap\"\n  ],\n  \"config\": {\n    \"output\": \"\",\n    \"output_map\": \"\"\n  },\n  \"engines\": {\n    \"npm\": \">=2.0.0\"\n  },\n  \"scripts\": {\n    \"start\": \"npm run watch\",\n    \"test\": \"npm run lint && npm run build-bundle && npm run test-local\",\n    \"test-ci\": \"npm run lint && npm run build-bundle && npm run test-remote\",\n    \"test-remote\": \"./node_modules/karma/bin/karma start --browsers SL_Firefox --single-run\",\n    \"test-local\": \"./node_modules/karma/bin/karma start --browsers Chrome --single-run\",\n    \"karma-start\": \"./node_modules/karma/bin/karma start --browsers Chrome --no-watch\",\n    \"karma-run\": \"./node_modules/karma/bin/karma run --browsers Chrome\",\n    \"lint\": \"./node_modules/.bin/jshint src/ && jshint test/\",\n    \"build\": \"npm run build-bundle && npm run build-minify\",\n    \"build-bundle\": \"./node_modules/.bin/browserify src/module.js -t [ babelify --presets [ es2015 ] ] -t brfs --debug -s Tangram -p browserify-derequire -p [ ./build/quine.js tangram.debug.js.map ] -p [ mapstraction ./dist/tangram.debug.js.map ] -o ./dist/tangram.debug.js\",\n    \"build-minify\": \"./node_modules/.bin/uglifyjs dist/tangram.debug.js -c warnings=false -m | sed -e 's/tangram.debug.js.map//g' > dist/tangram.min.js && npm run build-size\",\n    \"build-size\": \"gzip dist/tangram.min.js -c | wc -c | awk '{kb=$1/1024; print kb}' OFMT='%.0fk minified+gzipped'\",\n    \"watch\": \"./node_modules/.bin/budo src/module.js:dist/tangram.debug.js --port 8000 --cors --live -- -t [ babelify --presets [ es2015 ] ] -t brfs -s Tangram -p [ ./build/quine.js tangram.debug.temp.js.map ] -p [ mapstraction ./dist/tangram.debug.temp.js.map ]\"\n  },\n  \"files\": [\n    \"src/*\",\n    \"dist/tangram.debug.js\",\n    \"dist/tangram.debug.js.map\",\n    \"dist/tangram.min.js\"\n  ],\n  \"author\": {\n    \"name\": \"Tangram contributors\"\n  },\n  \"contributors\": [\n    {\n      \"name\": \"Brett Camper\"\n    },\n    {\n      \"name\": \"Peter Richardson\"\n    },\n    {\n      \"name\": \"Patricio Gonzalez Vivo\"\n    },\n    {\n      \"name\": \"Karim Naaji\"\n    },\n    {\n      \"name\": \"Ivan Willig\"\n    },\n    {\n      \"name\": \"Lou Huang\"\n    },\n    {\n      \"name\": \"David Valdman\"\n    },\n    {\n      \"name\": \"Nick Doiron\"\n    },\n    {\n      \"name\": \"Francisco López\"\n    },\n    {\n      \"name\": \"David Manzanares\"\n    }\n  ],\n  \"license\": \"MIT\",\n  \"dependencies\": {\n    \"@mapbox/vector-tile\": \"1.3.0\",\n    \"brfs\": \"1.4.3\",\n    \"csscolorparser\": \"1.0.3\",\n    \"earcut\": \"2.1.1\",\n    \"fontfaceobserver\": \"2.0.7\",\n    \"geojson-vt\": \"2.4.0\",\n    \"gl-mat3\": \"1.0.0\",\n    \"gl-mat4\": \"1.1.4\",\n    \"gl-shader-errors\": \"1.0.3\",\n    \"js-yaml\": \"tangrams/js-yaml#read-only\",\n    \"jszip\": \"tangrams/jszip#read-only\",\n    \"pbf\": \"3.1.0\",\n    \"strip-comments\": \"0.3.2\",\n    \"topojson-client\": \"tangrams/topojson-client#read-only\"\n  },\n  \"devDependencies\": {\n    \"babelify\": \"7.3.0\",\n    \"babel-preset-es2015\": \"6.16.0\",\n    \"browserify\": \"14.4.0\",\n    \"browserify-derequire\": \"0.9.4\",\n    \"budo\": \"10.0.3\",\n    \"chai\": \"1.9.2\",\n    \"chai-as-promised\": \"4.1.1\",\n    \"core-js\": \"2.4.1\",\n    \"glob\": \"4.0.6\",\n    \"jshint\": \"2.9.4\",\n    \"karma\": \"1.5.0\",\n    \"karma-browserify\": \"5.1.1\",\n    \"karma-chrome-launcher\": \"2.0.0\",\n    \"karma-mocha\": \"0.1.9\",\n    \"karma-mocha-reporter\": \"1.0.0\",\n    \"karma-sauce-launcher\": \"tangrams/karma-sauce-launcher#firefox-profiles2\",\n    \"karma-sinon\": \"1.0.4\",\n    \"mapstraction\": \"1.0.1\",\n    \"mocha\": \"1.21.4\",\n    \"sinon\": \"1.10.3\",\n    \"through2\": \"2.0.3\",\n    \"uglify-js\": \"2.8.29\",\n    \"yargs\": \"1.3.2\"\n  }\n}\n");
+var pkg = JSON.parse("{\n  \"name\": \"tangram\",\n  \"version\": \"0.13.0\",\n  \"description\": \"WebGL Maps for Vector Tiles\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git://github.com/tangrams/tangram.git\"\n  },\n  \"main\": \"dist/tangram.min.js\",\n  \"homepage\": \"https://github.com/tangrams/tangram\",\n  \"keywords\": [\n    \"maps\",\n    \"graphics\",\n    \"rendering\",\n    \"visualization\",\n    \"WebGL\",\n    \"OpenStreetMap\"\n  ],\n  \"config\": {\n    \"output\": \"\",\n    \"output_map\": \"\"\n  },\n  \"scripts\": {\n    \"start\": \"npm run watch\",\n    \"test\": \"npm run lint && npm run build-bundle && npm run test-local\",\n    \"test-ci\": \"npm run lint && npm run build-bundle && npm run test-remote\",\n    \"test-remote\": \"./node_modules/karma/bin/karma start --browsers SL_Firefox --single-run\",\n    \"test-local\": \"./node_modules/karma/bin/karma start --browsers Chrome --single-run\",\n    \"karma-start\": \"./node_modules/karma/bin/karma start --browsers Chrome --no-watch\",\n    \"karma-run\": \"./node_modules/karma/bin/karma run --browsers Chrome\",\n    \"lint\": \"$(npm bin)/jshint src/ && jshint test/\",\n    \"build\": \"npm run build-bundle && npm run build-minify\",\n    \"build-bundle\": \"$(npm bin)/browserify src/module.js -t [ babelify --presets [ es2015 ] ] -t brfs --debug -s Tangram -p browserify-derequire -p [ './build/quine.js' 'tangram.debug.js.map' ] -p [ mapstraction 'dist/tangram.debug.js.map' ] -o dist/tangram.debug.js\",\n    \"build-minify\": \"$(npm bin)/uglifyjs dist/tangram.debug.js -c warnings=false -m | sed -e 's/tangram.debug.js.map//g' > dist/tangram.min.js && npm run build-size\",\n    \"build-size\": \"gzip dist/tangram.min.js -c | wc -c | awk '{kb=$1/1024; print kb}' OFMT='%.0fk minified+gzipped'\",\n    \"watch\": \"$(npm bin)/budo src/module.js:dist/tangram.debug.js --port 8000 --cors --live -- -t [ babelify --presets [ es2015 ] ] -t brfs -s Tangram -p [ './build/quine.js' 'tangram.debug.temp.js.map' ] -p [ mapstraction 'dist/tangram.debug.temp.js.map' ]\"\n  },\n  \"author\": {\n    \"name\": \"Mapzen\",\n    \"email\": \"tangram@mapzen.com\"\n  },\n  \"contributors\": [\n    {\n      \"name\": \"Brett Camper\"\n    },\n    {\n      \"name\": \"Peter Richardson\"\n    },\n    {\n      \"name\": \"Patricio Gonzalez Vivo\"\n    },\n    {\n      \"name\": \"Karim Naaji\"\n    },\n    {\n      \"name\": \"Ivan Willig\"\n    },\n    {\n      \"name\": \"Lou Huang\"\n    },\n    {\n      \"name\": \"David Valdman\"\n    },\n    {\n      \"name\": \"Nick Doiron\"\n    }\n  ],\n  \"license\": \"MIT\",\n  \"dependencies\": {\n    \"brfs\": \"1.4.3\",\n    \"csscolorparser\": \"1.0.3\",\n    \"earcut\": \"2.1.1\",\n    \"fontfaceobserver\": \"2.0.7\",\n    \"geojson-vt\": \"2.4.0\",\n    \"gl-mat3\": \"1.0.0\",\n    \"gl-mat4\": \"1.1.4\",\n    \"gl-shader-errors\": \"1.0.3\",\n    \"js-yaml\": \"tangrams/js-yaml#read-only\",\n    \"jszip\": \"tangrams/jszip#read-only\",\n    \"pbf\": \"1.3.7\",\n    \"strip-comments\": \"0.3.2\",\n    \"topojson-client\": \"tangrams/topojson-client#read-only\",\n    \"vector-tile\": \"1.3.0\"\n  },\n  \"devDependencies\": {\n    \"babelify\": \"7.3.0\",\n    \"babel-preset-es2015\": \"6.16.0\",\n    \"browserify\": \"13.0.1\",\n    \"browserify-derequire\": \"0.9.4\",\n    \"budo\": \"10.0.3\",\n    \"chai\": \"1.9.2\",\n    \"chai-as-promised\": \"4.1.1\",\n    \"core-js\": \"2.4.1\",\n    \"glob\": \"4.0.6\",\n    \"jshint\": \"2.9.4\",\n    \"karma\": \"1.5.0\",\n    \"karma-browserify\": \"5.1.0\",\n    \"karma-chrome-launcher\": \"2.0.0\",\n    \"karma-mocha\": \"0.1.9\",\n    \"karma-mocha-reporter\": \"1.0.0\",\n    \"karma-sauce-launcher\": \"tangrams/karma-sauce-launcher#firefox-profiles2\",\n    \"karma-sinon\": \"1.0.4\",\n    \"mapstraction\": \"1.0.1\",\n    \"mocha\": \"1.21.4\",\n    \"rbush\": \"2.0.1\",\n    \"sinon\": \"1.10.3\",\n    \"through2\": \"2.0.3\",\n    \"uglify-js\": \"2.4.14\",\n    \"yargs\": \"1.3.2\"\n  }\n}\n");
 var version = void 0;
 exports.default = version = 'v' + pkg.version;
 
-},{}],271:[function(_dereq_,module,exports){
+},{}],279:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -46442,7 +47436,7 @@ if (_thread2.default.is_worker) {
     setupWorkerThread();
 }
 
-},{"./log":259,"./thread":267}],272:[function(_dereq_,module,exports){
+},{"./log":267,"./thread":275}],280:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -46655,7 +47649,7 @@ Vector.dot = function (v1, v2) {
     return n;
 };
 
-},{}],273:[function(_dereq_,module,exports){
+},{}],281:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -46728,7 +47722,7 @@ var View = function () {
         };
         this.aspect = null;
 
-        this.buffer = 0;
+        this.buffer = 1;
         this.continuous_zoom = typeof options.continuousZoom === 'boolean' ? options.continuousZoom : true;
         this.wrap = options.wrapView === false ? false : true;
         this.preserve_tiles_within_zoom = 1;
@@ -46999,7 +47993,7 @@ var View = function () {
 
             this.scene.tile_manager.removeTiles(function (tile) {
                 // Ignore visible tiles
-                if (tile.visible || tile.isProxy()) {
+                if (tile.visible || tile.proxy_for) {
                     return false;
                 }
 
@@ -47088,6 +48082,6 @@ var View = function () {
 
 exports.default = View;
 
-},{"./camera":199,"./geo":200,"./tile":251,"./utils/log":259,"./utils/subscribe":265,"./utils/utils":269}]},{},[225])(225)
+},{"./camera":208,"./geo":209,"./tile":259,"./utils/log":267,"./utils/subscribe":273,"./utils/utils":277}]},{},[233])(233)
 });})();
 //# sourceMappingURL=tangram.debug.js.map

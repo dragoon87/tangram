@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>测试</title>
+  </head>
+
+  <body>
+    <li class="has_child show current" style="">
+        <span class="">
+            地图显示
+        <i class="iconfont icon-downarrow"></i>
+        </span>
+        <ul class="sidebar_father"><li class="">
+            <a href="http://192.168.99.67:81/example/mapshow.html">
+                地图显示
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/3dmap.html">
+                3D地图
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/maplanguage.html">
+                英文、中英文地图---支持但没数据
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/mapcontrol.html">
+                带功能控件的地图
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/asynchronous-loading-map.html">
+                异步加载地图
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/set-center-according-to-map-name.html">
+                根据城市名称设置中心点
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/mapchange.html">
+                改变地图中心点及缩放级别
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/mappan.html">
+                地图平移
+            </a></li><li class="current"><a href="http://192.168.99.67:81/example/mapstatus.html">
+                设置地图状态
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/maplimit.html">
+                限制地图显示范围
+            </a></li><li class=""><!--a href="http://192.168.99.67:81/example/get-current-administrative-region.html"-->
+                获取地图当前所在的行政区
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/mapzoom.html">
+                获取地图缩放级别
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/maplnglat.html">
+                鼠标点击获取经纬度
+            </a></li><li class=""><a href="http://192.168.99.67:81/example/mapfeature.html">
+                地图热点
+            </a></li>
+        </ul></li><!--li class="has_child"><span class="">
+        POI搜索
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        地理编码
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        驾车路线规划
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        步行路线规划
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        骑行路径规划
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        调起高德地图
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        公交查询
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        行政区划查询
+    <i class="iconfont icon-downarrow"></i></span> </li--><li class="has_child"><span class="">
+        点标记
+    <ul class="sidebar_father"><li class="current">
+        <a href="http://192.168.99.67:81/example/marker.html">
+            点标记
+        </a></li><!--li class=""><a href="http://192.168.99.67:81/example/marker/custom-icon">
+            自定义图标
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/custom-icon-content">
+            自定义点标记内容
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/set-marker-text-label">
+            设置点标注的文本标签
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/adaptive-show-multiple-markers">
+            自适应显示多个点标记
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/delete-multiple-markers">
+            删除多个点标记
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/delet-specified-marker-from-multiple-markers">
+            从多个点中删除指定点
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/markerclusterer">
+            点聚合
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/set-marker-draggable">
+            设置点的拖拽效果
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/set-marker-bouncing">
+            设置点的弹跳效果
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/marker/replaying-historical-running-data">
+            轨迹回放
+        </a></li--></ul>
+    <i class="iconfont icon-downarrow"></i></span> </li><!--li class="has_child"><span class="">
+        信息窗体
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        数学计算
+    <i class="iconfont icon-downarrow"></i></span> </li--><li class="has_child"><span class="">
+        折线、多边形和圆
+    <ul class="sidebar_father"><li class="current">
+        <a href="http://192.168.99.67:81/example/overlay.html">
+            折线、多边形、圆
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/overlay_editor.html">
+            编辑折线、多边形、圆
+        </a></li><!--li class=""><a href="http://192.168.99.67:81/example/overlayers/draw-ground-line">
+            绘制大地线
+        </a></li><li class=""><a href="http://192.168.99.67:81/example/overlayers/draw-polygon-with-holes">
+            带洞多边形
+        </a></li--></ul>
+    <i class="iconfont icon-downarrow"></i></span> </li><!--li class="has_child"><span class="">
+        图层
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        鼠标操作地图
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        事件绑定
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        定位
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        我的数据
+    <i class="iconfont icon-downarrow"></i></span> </li--><li class="has_child"><span class="">
+        右键菜单
+        <ul class="sidebar_father"><li class="current"><a href="http://192.168.99.67:81/example/contextmenu.html">
+            右键菜单
+        </a></li><!--li class=""><a href="http://lbs.amap.com/api/javascript-api/example/contextmenu/custom-contextmenu">
+            自定义右键菜单
+        </a></li><li class=""><a href="http://lbs.amap.com/api/javascript-api/example/contextmenu/add-contextmenu-to-overlayer">
+            覆盖物添加右键菜单
+        </a></li--></ul>
+    <i class="iconfont icon-downarrow"></i></span> </li><!--li class="has_child"><span class="">
+        天气预报
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        个性化地图
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        室内地图
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 简单标注
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 字体图标标注
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 矢量标注
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 简单信息窗体
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 标注列表
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 基础控件
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 海量点展示
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 轨迹展示
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 行政区划浏览
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 行政区划聚合
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - 拖拽选址
+    <i class="iconfont icon-downarrow"></i></span> </li><li class="has_child"><span class="">
+        UI - POI选点
+    <i class="iconfont icon-downarrow"></i></span> </li-->
+  </body>
+
+</html>

@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>点标记</title>
+    
+    <style>
+        .marker {
+            color: #ff6600;
+            padding: 4px 10px;
+            border: 1px solid #fff;
+            white-space: nowrap;
+            font-size: 12px;
+            font-family: "";
+            background-color: #0066ff;
+        }
+        .button-group {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            padding: 10px;
+            z-index: 1000;
+        }
+        .button-group .button {
+            height: 28px;
+            line-height: 28px;
+            background-color: #0D9BF2;
+            color: #FFF;
+            border: 0;
+            outline: none;
+            padding-left: 5px;
+            padding-right: 5px;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            cursor: pointer;
+        }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div class="button-group">
+    <input type="button" class="button" value="添加点标记覆盖物" id="addMarker"/>
+    <input type="button" class="button" value="更新点标记覆盖物" id="updateMarker"/>
+    <input type="button" class="button" value="删除点标记覆盖物" id="clearMarker"/>
+    </div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 16,
+            maxZoom: 20,
+            zoomSnap: 0,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        
+        var marker = null;
+        L.DomEvent.on(document.getElementById('addMarker'), 'click', function() {
+            addMarker();
+        });
+        
+        L.DomEvent.on(document.getElementById('updateMarker'), 'click', function() {
+            marker && updateMarker();
+        });
+        
+        L.DomEvent.on(document.getElementById('clearMarker'), 'click', function() {
+            if (marker) {
+                marker.remove();
+                marker = null;
+            }
+        });
+        
+        function addMarker() {
+            if (marker) {
+                marker.remove();
+                marker = null;
+            }
+            var myIcon = L.icon({
+                iconUrl: '../demos/images/marker-icon.png',     //必须指定
+                //iconSize: [25, 41],                           //可以修改大小，默认原始大小
+                shadowUrl: '../demos/images/marker-shadow.png', //可以不指定
+                //shadowSize: [41, 41],                         //可以修改大小，默认原始大小
+            });
+            map.setView([30.32413, 114.26038], 16);
+            //默认图标在js所在目录的images下，名称是marker-icon.png和marker-shadow.png
+            //也可以用自定义icon
+            marker = L.marker([30.32413, 114.26038], {
+                    draggable: true,    //使图标可拖拽
+                    //icon: myIcon,     
+                }).addTo(map).bindPopup('<span class="labelInner">' + '' + '</span>')
+                    .openPopup();;
+        }
+
+        function updateMarker() {
+            // 自定义点标记内容
+            var markerContent = document.createElement("div");
+            var markerSpan = document.createElement("span");
+            markerSpan.className = 'marker';
+            markerSpan.innerHTML = "Hi，我换新装备啦！";
+            markerContent.appendChild(markerSpan);
+        
+            //更新点标记内容。注意内容更新必须要在位置和图标更新前面，否则排版有问题
+            marker.bindPopup(markerContent).openPopup(); 
+            
+            //更新点标记位置
+            marker.setLatLng(L.latLng(30.326, 114.262)); 
+            
+            //更新点标记图标
+            marker.setIcon(L.icon({iconUrl: '../demos/images/mark_r.png'}));
+        } 
+    </script>
+  </body>
+
+</html>

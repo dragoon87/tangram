@@ -1,3 +1,4 @@
+import Utils from './utils/utils';
 import Thread from './utils/thread';
 import Scene from './scene';
 import Geo from './geo';
@@ -20,7 +21,9 @@ function extendLeaflet(options) {
 
     // Leaflet layer functionality is only defined in main thread
     if (Thread.is_main) {
-
+        const inertiaLinearity = 0.25;
+        const inertiaMaxSpeed = 180;
+        const inertiaDeceleration = 720;
         let L = options.leaflet || window.L;
 
         // Determine if we are extending the leaflet 0.7.x TileLayer class, or the newer
@@ -55,6 +58,37 @@ function extendLeaflet(options) {
                 this.createScene();
                 this.hooks = {};
                 this._updating_tangram = false;
+                this._zoomAnimated = false; // turn leaflet zoom animations off for this layer
+                
+                this._el = options.element || this.scene.canvas;
+                this._bearingSnap = options.bearingSnap || 0;
+                this._pitchWithRotate = options.pitchWithRotate !== false;
+                this._button = options.button || 'right';
+                this._pos = {x : 0, y : 0};
+                this._rotate = options.rotate;
+                
+                if (this._rotate) {
+                    Utils.bindAll([
+                        '_onRotateDown',
+                        '_onRotateMove',
+                        '_onRotateUp',
+                        '_rotateCompassArrow'
+                    ], this);
+                    
+                    this._compass = L.DomUtil.create('a', 'leaflet-control-compass', document.getElementsByClassName('leaflet-control-zoom')[0]);
+                    //this._compass.type = 'button';
+                    this._compass.setAttribute('aria-label', 'Reset North');
+                    this._compass.setAttribute('href', '#');
+                    this._compass.addEventListener('click', () => this.resetNorth());
+                    this._compassArrow = L.DomUtil.create('span', 'leaflet-control-compass-arrow', this._compass);
+                }
+            },
+            
+             _rotateCompassArrow() {
+                if (this.scene.view.camera !== undefined) 
+                    this._compassArrow.style.transform = `rotate(${this.scene.view.camera.getBearing()}deg)`;
+                else
+                    this._compassArrow.style.transform = `rotate(0deg)`;
             },
 
             createScene () {
@@ -72,6 +106,279 @@ function extendLeaflet(options) {
                         webGLContextOptions: this.options.webGLContextOptions, // override/supplement WebGL context options
                         disableRenderLoop: this.options.disableRenderLoop // app must call scene.update() per frame
                     });
+            },
+            
+            mousePos (el, e) {
+                const rect = el.getBoundingClientRect();
+                e = e.touches ? e.touches[0] : e;
+                return {
+                    x : e.clientX - rect.left - el.clientLeft,
+                    y : e.clientY - rect.top - el.clientTop
+                };
+            },
+            
+            _drainInertiaBuffer() {
+                const inertia = this._inertia,
+                    now = Date.now(),
+                    cutoff = 160;   //msec
+
+                while (inertia.length > 0 && now - inertia[0][0] > cutoff)
+                    inertia.shift();
+            },
+            
+            _normalizeBearing (bearing, currentBearing) {
+                bearing = Utils.wrap(bearing, -180, 180);
+                const diff = Math.abs(bearing - currentBearing);
+                if (Math.abs(bearing - 360 - currentBearing) < diff) bearing -= 360;
+                if (Math.abs(bearing + 360 - currentBearing) < diff) bearing += 360;
+                return bearing;
+            },
+            
+            _fireEvent (type, e) {
+                return this._map.fire(type, { originalEvent: e });
+            },
+    
+            _onRotateMove (e) {
+                if (!this._rotate_active) {
+                    this._rotate_active = true;
+                    this._map.moving = true;
+                    this._fireEvent('rotatestart', e);
+                    this._fireEvent('movestart', e);
+                    if (this._pitchWithRotate) {
+                        this._fireEvent('pitchstart', e);
+                    }
+                }
+
+                const map = this._map;
+                map.stop();
+                
+                this._el = this.scene.canvas;
+                const p1 = this._pos,
+                    p2 = this.mousePos(this.scene.canvas, e),
+                    bearingDiff = (p1.x - p2.x) * 0.8,
+                    pitchDiff = (p1.y - p2.y) * -0.5,
+                    bearing = this.scene.view.camera.getBearing() - bearingDiff,
+                    pitch = this.scene.view.camera.getPitch() - pitchDiff,
+                    inertia = this._inertia,
+                    last = inertia[inertia.length - 1];
+
+                this._drainInertiaBuffer();
+                inertia.push([Date.now(), this._normalizeBearing(bearing, last[1])]);
+
+                //console.log("bearing:"+bearing)
+                if (Math.abs(bearing) <= 180)
+                    this.scene.view.camera.setBearing(bearing);
+                if (this._pitchWithRotate && Math.abs(pitch) <= 90) {
+                    this._fireEvent('pitch', e);
+                    //console.log("pitch:"+pitch)
+                    this.scene.view.camera.setPitch(pitch);
+                }
+
+                this._fireEvent('rotate', e);
+                this._fireEvent('move', e);
+
+                this._pos = p2;
+            },
+            
+            _onRotateDown (e) {
+                //if (this._map.boxZoom && this._map.boxZoom.isActive()) return;//À­¿òËõ·Å
+                //if (this._map.dragPan && this._map.dragPan.isActive()) return;//Æ½ÒÆ
+                if (this._rotate_active) return;
+
+                if (this._button === 'right') {
+                    const button = (e.ctrlKey ? 0 : 2);   // ? ctrl+left button : right button
+                    let eventButton = e.button;
+                    if (typeof window.InstallTrigger !== 'undefined' && e.button === 2 && e.ctrlKey &&
+                        window.navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
+                        // Fix for https://github.com/mapbox/mapbox-gl-js/issues/3131:
+                        // Firefox (detected by InstallTrigger) on Mac determines e.button = 2 when
+                        // using Control + left click
+                        eventButton = 0;
+                    }
+                    if (eventButton !== button) return;
+                } else {
+                    if (e.ctrlKey || e.button !== 0) return;
+                }
+
+                //DOM.disableDrag();
+
+                window.document.addEventListener('mousemove', this._onRotateMove, {capture: true});
+                window.document.addEventListener('mouseup', this._onRotateUp);
+                /* Deactivate DragRotate when the window looses focus. Otherwise if a mouseup occurs when the window isn't in focus, DragRotate will still be active even though the mouse is no longer pressed. */
+                window.addEventListener('blur', this._onRotateUp);
+
+                this._rotate_active = false;
+                this._inertia = [[Date.now(), this.scene.view.camera.getBearing()]];
+                this._startPos = this._pos = this.mousePos(this.scene.canvas, e);
+                //this._center = this._map.transform.centerPoint;  // Center of rotation
+
+                e.preventDefault();
+            },
+            
+            /*easeTo (options, eventData) {
+                this.stop();
+
+                options = util.extend({
+                    offset: [0, 0],
+                    duration: 500,
+                    easing: util.ease
+                }, options);
+
+                if (options.animate === false) options.duration = 0;
+
+                if (options.smoothEasing && options.duration !== 0) {
+                    options.easing = this._smoothOutEasing(options.duration);
+                }
+
+                const tr = this.transform,
+                    startZoom = this.getZoom(),
+                    startBearing = this.getBearing(),
+                    startPitch = this.getPitch(),
+
+                    zoom = 'zoom' in options ? +options.zoom : startZoom,
+                    bearing = 'bearing' in options ? this._normalizeBearing(options.bearing, startBearing) : startBearing,
+                    pitch = 'pitch' in options ? +options.pitch : startPitch;
+
+                const pointAtOffset = tr.centerPoint.add(Point.convert(options.offset));
+                const locationAtOffset = tr.pointLocation(pointAtOffset);
+                const center = LngLat.convert(options.center || locationAtOffset);
+                this._normalizeCenter(center);
+
+                const from = tr.project(locationAtOffset);
+                const delta = tr.project(center).sub(from);
+                const finalScale = tr.zoomScale(zoom - startZoom);
+
+                let around, aroundPoint;
+
+                if (options.around) {
+                    around = LngLat.convert(options.around);
+                    aroundPoint = tr.locationPoint(around);
+                }
+
+                this.zooming = (zoom !== startZoom);
+                this.rotating = (startBearing !== bearing);
+                this.pitching = (pitch !== startPitch);
+
+                this._prepareEase(eventData, options.noMoveStart);
+
+                clearTimeout(this._onEaseEnd);
+
+                this._ease(function (k) {
+                    if (this.zooming) {
+                        tr.zoom = interpolate(startZoom, zoom, k);
+                    }
+                    if (this.rotating) {
+                        tr.bearing = interpolate(startBearing, bearing, k);
+                    }
+                    if (this.pitching) {
+                        tr.pitch = interpolate(startPitch, pitch, k);
+                    }
+
+                    if (around) {
+                        tr.setLocationAtPoint(around, aroundPoint);
+                    } else {
+                        const scale = tr.zoomScale(tr.zoom - startZoom);
+                        const base = zoom > startZoom ?
+                            Math.min(2, finalScale) :
+                            Math.max(0.5, finalScale);
+                        const speedup = Math.pow(base, 1 - k);
+                        const newCenter = tr.unproject(from.add(delta.mult(k * speedup)).mult(scale));
+                        tr.setLocationAtPoint(tr.renderWorldCopies ? newCenter.wrap() : newCenter, pointAtOffset);
+                    }
+
+                    this._fireMoveEvents(eventData);
+
+                }, () => {
+                    if (options.delayEndEvents) {
+                        this._onEaseEnd = setTimeout(() => this._easeToEnd(eventData), options.delayEndEvents);
+                    } else {
+                        this._easeToEnd(eventData);
+                    }
+                }, options);
+
+                return this;
+            }
+            
+            rotateTo (bearing, options , eventData) {
+                return this.easeTo(util.extend({
+                    bearing: bearing
+                }, options), eventData);
+            },*/
+            
+            resetNorth (options, eventData) {
+                //this.rotateTo(0, util.extend({duration: 1000}, options), eventData);
+                this.scene.view.camera.setBearing(0);
+                this.scene.dirty = true;
+                this.scene.update();
+                this._rotateCompassArrow();
+                return this;
+            },
+            
+            _onRotateUp(e) {
+                window.document.removeEventListener('mousemove', this._onRotateMove, {capture: true});
+                window.document.removeEventListener('mouseup', this._onRotateUp);
+                window.removeEventListener('blur', this._onRotateUp);
+
+                //DOM.enableDrag();
+
+                if (!this._rotate_active) return;
+
+                this._rotate_active = false;
+                this._fireEvent('rotateend', e);
+                this._drainInertiaBuffer();
+
+                const map = this._map,
+                    mapBearing = this.scene.view.camera.getBearing(),
+                    inertia = this._inertia;
+
+                const finish = () => {
+                    if (Math.abs(mapBearing) < this._bearingSnap) {
+                        this.resetNorth({noMoveStart: true}, { originalEvent: e });
+                    } else {
+                        this._map.moving = false;
+                        this._fireEvent('moveend', e);
+                    }
+                    if (this._pitchWithRotate) this._fireEvent('pitchend', e);
+                };
+
+                if (inertia.length < 2) {
+                    finish();
+                    return;
+                }
+
+                const first = inertia[0],
+                    last = inertia[inertia.length - 1],
+                    previous = inertia[inertia.length - 2];
+                let bearing = this._normalizeBearing(mapBearing, previous[1]);
+                const flingDiff = last[1] - first[1],
+                    sign = flingDiff < 0 ? -1 : 1,
+                    flingDuration = (last[0] - first[0]) / 1000;
+
+                if (flingDiff === 0 || flingDuration === 0) {
+                    finish();
+                    return;
+                }
+
+                let speed = Math.abs(flingDiff * (inertiaLinearity / flingDuration));  // deg/s
+                if (speed > inertiaMaxSpeed) {
+                    speed = inertiaMaxSpeed;
+                }
+
+                const duration = speed / (inertiaDeceleration * inertiaLinearity),
+                    offset = sign * speed * (duration / 2);
+
+                bearing += offset;
+
+                if (Math.abs(this._normalizeBearing(bearing, 0)) < this._bearingSnap) {
+                    bearing = this._normalizeBearing(0, bearing);
+                }
+
+                this.scene.view.camera.setBearing(bearing);
+                /*map.rotateTo(bearing, {
+                    duration: duration * 1000,
+                    easing: inertiaEasing,
+                    noMoveStart: true
+                }, { originalEvent: e });*/
             },
 
             // Finish initializing scene and setup events when layer is added to map
@@ -171,6 +478,12 @@ function extendLeaflet(options) {
                 }).catch(error => {
                     this.fire('error', error);
                 });
+                
+                if (this._rotate) {
+                    this._map.on('rotate', this._rotateCompassArrow);
+                    this._rotateCompassArrow();
+                    this.scene.canvas.addEventListener('mousedown', this._onRotateDown);
+                }
             },
 
             onRemove (map) {
@@ -193,6 +506,9 @@ function extendLeaflet(options) {
                     this.scene.destroy();
                     this.scene = null;
                 }
+                
+                if (this._rotate)
+                    map.off('rotate', this._rotateCompassArrow);
             },
 
             createTile (coords) {
@@ -439,6 +755,24 @@ function extendLeaflet(options) {
                 var top_left = this._map.containerPointToLayerPoint([0, 0]);
                 L.DomUtil.setPosition(this.scene.container, top_left);
             },
+            
+            onDiv: function (pixel, div) {
+                var divs = document.getElementsByClassName(div);
+                for (var i in divs) {
+                    div = divs[i];
+                
+                    var x = pixel.x;
+                    var y = pixel.y;
+                    var x1 = div.offsetLeft;
+                    var y1 = div.offsetTop;
+                    var x2 = div.offsetLeft + div.offsetWidth;
+                    var y2 = div.offsetTop + div.offsetHeight;
+                    if(x >= x1 && x <= x2 && y >= y1 && y <= y2)
+                        return true;
+                }
+                
+                return false;
+            },
 
             // Tie Leaflet event handlers to Tangram feature selection
             setupSelectionEventHandlers (map) {
@@ -446,6 +780,10 @@ function extendLeaflet(options) {
                 this._selection_radius = null; // optional radius
 
                 this.hooks.click = (event) => {
+                    if (this.onDiv(event.containerPoint, "leaflet-control")) {
+                        this._selection_events.hover(Object.assign({}, null, { leaflet_event: event }));
+                        return;
+                    }
                     if (typeof this._selection_events.click === 'function') {
                         this.scene.getFeatureAt(event.containerPoint, { radius: this._selection_radius }).
                             then(selection => {
@@ -457,6 +795,10 @@ function extendLeaflet(options) {
                 map.on('click', this.hooks.click);
 
                 this.hooks.mousemove = (event) => {
+                    if (this.onDiv(event.containerPoint, "leaflet-control")) {
+                        this._selection_events.hover(Object.assign({}, null, { leaflet_event: event }));
+                        return;
+                    }
                     if (typeof this._selection_events.hover === 'function') {
                         this.scene.getFeatureAt(event.containerPoint, { radius: this._selection_radius }).
                             then(selection => {

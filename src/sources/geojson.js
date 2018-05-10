@@ -112,15 +112,15 @@ export class GeoJSONSource extends NetworkSource {
     }
 
     parseSourceData (tile, source, response) {
-        let data = typeof response === 'string' ? JSON.parse(response) : response;
-        let layers = this.getLayers(data);
+        let parsed_response = JSON.parse(response);
+        let layers = this.getLayers(parsed_response);
         source.layers = this.preprocessLayers(layers);
     }
 
     preprocessLayers (layers){
         for (let key in layers) {
             let layer = layers[key];
-            layer.features = this.preprocessFeatures(layer.features);
+            this.preprocessFeatures(layer.features);
         }
 
         // Apply optional data transform
@@ -138,9 +138,6 @@ export class GeoJSONSource extends NetworkSource {
 
     // Preprocess features. Currently used to add a new "centroid" feature for polygon labeling
     preprocessFeatures (features) {
-        // Remove features without geometry (which is valid GeoJSON)
-        features = features.filter(f => f.geometry != null);
-
         // Define centroids for polygons for centroid label placement
         // Avoids redundant label placement for each generated tile at higher zoom levels
         if (this.config.generate_label_centroids){
@@ -148,6 +145,10 @@ export class GeoJSONSource extends NetworkSource {
             let centroid_properties = {"label_placement" : true};
 
             features.forEach(feature => {
+                if (feature.geometry == null) {
+                    return; // no geometry (which is valid GeoJSON)
+                }
+
                 let coordinates, centroid_feature;
                 switch (feature.geometry.type) {
                     case 'Polygon':
@@ -228,7 +229,7 @@ export class GeoJSONTileSource extends NetworkTileSource {
     }
 
     parseSourceData (tile, source, response) {
-        let data = typeof response === 'string' ? JSON.parse(response) : response;
+        let data = JSON.parse(response);
         this.prepareGeoJSON(data, tile, source);
     }
 

@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../demos/css/main.css" />
+    <link rel="stylesheet" href="../dist/leaflet.css" />
+    <title>获取地图缩放级别</title>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <div id="tip" style="z-index:1000;background-color: #fff;position: absolute;font-size: 12px;right: 10px;top: 20px;">可以缩放地图，得到缩放级别哦！<br><span id="info"></span></div>
+    <script src="../dist/leaflet.js"></script>
+    <script src="../dist/tangram.debug.js"></script>
+    <script>
+        var
+        map = L.map('map', {
+            center: [30.527, 114.34],
+            zoom: 16,
+            maxZoom: 20,
+            zoomSnap: 0,
+        }),
+
+        layer = Tangram.leafletLayer({
+            scene: '../demos/bubble-wrap-style-more-labels.yaml',
+            introspection: true,
+            logLevel: 'debug',
+        });
+        
+        layer.addTo(map);
+        
+        L.control.scale().addTo(map);
+        //监控map缩放，获取缩放后级别
+        map.on('zoomend',function(){
+            document.getElementById('info').innerHTML = '当前缩放级别：' + map.getZoom();
+        });
+    </script>
+  </body>
+
+</html>
